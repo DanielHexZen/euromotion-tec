@@ -1,0 +1,8 @@
+../Core/Src/encoder.c:24:6:encoder_init	3
+../Core/Src/encoder.c:48:6:encoder_sample_1khz	2
+../Core/Src/encoder.c:63:6:encoder_update_200hz	2
+../Core/Src/encoder.c:83:9:encoder_count	1
+../Core/Src/encoder.c:88:6:encoder_reset	3
+../Core/Src/encoder.c:101:7:encoder_rpm_out	1
+../Core/Src/encoder.c:106:7:encoder_speed_mps	1
+../Core/Src/encoder.c:111:7:encoder_cpr	1

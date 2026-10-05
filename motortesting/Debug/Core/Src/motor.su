@@ -1,0 +1,9 @@
+../Core/Src/motor.c:30:13:set_pwm	24	static
+../Core/Src/motor.c:50:13:set_dir	24	static
+../Core/Src/motor.c:68:6:motor_init	24	static
+../Core/Src/motor.c:87:6:motor_apply	32	static
+../Core/Src/motor.c:132:6:motor_coast	16	static
+../Core/Src/motor.c:140:6:motor_coast_all	16	static
+../Core/Src/motor.c:147:6:motor_service_1khz	16	static
+../Core/Src/motor.c:156:7:motor_get_applied	16	static
+../Core/Src/motor.c:161:6:motor_logic_probe	24	static
