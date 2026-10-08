@@ -60,3 +60,9 @@ dkms.conf
 *.launch
 .CLAUDE.md
 /Release
+
+# Python ground station
+.venv/
+__pycache__/
+.pytest_cache/
+ground_station/sessions/
