@@ -1,0 +1,32 @@
+2026-10-07 20:44:06,922 [INFO] Activator:177 - 
+
+
+2026-10-07 20:44:06,923 [INFO] Activator:178 - !SESSION log4j initialized
+2026-10-07 20:44:08,788 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] 
+2026-10-07 20:44:10,206 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Start the detection of the machine's architecture
+2026-10-07 20:44:10,212 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] use arm architecture
+2026-10-07 20:44:10,212 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Architecture: Apple Silicon (ARM64)
+2026-10-07 20:46:19,043 [INFO] Activator:177 - 
+
+
+2026-10-07 20:46:19,044 [INFO] Activator:178 - !SESSION log4j initialized
+2026-10-07 20:46:20,664 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] 
+2026-10-07 20:46:20,801 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Start the detection of the machine's architecture
+2026-10-07 20:46:20,810 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] use arm architecture
+2026-10-07 20:46:20,810 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Architecture: Apple Silicon (ARM64)
+2026-10-07 20:53:14,875 [INFO] Activator:177 - 
+
+
+2026-10-07 20:53:14,876 [INFO] Activator:178 - !SESSION log4j initialized
+2026-10-07 20:53:16,591 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] 
+2026-10-07 20:53:16,722 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Start the detection of the machine's architecture
+2026-10-07 20:53:16,730 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] use arm architecture
+2026-10-07 20:53:16,731 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Architecture: Apple Silicon (ARM64)
+2026-10-07 20:59:37,251 [INFO] Activator:177 - 
+
+
+2026-10-07 20:59:37,252 [INFO] Activator:178 - !SESSION log4j initialized
+2026-10-07 20:59:38,884 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] 
+2026-10-07 20:59:39,007 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Start the detection of the machine's architecture
+2026-10-07 20:59:39,016 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] use arm architecture
+2026-10-07 20:59:39,016 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] Architecture: Apple Silicon (ARM64)

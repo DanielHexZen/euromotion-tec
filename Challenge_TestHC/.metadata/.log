@@ -1,0 +1,55 @@
+!SESSION 2026-10-07 20:43:45.239 -----------------------------------------------
+eclipse.buildId=Version 2.2.0
+java.version=21.0.10
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=macosx, ARCH=aarch64, WS=cocoa, NL=de_MX
+Framework arguments:  -keyring /Users/danielappel/.eclipse_keyring
+Command-line arguments:  -os macosx -ws cocoa -arch aarch64 -keyring /Users/danielappel/.eclipse_keyring
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-10-07 20:44:06.736
+!MESSAGE Log4j2 initialized with config file /Users/danielappel/Desktop/Microcontrollers/A2.4/Challenge_TestHC/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-10-07 20:44:10.254
+!MESSAGE Started RMI Server, listening on port 41337
+!SESSION 2026-10-07 20:46:13.257 -----------------------------------------------
+eclipse.buildId=Version 2.2.0
+java.version=21.0.10
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=macosx, ARCH=aarch64, WS=cocoa, NL=de_MX
+Framework arguments:  -keyring /Users/danielappel/.eclipse_keyring
+Command-line arguments:  -os macosx -ws cocoa -arch aarch64 -keyring /Users/danielappel/.eclipse_keyring
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-10-07 20:46:18.885
+!MESSAGE Log4j2 initialized with config file /Users/danielappel/Desktop/Microcontrollers/A2.4/Challenge_TestHC/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-10-07 20:46:20.844
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-10-07 20:46:52.432
+!MESSAGE Indexed 'Activity2.4_A01833285' (22 sources, 123 headers) in 1,9 sec: 13.454 declarations; 68.475 references; 1 unresolved inclusions; 92 syntax errors; 238 unresolved names (0,29 %)
+!SESSION 2026-10-07 20:53:03.962 -----------------------------------------------
+eclipse.buildId=Version 2.2.0
+java.version=21.0.10
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=macosx, ARCH=aarch64, WS=cocoa, NL=de_MX
+Framework arguments:  -keyring /Users/danielappel/.eclipse_keyring
+Command-line arguments:  -os macosx -ws cocoa -arch aarch64 -keyring /Users/danielappel/.eclipse_keyring
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-10-07 20:53:14.689
+!MESSAGE Log4j2 initialized with config file /Users/danielappel/Desktop/Microcontrollers/A2.4/Challenge_TestHC/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-10-07 20:53:16.771
+!MESSAGE Started RMI Server, listening on port 41337
+!SESSION 2026-10-07 20:56:24.044 -----------------------------------------------
+eclipse.buildId=Version 2.2.0
+java.version=21.0.10
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=macosx, ARCH=aarch64, WS=cocoa, NL=de_MX
+Framework arguments:  -keyring /Users/danielappel/.eclipse_keyring
+Command-line arguments:  -os macosx -ws cocoa -arch aarch64 -keyring /Users/danielappel/.eclipse_keyring
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-10-07 20:59:37.089
+!MESSAGE Log4j2 initialized with config file /Users/danielappel/Desktop/Microcontrollers/A2.4/Challenge_TestHC/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-10-07 20:59:39.093
+!MESSAGE Started RMI Server, listening on port 41337
