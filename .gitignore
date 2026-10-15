@@ -56,7 +56,7 @@ dkms.conf
 *.dwo
 
 .settings
-.DS_store
+.DS_Store
 *.launch
 .CLAUDE.md
 /Release
