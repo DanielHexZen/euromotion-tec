@@ -246,8 +246,8 @@ Wheel control & Per-wheel cascade (trapezoid profile $\to$ P position $\to$ FF +
 Odometry & Effective rolling diameter calibrated (72.6\,mm with a common 3584 counts/rev);
 per-wheel scale and wheelbase still to be calibrated (UMBmark)\\
 Communication & HC-12 at 9600\,Bd running in parallel to the USB console\\
-IMU & ICM-42688-P unobtainable; replacement (LSM6DSV favoured) undecided \DECIDE\\
-Ground / boundary sensing & 8\,$\times$\,VL53L1X planned on I2C1/I2C2, not yet installed \OPEN\\
+IMU & ICM-42688-P unobtainable; \textbf{Adafruit ISM330DHCX} selected, not yet integrated\\
+Ground / boundary sensing & 5\,$\times$\,VL53L1X ordered: 4 planned on I2C1 (ground), 1 spare; not yet installed \OPEN\\
 EKF, path follower, mission & designed, not implemented \OPEN\\
 \bottomrule
 \end{tabularx}
@@ -366,7 +366,7 @@ with the professor as acceptable (\cref{sec:open-questions}, Q10).
 \textbf{Week} & \textbf{Milestone (graded)} & \textbf{Acceptance criterion used internally} & \textbf{State}\\
 \midrule
 5  & Chassis, motor and driver built and working & drives straight and turns in place under command & \tg{done}\\
-8  & Sensory system & IMU, encoders, ToF logged with timestamps, $<1\,\%$ dropped frames & \tw{IMU open}\\
+8  & Sensory system & IMU, encoders, ToF logged with timestamps, $<1\,\%$ dropped frames & \tw{IMU chosen}\\
 10 & Comms (telemetry) & full state logged at 10\,Hz for 15\,min & \tw{CSV link runs}\\
 14 & Comms (remote control) & manual mode, failsafe verified & \tk{planned}\\
 15 & Autonomous behaviour & full circuit without obstacles, waypoints within 40\,cm & \tk{planned}\\
@@ -410,10 +410,10 @@ where the vehicle is. \Cref{fig:signalflow} shows the signals.
         {\scriptsize predict \textperiodcentered{} gate}\\{\scriptsize correct}};
   % sensors
   \tikzset{sx/.style={blkG,minimum width=37mm,minimum height=9mm}}
-  \node[sx] (vlg) at (11.0,10.0) {4$\times$ VL53L1X down\\[-1mm]{\scriptsize\color{grey}edge, grass, drop}};
-  \node[sx] (vll) at (11.0,8.8)  {2$\times$ VL53L1X lateral\\[-1mm]{\scriptsize\color{grey}benches, posts}};
+  \node[sx] (vlg) at (11.0,10.0) {4$\times$ VL53L1X down\\[-1mm]{\scriptsize\color{grey}edge, grass, drop (all 4 fitted)}};
+  \node[sx] (vll) at (11.0,8.8)  {2$\times$ VL53L1X lateral\\[-1mm]{\scriptsize\color{grey}benches, posts --- not fitted}};
   \node[sx] (imu) at (11.0,7.6)  {IMU (gyro, accel.)\\[-1mm]{\scriptsize\color{grey}yaw rate, attitude}};
-  \node[sx] (vlf) at (11.0,6.0)  {2$\times$ VL53L1X forward\\[-1mm]{\scriptsize\color{grey}reflex stop, free space}};
+  \node[sx] (vlf) at (11.0,6.0)  {2$\times$ VL53L1X forward\\[-1mm]{\scriptsize\color{grey}reflex stop --- not fitted}};
   \node[sx] (enc) at (11.0,3.6)  {2$\times$ Hall encoders\\[-1mm]{\scriptsize\color{grey}TIM3 / TIM8, $\times4$}};
   % arrows
   \draw[arr] (miss) -- (path) node[lbl,midway,right=0.5mm] {segment};
@@ -573,8 +573,8 @@ Wire 14--16\,AWG / 20\,AWG / 20--22\,AWG & --- & battery--drivers / motor leads 
 Standoffs & 1 set & driver underside can short & \tw{to order}\\
 \midrule
 \multicolumn{4}{@{}l}{\textbf{\textsf{Sensing}}}\\
-VL53L1X ToF breakout & 8 & 4 downward (ground/edge, I2C1), 2 forward (reflex, free space, I2C2), 2 lateral (benches, posts, I2C2); individual XSHUT for address assignment & \tw{to order/fit}\\
-IMU (6-axis) & 1 & ICM-42688-P planned but unobtainable (0 stock, 16-week lead time); \textbf{LSM6DSV} (STEVAL-MKI239A) favoured, ISM330DHCX backup; SPI + DMA, DRDY on input capture & \tk{decide}\\
+VL53L1X ToF breakout & 5 & 4 fitted downward (ground/edge, I2C1), 1 spare; the 2 forward (reflex) and 2 lateral (benches, posts) positions are not covered \DECIDE; individual XSHUT for address assignment & \tw{ordered}\\
+IMU (6-axis) & 1 & ICM-42688-P planned but unobtainable (0 stock, 16-week lead time); \textbf{Adafruit ISM330DHCX} selected; SPI + DMA, DRDY on input capture & \tw{to order/fit}\\
 \midrule
 \multicolumn{4}{@{}l}{\textbf{\textsf{Communication}}}\\
 HC-12 radio (SI4463 based) & 2 & \qty{433}{MHz} band, transparent UART at \qty{9600}{Bd}, FU3, CH001; vehicle on USART1, ground station on FT232RL; SET on PC9 & \tg{running}\\
@@ -588,7 +588,7 @@ Mac + STM32CubeIDE 2.2 + CubeMX & --- & HAL-based C, Git in terminal & \tg{in us
 }
 
 \begin{warnbox}
-\textbf{No spares.} No spare motor, driver, Nucleo or IMU is on hand. One Nucleo
+\textbf{Few spares.} No spare motor, driver, Nucleo or IMU is on hand (one spare VL53L1X). One Nucleo
 has already failed during the week-6 work (reported 10 Oct). A single defective
 part now costs a week of lead time in a 16-week schedule. \RISK\ Recommended:
 one spare Nucleo, one spare BTS7960 module, one spare motor.
@@ -687,9 +687,9 @@ PH0         & CN7-29        & RCC\_OSC\_IN & MCO \qty{8}{MHz} & PH1 free in BYPA
 PA1         & CN7-30        & TIM2\_CH2 IC & IMU INT1/DRDY & reserved\\
 PB3/PB4/PB5, PA4 & --- & SPI1 + CS & IMU & relocated from PA5--PA7 (taken by TIM3); costs SWO\\
 PB8 / PB9   & --- & I2C1 & 4 ground VL53L1X & reserved\\
-PB10 / PC12 & --- & I2C2 & 4 horizontal VL53L1X & PC12 as I2C2\_SDA \VERIFY\ in CubeMX\\
+PB10 / PC12 & --- & I2C2 & (forward/lateral VL53L1X, not fitted) & PC12 as I2C2\_SDA \VERIFY\ in CubeMX\\
 PA0         & --- & ADC1\_IN0 & battery divider & PC4/PC5 further ADC channels reserved\\
-8 GPIO      & --- & XSHUT & VL53L1X & pins per \code{MR2006B\_Pinout.xlsx} \VERIFY\\
+4 GPIO      & --- & XSHUT & VL53L1X (ground) & pins per \code{MR2006B\_Pinout.xlsx} \VERIFY\\
 PA5 / PC13  & --- & LD2 / B1 & on-board & unused\\
 \bottomrule
 \end{tabularx}
@@ -794,8 +794,8 @@ input: $\qty{9.9}{V}-\qty{0.34}{V}\ (\text{stall sag})-\qty{0.1}{V}\ (\text{wiri
 \approx\qty{9.4}{V}$; otherwise the logic browns out \emph{before} the software
 cut-off acts, which presents as a random reset.
 
-\paragraph{3.3\,V budget.} Worst case (eight VL53L1X ranging, HC-12
-transmitting at full power) $\approx\qty{0.46}{A}$; the AMS1117 then dissipates
+\paragraph{3.3\,V budget.} Worst case (originally eight VL53L1X ranging, HC-12
+transmitting at full power; only four are fitted, so this is conservative) $\approx\qty{0.46}{A}$; the AMS1117 then dissipates
 $(5-3.3)\,\text{V}\times\qty{0.46}{A}\approx\qty{0.78}{W}$ --- hot on a small
 SOT-223 module. The observed overheating with the HC-12 attached (which also
 pulled down the Nucleo's 3.3\,V and disturbed the ST-Link) is open item O-4.
@@ -2011,16 +2011,16 @@ it.
 \subsection{IMU integration}\label{sec:imu}
 
 \begin{itemize}[leftmargin=6mm]
-\item \textbf{Selection.} ICM-42688-P unobtainable; \textbf{LSM6DSV} (board
-STEVAL-MKI239A) favoured, ISM330DHCX (Adafruit board) as backup. Criteria in
+\item \textbf{Selection.} ICM-42688-P unobtainable; \textbf{ISM330DHCX}
+(Adafruit breakout) selected. Criteria in
 order: gyro temperature-offset stability, noise density, SPI for DMA, a data-ready
 output for hardware timestamping, local availability. MPU-6050/9250 and
 ICM-20948 only as bring-up placeholders (poor temperature stability,
-discontinued, counterfeit-prone). \DECIDE
-\item \textbf{Interface.} SPI1 (PB3/PB4/PB5, CS PA4), \qty{11.25}{MHz}; DRDY
+discontinued, counterfeit-prone).
+\item \textbf{Interface.} SPI1 (PB3/PB4/PB5, CS PA4), \qty{5.625}{MHz} (APB2/16; the ISM330DHCX allows at most \qty{10}{MHz}); DRDY
 on PA1 = TIM2\_CH2 input capture gives a jitter-free timestamp; the capture
-interrupt starts the DMA read. Sample at \qty{1}{kHz} with the sensor's
-anti-aliasing filter, decimate to \qty{200}{Hz} by averaging.
+interrupt starts the DMA read. The ISM330DHCX has no \qty{1}{kHz} output data rate: sample at \qty{833}{Hz} with the sensor's
+anti-aliasing filter and decimate by 4 to $\approx\qty{208}{Hz}$ for the \qty{200}{Hz} EKF \VERIFY\ (datasheet ODR table).
 \item \textbf{Mounting.} Rigid, at the axle midpoint (no lever-arm accelerations
 in turns), not soft-mounted (an elastic mount creates a resonance in the band of
 interest), thermally away from the drivers, under a light-coloured cover.
@@ -2081,7 +2081,8 @@ look straight down, two per side at different lateral offsets (e.g.\ 15 and
 \qty{25}{cm} from the centre line) \DECIDE. Forward sensors F1/F2 serve the
 reflex layer and free-space estimation; lateral sensors S1/S2 look sideways at
 benches, posts and kerbs. G on I2C1, F and S on I2C2; every sensor has its own
-XSHUT line.}
+XSHUT line. Only five VL53L1X were ordered (four fitted, one spare): G1--G4
+are fitted, F1/F2 and S1/S2 are not covered \DECIDE.}
 \label{fig:layout}
 \end{figure}
 
@@ -2843,7 +2844,7 @@ O-20 & Replacement Nucleo & board failure reported 10 Oct; re-verify clock tree 
 \toprule
 \# & \textbf{Decision} & \textbf{Options and recommendation} & \textbf{Blocks}\\
 \midrule
-D-1 & IMU & LSM6DSV (recommended), ISM330DHCX, LSM6DSV320X & week-8 milestone\\
+D-1 & IMU & ISM330DHCX (Adafruit) --- decided & week-8 milestone\\
 D-2 & Radio & keep HC-12 / XBee 3 Pro (certified, own MCU) & week 10/14\\
 D-3 & Caster type and size & after F-1 & chassis\\
 D-4 & Ground-sensor mounting height and offsets & 100--200\,mm, offsets 15/25\,cm & spot size, thresholds\\
@@ -2891,7 +2892,7 @@ Q-12 & How is waypoint accuracy aggregated (per waypoint, mean, worst)? & profes
 \midrule
 Course not surveyed in time & wheel size, landmarks, budget all unknown & one afternoon, now (F-1\ldots F-14)\\
 No spare parts & a failure costs a week (already happened once) & D-10\\
-IMU not delivered by week 8 & milestone and all heading aiding late & order LSM6DSV now; placeholder IMU for bring-up\\
+IMU not delivered by week 8 & milestone and all heading aiding late & order the ISM330DHCX now; placeholder IMU for bring-up\\
 Clock without USB fails & no autonomous run on battery & O-3: test, power bank, crystal\\
 CubeMX regeneration reverts values & wrong tick rate, lost flags; ``mysterious'' behaviour & commit, \code{git diff}, start-up rate printout\\
 Turn on a slope & 35--62\,cm cross-track error from one manoeuvre & turn on level ground, slope projection\\
@@ -2961,7 +2962,7 @@ battery fixed where it rides during calibration.
 \textbf{Next five actions.} (1) Fix TIM6 = 199 and confirm the flashed build
 (O-1, O-19) on the replacement board (O-20). (2) Survey the course (F-1\ldots
 F-14). (3) Run calibration \code{A}, \code{L}, \code{G} and the odometry sequence.
-(4) Order the IMU (D-1) and the VL53L1X set. (5) Ask the professor Q-5, Q-7, Q-10.
+(4) Order the IMU (D-1, ISM330DHCX); the five VL53L1X are ordered. (5) Ask the professor Q-5, Q-7, Q-10.
 \end{keybox}
 % =====================================================================
 \clearpage
