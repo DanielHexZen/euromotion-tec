@@ -60,6 +60,8 @@ dkms.conf
 *.launch
 .CLAUDE.md
 /Release
+.metadata/
+
 
 # Python ground station
 .venv/
