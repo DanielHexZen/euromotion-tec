@@ -37,15 +37,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include "app.h"
+#include "app_config.h"
+#include "sys_fault.h"
+#if APP_CALIB
+#include "calib.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#if 0  /* pre-spec firmware, compiled out until H3 passes (spec 16.3), then deleted */
 typedef enum {
   PH_IDLE = 0,
   PH_MOVE,        /* following the speed profile                       */
@@ -72,10 +74,12 @@ typedef struct {
   uint8_t  fault_cnt;
 } Wheel_t;
                 /* feed-forward slope, % per mm/s       */
+#endif
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#if 0
 /* ---- mechanics ---- */
 #define WHEEL_DIAMETER_MM     72.6f
 #define WHEEL_BASE_MM         223.25f   /* not used yet, for odometry later  */
@@ -145,6 +149,7 @@ typedef struct {
 #define RX_LINE_MAX           16
 #define AUTO_PRINT_MS         250U
 #define DEADMAN_MS            2000U   /* open loop: stop without input */
+#endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -163,6 +168,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+#if 0
 static Wheel_t wl = { .enc = &htim3, .ch_fwd = MOT_L_FWD_CH, .ch_rev = MOT_L_REV_CH,
                       .enc_sign = ENC_L_SIGN, .mot_sign = MOT_L_SIGN,
 					  .ks = KS_PCT(KS_L), .kv = KV_PCT_PER_MMS(KV_L), .ks_break = 14.1f };
@@ -201,6 +207,7 @@ static uint8_t auto_print = 0;
 static uint8_t           rx_byte1;        /* HC-12 on USART1 */
 static volatile uint32_t t_last_rx = 0;   /* last byte from either UART */
 static uint8_t           open_loop = 0;   /* open-loop duty is active */
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -214,6 +221,7 @@ static void MX_TIM8_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+#if 0
 static void Car_Init(void);
 static void Car_Loop(void);
 static void PWM_Setup(void);
@@ -223,6 +231,7 @@ static void Serial_PrintStatus(void);
 static void Wheel_SetDuty(Wheel_t *w, float duty);
 static void Motors_Stop(void);
 static int  Move_Start(long dist_mm);
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -267,7 +276,14 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  Car_Init();
+#if APP_CALIB
+  htim6.Instance->ARR = 19999U;                  /* 50 Hz for the calibration firmware */
+  Calib_Init(&htim1, &htim3, &htim8, &htim6, &huart2, &huart1);
+  for (;;) { Calib_Loop(); }
+#else
+  app_init(&(app_hw_t){ .tim1 = &htim1, .tim2 = &htim2, .tim3 = &htim3, .tim6 = &htim6,
+                        .tim8 = &htim8, .uart1 = &huart1, .uart2 = &huart2 });
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -277,7 +293,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Car_Loop();
+    app_loop();
   }
   /* USER CODE END 3 */
 }
@@ -733,7 +749,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+#if 0
 /* ============================== helpers =================================== */
 static float clampf(float x, float lo, float hi)
 {
@@ -1210,6 +1226,7 @@ static void Car_Loop(void)
     Serial_Print("DEADMAN: no input for 2 s, motors stopped\r\n");
   }
 }
+#endif
 /* USER CODE END 4 */
 
 /**
@@ -1220,6 +1237,8 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  sys_fault_hard_stop();
+  sys_fault_record_hard(F_HARDFAULT, __get_MSP());
   __disable_irq();
   while (1)
   {
