@@ -2148,6 +2148,13 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-18 | **Kick removed**, breakaway feedforward switching instead | the kick acted per wheel and caused heading errors at start | `KICK` parameters re-added |
 | D-19 | Hard-fault record in **RTC backup registers** | survives reset without editing the linker script | `.noinit` section |
 | D-20 | Mission frequency **50 Hz instead of 20 Hz** | see D-1 | — |
+| D-21 | **Phase-0 API adjustments for pure modules.** `par_dump_defines(com_port_t)` becomes `par_format_define(i, buf, n)`, one line per call; PAR_S gating uses `par_set_stationary(bool)`; the `par_set` event is logged by the caller. `drv` returns the drivetrain fault in `drv_out_t.fault` instead of calling `sys_fault_raise()`; `app` raises it. `con_poll()` returns the parsed command; `app_cmd.c` executes it. | `par`, `drv` and `con`'s callers must not depend on `com_uart`/`sys_fault.c` (REQ-ARC-02) so the host tests link; `app` is the only place that moves data between modules (REQ-APP-01) | `par`/`drv` call the system modules directly and the tests stub them |
+| D-22 | `whl`: the integrator is cleared **before** it is used when command and reference are both zero (spec §7.8 lists the clear last) | identical to the old `Wheel_Control`; the other order feeds one control tick of stale integrator into a stopped wheel | move the reset below the `u` computation |
+| D-23 | `PROBE` (PC8) is high during `S_CTRL` (§5.6, REQ-EXE-11); the tick-ISR toggle of §5.2 step 5 is not implemented | both cannot drive one pin; H2 measures the slot | add a second probe pin |
+| D-24 | `W<deg>` in phase 0 uses `drv_v_nom` and `drv_t_acc` for the wheels (ω = v_nom / (b/2)) | there is no turn-rate parameter before `nav_turn_w` (phase 3) | `W` takes `nav_turn_w`/`nav_turn_ta` once `nav` exists |
+| D-25 | Boot-time platform mismatches (TIM1 ARR ≠ 8999, TIM6 PSC/ARR ≠ 89/999, TIM2 PSC ≠ 89, clock check) all raise `F_CLOCK` (R4) | the catalogue has no code for "CubeMX not regenerated"; the reaction wanted is the same | add `F_PLATFORM` |
+| D-26 | The hard-fault record in the backup registers holds the code, MSP and the first 12 stack words raw, not PC/LR | the handler's own prologue shifts the exception frame by an unknown amount, so PC/LR cannot be picked reliably from MSP | naked-asm entry that selects the frame from `EXC_RETURN` |
+| D-27 | `main.c` includes `calib.h` only under `APP_CALIB`; the pre-spec code is kept under `#if 0` until H3 passes (§16.3 step 3); `app_hw_t` has `adc1` as `void *` until CubeMX generates ADC1 | `calib.c` is not in the repository; the build must not depend on it | delete the `#if 0` blocks after H3; type `adc1` when ADC1 exists |
 
 ---
 
