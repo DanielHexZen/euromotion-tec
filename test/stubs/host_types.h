@@ -1,5 +1,5 @@
 /* Host stand-in for the CubeMX main.h (the Makefile defines __MAIN_H to blank the real one):
- * just enough types for con.c and its headers. */
+ * just enough types for console.c and its headers. */
 #ifndef HOST_TYPES_H
 #define HOST_TYPES_H
 #include <stdbool.h>

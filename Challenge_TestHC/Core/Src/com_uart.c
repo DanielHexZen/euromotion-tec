@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include "con.h"
+#include "console.h"
 #include "sys_time.h"
 
 #define RX_N 256U            /* power of two */

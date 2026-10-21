@@ -1,7 +1,7 @@
 /* Console parser and chunked output on the host. com_uart / sys_* are stubbed below. */
 #include <string.h>
 
-#include "con.h"
+#include "console.h"
 #include "sys_fault.h"
 #include "sys_time.h"
 #include "test.h"

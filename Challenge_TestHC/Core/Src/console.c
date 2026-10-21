@@ -1,5 +1,5 @@
-/* con.c — spec §7.23, §9 (REQ-CON-01..05). */
-#include "con.h"
+/* console.c — spec §7.23, §9 (REQ-CON-01..05). */
+#include "console.h"
 
 #include <stdarg.h>
 #include <stdio.h>

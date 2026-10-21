@@ -12,7 +12,7 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 ## Hard rules
 - C11 (`gnu11`). No C++, RTOS, `malloc`, recursion or VLAs.
 - `float` only: every literal has an `f` suffix, use `sinf`/`fabsf`/…, no `double`. `-Wdouble-promotion` stays clean. Never use `-ffast-math`. No `%f` in printf.
-- SI units internally (m, s, rad, V, duty in [−1, 1]). Legacy units (mm, %, ms) exist only in `con.c`.
+- SI units internally (m, s, rad, V, duty in [−1, 1]). Legacy units (mm, %, ms) exist only in `console.c`.
 - Nothing blocks after `app_init()`: no `HAL_Delay`, no HAL call with a timeout, no blocking UART. Use `_IT`/`_DMA` variants. ISRs only snapshot and set flags; no float math in ISRs.
 - Pure modules (`prof whl drv att gnd lat fwd ekf map nav evd msn proto par`) must not include HAL or `main.h`. They must build on the host.
 - `mot_apply()` is the only writer of TIM1 CCR1–4. Write the inactive channel before the active one.

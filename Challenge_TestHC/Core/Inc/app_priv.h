@@ -2,7 +2,7 @@
 #ifndef APP_PRIV_H
 #define APP_PRIV_H
 
-#include "con.h"
+#include "console.h"
 #include "drv.h"
 
 /* Phase-0 modes. msn (phase 3) takes this over and adds MANUAL and AUTO. */

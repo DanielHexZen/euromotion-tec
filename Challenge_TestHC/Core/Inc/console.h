@@ -1,4 +1,4 @@
-/* con.h — text console (spec §7.23, §9). System layer.
+/* console.h — text console (spec §7.23, §9). System layer.
  * con parses lines into SI commands and formats every reply in legacy units (mm, mm/s, %, deg);
  * app_cmd.c executes. No other module sees legacy units (spec §6.4). */
 #ifndef CON_H
