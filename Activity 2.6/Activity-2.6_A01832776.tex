@@ -85,32 +85,7 @@ It stops at obstacles closer than \(30\,\mathrm{mm}\) and receives new parameter
 \section{Open-Loop Tests}
 Open loop means fixed duty and no feedback.
 The encoders measure the wheel speed.
-The team ran two test sessions.
-
-\subsection{Bench Test (Week 5)}
-One motor at a time, without wheel, on the previous driver (L298) and a laboratory supply.
-The duty was swept from 20\,\% to 100\,\% in nine steps, two sweeps per motor.
-A straight line was fitted to duty over speed.
-The breakaway duty comes from slow ramps.
-
-\begin{table}[H]
-  \centering
-  \caption{Bench test results.}
-  \begin{tabular}{@{}lcc@{}}
-    \toprule
-    \textbf{Quantity} & \textbf{Motor L} & \textbf{Motor R} \\ \midrule
-    Slope \(K_v\) [duty/rpm]               & 0.00492  & 0.00507 \\
-    Intercept \(K_s\) (kinetic friction)   & 11.0\,\% & 12.7\,\% \\
-    Breakaway duty (static friction)       & 14.1\,\% & 16.9\,\% \\
-    Speed at 100\,\% duty                  & 181 rpm  & 177 rpm \\
-    Linearity, 20--100\,\% duty            & \(R^2 > 0.999\) & \(R^2 > 0.999\) \\
-    Encoder counts per wheel revolution    & 3595     & 3618 \\ \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsection{Car Test (BTS7960, Wheels in the Air)}
-The same test was repeated on the car with the BTS7960 drivers.
-The wheels were lifted.
+The test ran on the car with the BTS7960 drivers and the wheels lifted.
 The MATLAB function \texttt{identify\_car} sends the command \texttt{I<duty>} over the serial port.
 The car applies a duty step to both wheels and logs the raw encoder counts every 20 ms.
 Then it sends the samples back to MATLAB.
@@ -152,10 +127,8 @@ Duties: 20, 30, 40, 50, 70, 90 and 100\,\%.
 Findings:
 \begin{itemize}
   \item Above the dead zone, the speed is linear in the duty.
-  \item Starting needs more duty than moving (14.1/16.9\,\% vs.\ 11.0/12.7\,\% on the bench).
+  \item From rest, the wheels need more duty to start: 14.1\,\% (L) and 16.9\,\% (R).
         Static friction is higher than kinetic friction.
-  \item The BTS7960 has a smaller dead zone than the old driver (7.0\,\% vs.\ 11--13\,\%).
-        The MOSFET bridge drops less voltage.
 \end{itemize}
 
 \begin{figure}[H]
@@ -366,7 +339,7 @@ Tight overshoots, and a real gain change makes it worse.
   \caption{Speed step for the three SIMC settings.}
 \end{figure}
 
-The MATLAB script is in Appendix~\ref{app:code}, its output in Appendix~\ref{app:output}.
+The MATLAB script is in Appendix~\ref{app:code}.
 
 \subsection{Validation}
 The discrete loop includes zero-order hold, encoder, count difference and filter.
@@ -486,7 +459,6 @@ This gives 9000 duty steps.
 \subsection{Distance and Speed}
 Each encoder gives \(N_{rev} = 3584\) counts per wheel revolution:
 64 counts per motor revolution (x4 decoding) times the gear ratio 56.
-The bench measured 3595 and 3618 (+0.3\,\%, +0.9\,\%).
 The wheel circumference is \(C_w \approx 228\,\mathrm{mm}\).
 \begin{equation}
   k_x = \frac{C_w}{N_{rev}} = \frac{228}{3584} \approx 0.0636\,\mathrm{mm/count}
@@ -596,8 +568,5 @@ The car stopped at [TBD] mm and continued after the obstacle was removed.
 \appendix
 \section{MATLAB Code}\label{app:code}
 \lstinputlisting{identify_car.m}
-
-\section{MATLAB Output}\label{app:output}
-\lstinputlisting[language={}, columns=fixed, basewidth=0.5em, basicstyle=\ttfamily\fontsize{6.5}{8}\selectfont]{identify_car_output.txt}
 
 \end{document}
