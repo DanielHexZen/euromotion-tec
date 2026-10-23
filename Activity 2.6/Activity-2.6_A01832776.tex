@@ -24,6 +24,9 @@
 \lstset{language=Matlab, basicstyle=\ttfamily\scriptsize, breaklines=true, columns=fullflexible,
   frame=single, rulecolor=\color{black!25}, backgroundcolor=\color{black!3}, showstringspaces=false,
   keywordstyle=\color{blue!70!black}, commentstyle=\color{green!45!black}, stringstyle=\color{red!60!black}}
+% MATLAB figure if the file exists (run identify_car.m), else a placeholder box
+\newcommand{\matfig}[3]{\IfFileExists{#1}{\includegraphics[width=#2\linewidth]{#1}}%
+  {\fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering #3}}}}
 
 % ---------- Feste Einstellungen ----------
 % Jede Section beginnt immer auf einer neuen Seite (auch \section*):
@@ -79,26 +82,60 @@ It stops at obstacles closer than \(30\,\mathrm{mm}\) and receives new parameter
 
 % ---------------------------------------------------------------------
 \section{Open-Loop Tests}
-The motors were driven with fixed PWM duty steps, without feedback.
-The encoders were sampled every \(20\,\mathrm{ms}\).
-Speed and distance were logged for each step.
+Open loop means fixed duty and no feedback.
+The encoders measure the wheel speed.
+The team ran two test sessions.
+
+\subsection{Bench Test (Week 5)}
+One motor at a time, without wheel, on the previous driver (L298) and a laboratory supply.
+The duty was swept from 20\,\% to 100\,\% in nine steps, two sweeps per motor.
+A straight line was fitted to duty over speed.
+The breakaway duty comes from slow ramps.
 
 \begin{table}[H]
   \centering
-  \caption{Open-loop step tests.}
-  \begin{tabular}{@{}ccc@{}}
+  \caption{Bench test results.}
+  \begin{tabular}{@{}lcc@{}}
     \toprule
-    \textbf{Duty [\%]} & \textbf{Final speed [mm/s]} & \textbf{Time to 63\,\% [s]} \\ \midrule
-    20  & [TBD] & [TBD] \\
-    40  & [TBD] & [TBD] \\
-    60  & [TBD] & [TBD] \\
-    80  & [TBD] & [TBD] \\
-    100 & 650   & [TBD] \\ \bottomrule
+    \textbf{Quantity} & \textbf{Motor L} & \textbf{Motor R} \\ \midrule
+    Slope \(K_v\) [duty/rpm]               & 0.00492  & 0.00507 \\
+    Intercept \(K_s\) (kinetic friction)   & 11.0\,\% & 12.7\,\% \\
+    Breakaway duty (static friction)       & 14.1\,\% & 16.9\,\% \\
+    Speed at 100\,\% duty                  & 181 rpm  & 177 rpm \\
+    Linearity, 20--100\,\% duty            & \(R^2 > 0.999\) & \(R^2 > 0.999\) \\
+    Encoder counts per wheel revolution    & 3595     & 3618 \\ \bottomrule
   \end{tabular}
 \end{table}
 
-The car starts moving at \(14.1\,\%\) duty (left) and \(16.9\,\%\) duty (right).
-Below these values, static friction holds the wheels.
+\subsection{Car Test (BTS7960, Wheels in the Air)}
+The same test was repeated on the car with the BTS7960 drivers.
+The wheels were lifted.
+Both wheels got duty steps and ramps, and the speed was logged.
+
+\begin{table}[H]
+  \centering
+  \caption{Car test results (BTS7960, wheels in the air).}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Quantity} & \textbf{Value} \\ \midrule
+    Dead zone (mean of both wheels)      & 7.0\,\% \\
+    Duty-to-speed line, wheel L          & \(9.8\,\% + 0.1275\,\%/(\mathrm{mm/s})\) \\
+    Duty-to-speed line, wheel R          & \(4.1\,\% + 0.1361\,\%/(\mathrm{mm/s})\) \\
+    Time constant of the step response   & 50 ms \\
+    Dead time                            & none measurable \\
+    Highest speed (100\,\% duty)         & 680 mm/s \\
+    On the floor, 60\,\% duty            & 374 mm/s \\ \bottomrule
+  \end{tabular}
+\end{table}
+
+Findings:
+\begin{itemize}
+  \item Above the dead zone, the speed is linear in the duty.
+  \item Starting needs more duty than moving (14.1/16.9\,\% vs.\ 11.0/12.7\,\% on the bench).
+        Static friction is higher than kinetic friction.
+  \item The BTS7960 has a smaller dead zone than the old driver (7.0\,\% vs.\ 11--13\,\%).
+        The MOSFET bridge drops less voltage.
+\end{itemize}
 
 \begin{figure}[H]
   \centering
@@ -110,16 +147,26 @@ Below these values, static friction holds the wheels.
 % ---------------------------------------------------------------------
 \section{Model Identification}
 Input \(u\) is the PWM duty in \%. Output \(v\) is the wheel speed in mm/s.
-The MATLAB System Identification app estimated a first-order model:
+A first-order model with dead time was fitted to the step data:
 \begin{equation}
-  G(s) = \frac{V(s)}{U(s)} = \frac{K}{\tau s + 1}
+  G(s) = \frac{V(s)}{U(s)} = \frac{K\,e^{-Ls}}{\tau s + 1}
 \end{equation}
-with \(K = 7.596\,\mathrm{mm/(s\cdot\%)}\), \(\tau = 0.050\) s and a fit of [TBD] \%.
-The dead zone is \(u_0 = 7.0\,\%\).
+\begin{itemize}
+  \item \(K = 7.596\,\mathrm{(mm/s)/\%}\), slope of the steady-state speed over duty.
+  \item \(\tau = 50\,\mathrm{ms}\), time constant.
+  \item \(L = 0\), no measurable dead time.
+  \item Dead zone \(u_0 = 7.0\,\%\): \(v_{ss} = K\,(u - u_0)\) for \(u > u_0\).
+\end{itemize}
+% TODO: load the step data into the System Identification app (process model P1D),
+%       add the screenshot and the fit value.
+In the MATLAB System Identification app, the model reaches a fit of [TBD]\,\%.
 The position is the integral of the speed:
 \begin{equation}
   X(s) = \frac{G(s)}{s}\,U(s)
 \end{equation}
+Check on the floor: at 60\,\% duty the model predicts 403 mm/s, the car reached 374 mm/s.
+The load lowers the gain by about 7\,\%.
+The simulation therefore also tests a gain of \(\pm 20\,\%\).
 
 \begin{figure}[H]
   \centering
@@ -131,17 +178,27 @@ The position is the integral of the speed:
 % ---------------------------------------------------------------------
 \section{Control Loop Simulation}
 
-\subsection{Closed Loop in Simulink}
-The loop has five blocks: reference generator, PID, actuator, plant and sensor.
+\subsection{Closed Loop Model}
+The loop is a cascade, the same as in the firmware.
+A position loop corrects the speed command, a PI controls the speed.
+% TODO: build the Simulink model and add the screenshot.
+
 \begin{itemize}
-  \item \textbf{Actuator:} H-bridge. Duty limited to \(\pm 100\,\%\).
+  \item \textbf{Reference generator:} trapezoidal speed profile.
+        The user sets the distance \(D\), the speed \(v_{max}\),
+        the acceleration time \(t_a\) and the deceleration time \(t_d\).
+  \item \textbf{Position controller:} P, \(K_{px} = 2\,\mathrm{s^{-1}}\),
+        correction limited to \(\pm 100\,\mathrm{mm/s}\).
+  \item \textbf{Feed-forward:} inverse of the static map, \(K_{ff} = 1/K = 0.1316\,\%/(\mathrm{mm/s})\),
+        plus an acceleration term.
+  \item \textbf{Speed controller:} PI, integral limited to \(\pm 30\,\%\) (anti-windup).
+  \item \textbf{Actuator model:} BTS7960 H-bridge. Duty limited to \(\pm 100\,\%\), dead zone \(u_0 = 7\,\%\).
   \item \textbf{Plant:} \(G(s)\) from the identification.
-  \item \textbf{Sensor:} encoder with gain \(k_x\), sampled every \(T_s\).
+  \item \textbf{Sensor model:} encoder with \(k_x = 0.0636\,\mathrm{mm/count}\) (quantizer),
+        speed from the count difference over \(T_s\), IIR filter with \(\alpha = 0.5\).
 \end{itemize}
 
-The reference is a trapezoidal speed profile.
-The user sets the distance \(D\), the maximum speed \(v_{max}\),
-the acceleration time \(t_a\) and the deceleration time \(t_d\):
+Reference profile:
 \begin{equation}
   v_{ref}(t) =
   \begin{cases}
@@ -155,6 +212,22 @@ the acceleration time \(t_a\) and the deceleration time \(t_d\):
   \qquad
   x_{ref}(t) = \int_0^t v_{ref}(\tau)\,d\tau
 \end{equation}
+If \(D\) is too short to reach \(v_{max}\), the profile is a triangle with
+\(T = t_a + t_d\).
+
+Control law:
+\begin{align}
+  v_{cmd} &= v_{ref} + \mathrm{sat}_{\pm 100}\bigl(K_{px}\,(x_{ref} - \hat{x})\bigr) \\
+  e_v     &= v_{cmd} - \hat{v} \\
+  u       &= u_0\,\mathrm{sgn}(v_{cmd}) + K_{ff}\,v_{cmd} + K_{ff}\,\tau\,a_{ref}
+             + K_p\,e_v + K_i \int e_v\,dt
+\end{align}
+Sensor:
+\begin{equation}
+  \hat{x}[k] = k_x \left\lfloor \frac{x[k]}{k_x} \right\rfloor,
+  \qquad
+  \hat{v}[k] = \hat{v}[k-1] + \alpha \left( \frac{\hat{x}[k] - \hat{x}[k-1]}{T_s} - \hat{v}[k-1] \right)
+\end{equation}
 
 \begin{figure}[H]
   \centering
@@ -163,33 +236,68 @@ the acceleration time \(t_a\) and the deceleration time \(t_d\):
   \caption{Closed control loop in Simulink.}
 \end{figure}
 
-\subsection{Continuous PID}
+\subsection{Continuous Simulation}
+The continuous PID is:
 \begin{equation}
   C(s) = K_p + \frac{K_i}{s} + K_d\,s
 \end{equation}
+With \(K_d = 0\) (Section~\ref{sec:tuning}) it is a PI.
+The continuous simulation runs the controller every 0.1 ms with the true speed.
+Gains from Section~\ref{sec:tuning}.
+\begin{itemize}
+  \item Speed step: no overshoot, settled (5\,\%) after 0.31 s.
+  \item 1000 mm at 300 mm/s, ramps of 1 s: final error \(-0.38\) mm, largest position error 0.38 mm.
+\end{itemize}
 
 \subsection{Discretization}
-The sampling time is \(T_s = 20\,\mathrm{ms}\).
-It is much smaller than \(\tau\) (rule of thumb: \(T_s \le \tau/10\)).
-It also matches the TIM6 interrupt on the microcontroller.
-The plant was discretized with a zero-order hold.
+The sampling time is \(T_s = 20\,\mathrm{ms}\) (TIM6 interrupt, 50 Hz). Reasons:
+\begin{itemize}
+  \item \textbf{Speed resolution.} One encoder count per sample is
+        \(k_x / T_s = 3.18\,\mathrm{mm/s}\) at 20 ms, but 12.7 mm/s at 5 ms.
+        A shorter \(T_s\) makes the speed signal too coarse.
+  \item \textbf{Fast enough.} The closed speed loop rises in about 0.2 s.
+        That gives about 10 samples per rise time (rule of thumb: 4 to 10).
+  \item \textbf{Cost.} Sampling and filter add a delay of
+        \(\theta = T_s + \tau_f = 49\,\mathrm{ms}\) (\(\tau_f = 28.9\,\mathrm{ms}\)).
+        The tuning includes this delay.
+\end{itemize}
+The plant is discretized with a zero-order hold.
+The sensor is discrete by nature (count difference and IIR filter):
+\begin{equation}
+  \frac{\hat{V}(z)}{X(z)} = \frac{z - 1}{T_s\,z} \cdot \frac{\alpha\,z}{z - (1 - \alpha)}
+\end{equation}
 The discrete PI uses the forward Euler integral, as in the firmware:
 \begin{equation}
   C(z) = K_p + \frac{K_i\,T_s}{z-1}
+  \quad\Leftrightarrow\quad
+  u[k] = K_p\,e[k] + I[k-1], \qquad I[k] = I[k-1] + K_i\,T_s\,e[k]
 \end{equation}
 
-\subsection{Tuning}
-The PI gains follow the SIMC rules (Skogestad).
-Sampling (\(T_s\)) and the speed filter (\(\tau_f = 28.9\,\mathrm{ms}\)) act as a delay
-\(\theta = T_s + \tau_f = 49\,\mathrm{ms}\):
+\subsection{Tuning}\label{sec:tuning}
+The PI gains follow the SIMC rules (Skogestad), with the delay \(\theta\) from above:
 \begin{equation}
   K_p = \frac{\tau}{K(\tau_c + \theta)}, \qquad
   T_i = \min\bigl(\tau,\ 4(\tau_c + \theta)\bigr), \qquad
   K_i = \frac{K_p}{T_i}
 \end{equation}
-The setting \(\tau_c = 2\theta\) (balanced) was chosen: no overshoot, settling in 0.31 s.
+The closed-loop time constant \(\tau_c\) sets the speed of the loop.
+Three settings were compared:
+
+\begin{table}[H]
+  \centering
+  \caption{SIMC settings (speed step, design model).}
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    \textbf{Setting} & \(\tau_c\) & \(K_p\) & \(K_i\) & \textbf{Overshoot} & \textbf{Settling (5\,\%)} \\ \midrule
+    Tight    & \(\theta\)  & 0.067 & 1.347 & 4.1\,\% & 0.16 s \\
+    Balanced & \(2\theta\) & 0.045 & 0.898 & 0.0\,\% & 0.31 s \\
+    Gentle   & \(4\theta\) & 0.027 & 0.539 & 0.0\,\% & 0.62 s \\ \bottomrule
+  \end{tabular}
+\end{table}
+
+\emph{Balanced} was chosen: no overshoot and still fast.
+Tight overshoots, and a real gain change makes it worse.
 \(K_d = 0\). A derivative term would amplify the speed quantization of 3.18 mm/s.
-The MATLAB script is in Appendix~\ref{app:code}, its output in Appendix~\ref{app:output}.
 
 \begin{table}[H]
   \centering
@@ -202,11 +310,21 @@ The MATLAB script is in Appendix~\ref{app:code}, its output in Appendix~\ref{app
   \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+  \centering
+  \matfig{fig_simc_step.pdf}{0.75}{Plot: SIMC settings, speed step}
+  \caption{Speed step for the three SIMC settings.}
+\end{figure}
+
+The MATLAB script is in Appendix~\ref{app:code}, its output in Appendix~\ref{app:output}.
+
 \subsection{Validation}
-The continuous and the discrete loop give nearly the same response.
+The discrete loop includes zero-order hold, encoder, count difference and filter.
+It gives nearly the same response as the continuous design.
 In the 1000 mm move (300 mm/s, ramps of 1 s), the discrete loop is within 2 mm
 after 4.88 s. The profile takes 4.33 s.
 With \(\pm 20\,\%\) plant gain, the final error stays below 1.5 mm.
+This covers the gain drop on the floor (about 7\,\%).
 
 \begin{table}[H]
   \centering
@@ -214,17 +332,23 @@ With \(\pm 20\,\%\) plant gain, the final error stays below 1.5 mm.
   \begin{tabular}{@{}lcc@{}}
     \toprule
     & \textbf{Continuous} & \textbf{Discrete} \\ \midrule
-    Overshoot [\%]          & 0.0   & 0.3   \\
-    Settling time (5\,\%) [s] & 0.31 & 0.28 \\
-    Final position error, 1000 mm move [mm] & \(-0.38\) & 0.88 \\ \bottomrule
+    Overshoot, speed step [\%]               & 0.0   & 0.3   \\
+    Settling time (5\,\%) [s]                & 0.31  & 0.28  \\
+    Final position error, 1000 mm move [mm]  & \(-0.38\) & 0.88 \\
+    Largest position error during move [mm]  & 0.38  & 3.75  \\ \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[H]
   \centering
-  \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering Plot: continuous vs.\ discrete response}}
-  % \includegraphics[width=0.8\linewidth]{fig_cont_vs_disc.pdf}
-  \caption{Continuous and discrete simulation.}
+  \matfig{fig_cont_vs_disc.pdf}{0.75}{Plot: continuous vs.\ discrete speed step}
+  \caption{Speed step, continuous vs.\ discrete.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \matfig{fig_trapezoid.pdf}{0.85}{Plot: trapezoidal profile, speed and position}
+  \caption{1000 mm move with a trapezoidal profile.}
 \end{figure}
 
 % ---------------------------------------------------------------------
