@@ -19,6 +19,11 @@
 
 % ---------- Zusätzliche Pakete (für diesen Bericht) ----------
 \usepackage[a4paper,margin=2.54cm]{geometry}   % Normal margins (2.54 cm)
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset{language=Matlab, basicstyle=\ttfamily\scriptsize, breaklines=true, columns=fullflexible,
+  frame=single, rulecolor=\color{black!25}, backgroundcolor=\color{black!3}, showstringspaces=false,
+  keywordstyle=\color{blue!70!black}, commentstyle=\color{green!45!black}, stringstyle=\color{red!60!black}}
 
 % ---------- Feste Einstellungen ----------
 % Jede Section beginnt immer auf einer neuen Seite (auch \section*):
@@ -109,7 +114,8 @@ The MATLAB System Identification app estimated a first-order model:
 \begin{equation}
   G(s) = \frac{V(s)}{U(s)} = \frac{K}{\tau s + 1}
 \end{equation}
-with \(K = \) [TBD] \(\mathrm{mm/(s\cdot\%)}\), \(\tau = \) [TBD] s and a fit of [TBD] \%.
+with \(K = 7.596\,\mathrm{mm/(s\cdot\%)}\), \(\tau = 0.050\) s and a fit of [TBD] \%.
+The dead zone is \(u_0 = 7.0\,\%\).
 The position is the integral of the speed:
 \begin{equation}
   X(s) = \frac{G(s)}{s}\,U(s)
@@ -167,27 +173,40 @@ The sampling time is \(T_s = 20\,\mathrm{ms}\).
 It is much smaller than \(\tau\) (rule of thumb: \(T_s \le \tau/10\)).
 It also matches the TIM6 interrupt on the microcontroller.
 The plant was discretized with a zero-order hold.
-The discrete PID is:
+The discrete PI uses the forward Euler integral, as in the firmware:
 \begin{equation}
-  C(z) = K_p + K_i\,T_s\,\frac{z}{z-1} + K_d\,\frac{z-1}{T_s\,z}
+  C(z) = K_p + \frac{K_i\,T_s}{z-1}
 \end{equation}
 
 \subsection{Tuning}
-The gains were tuned with the PID Tuner.
+The PI gains follow the SIMC rules (Skogestad).
+Sampling (\(T_s\)) and the speed filter (\(\tau_f = 28.9\,\mathrm{ms}\)) act as a delay
+\(\theta = T_s + \tau_f = 49\,\mathrm{ms}\):
+\begin{equation}
+  K_p = \frac{\tau}{K(\tau_c + \theta)}, \qquad
+  T_i = \min\bigl(\tau,\ 4(\tau_c + \theta)\bigr), \qquad
+  K_i = \frac{K_p}{T_i}
+\end{equation}
+The setting \(\tau_c = 2\theta\) (balanced) was chosen: no overshoot, settling in 0.31 s.
+\(K_d = 0\). A derivative term would amplify the speed quantization of 3.18 mm/s.
+The MATLAB script is in Appendix~\ref{app:code}, its output in Appendix~\ref{app:output}.
 
 \begin{table}[H]
   \centering
-  \caption{PID gains.}
+  \caption{PI gains (\(K_p\) in \%/(mm/s), \(K_i\) in \%/(mm/s\(\cdot\)s)).}
   \begin{tabular}{@{}lccc@{}}
     \toprule
                & \(K_p\) & \(K_i\) & \(K_d\) \\ \midrule
-    Continuous & [TBD]   & [TBD]   & [TBD]   \\
-    Discrete   & [TBD]   & [TBD]   & [TBD]   \\ \bottomrule
+    Continuous & 0.045   & 0.898   & 0       \\
+    Discrete   & 0.045   & 0.898 (\(K_i T_s = 0.018\)) & 0 \\ \bottomrule
   \end{tabular}
 \end{table}
 
 \subsection{Validation}
 The continuous and the discrete loop give nearly the same response.
+In the 1000 mm move (300 mm/s, ramps of 1 s), the discrete loop is within 2 mm
+after 4.88 s. The profile takes 4.33 s.
+With \(\pm 20\,\%\) plant gain, the final error stays below 1.5 mm.
 
 \begin{table}[H]
   \centering
@@ -195,16 +214,16 @@ The continuous and the discrete loop give nearly the same response.
   \begin{tabular}{@{}lcc@{}}
     \toprule
     & \textbf{Continuous} & \textbf{Discrete} \\ \midrule
-    Overshoot [\%]          & [TBD] & [TBD] \\
-    Settling time [s]       & [TBD] & [TBD] \\
-    Final position error [mm] & [TBD] & [TBD] \\ \bottomrule
+    Overshoot [\%]          & 0.0   & 0.3   \\
+    Settling time (5\,\%) [s] & 0.31 & 0.28 \\
+    Final position error, 1000 mm move [mm] & \(-0.38\) & 0.88 \\ \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[H]
   \centering
   \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering Plot: continuous vs.\ discrete response}}
-  % \includegraphics[width=0.8\linewidth]{sim_compare.png}
+  % \includegraphics[width=0.8\linewidth]{fig_cont_vs_disc.pdf}
   \caption{Continuous and discrete simulation.}
 \end{figure}
 
@@ -356,5 +375,13 @@ The car stopped at [TBD] mm and continued after the obstacle was removed.
 \section{Conclusions}
 % TODO: write after the tests.
 [TBD]
+
+% ---------------------------------------------------------------------
+\appendix
+\section{MATLAB Code}\label{app:code}
+\lstinputlisting{identify_car.m}
+
+\section{MATLAB Output}\label{app:output}
+\lstinputlisting[language={}, columns=fixed, basewidth=0.5em, basicstyle=\ttfamily\fontsize{6.5}{8}\selectfont]{identify_car_output.txt}
 
 \end{document}
