@@ -209,10 +209,32 @@ The simulation therefore also tests a gain of \(\pm 20\,\%\).
 % ---------------------------------------------------------------------
 \section{Control Loop Simulation}
 
-\subsection{Closed Loop Model}
-The loop is a cascade, the same as in the firmware.
+\subsection{Simulink Model}
+Figure~\ref{fig:simulink} shows the Simulink model.
+It runs the continuous and the discrete loop side by side.
+\begin{itemize}
+  \item \textbf{Reference:} \texttt{Ramp\_Up} rises with \(v_{max}/t_a\) and is limited to \(v_{max}\).
+        \texttt{Ramp\_Down} starts at \(T - t_d\) with \(-v_{max}/t_d\).
+        Their sum, limited at zero, is the trapezoidal speed profile.
+  \item \textbf{Continuous loop:} \texttt{PID(s)} and the plant \(G(s) = K/(\tau s + 1)\).
+  \item \textbf{Discrete loop:} \texttt{PID(z)} and the plant with zero-order hold,
+        \(G(z) = b_d/(z - a_d)\) with \(a_d = e^{-T_s/\tau} = 0.670\) and \(b_d = K(1 - a_d) = 2.504\).
+  \item \textbf{Distance:} integrators \(1/s\) and \(T_s/(z-1)\).
+  \item \textbf{Scopes:} speed and distance of both loops.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Simulink model.png}
+  \caption{Continuous and discrete control loop in Simulink.}
+  \label{fig:simulink}
+\end{figure}
+
+\subsection{Full Loop with Actuator and Sensor Models}
+The firmware runs a cascade.
 A position loop corrects the speed command, a PI controls the speed.
-% TODO: build the Simulink model and add the screenshot.
+The MATLAB script (Appendix~\ref{app:code}) simulates this full loop,
+including the models of actuator and sensor:
 
 \begin{itemize}
   \item \textbf{Reference generator:} trapezoidal speed profile.
@@ -259,13 +281,6 @@ Sensor:
   \qquad
   \hat{v}[k] = \hat{v}[k-1] + \alpha \left( \frac{\hat{x}[k] - \hat{x}[k-1]}{T_s} - \hat{v}[k-1] \right)
 \end{equation}
-
-\begin{figure}[H]
-  \centering
-  \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering Screenshot: Simulink model}}
-  % \includegraphics[width=0.9\linewidth]{simulink.png}
-  \caption{Closed control loop in Simulink.}
-\end{figure}
 
 \subsection{Continuous Simulation}
 The continuous PID is:
