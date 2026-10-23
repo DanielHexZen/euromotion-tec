@@ -384,7 +384,15 @@ This covers the gain drop on the floor (about 7\,\%).
 
 % ---------------------------------------------------------------------
 \section{Hardware}
-% TODO: confirm module models and fill in the new pins.
+Figure~\ref{fig:schematic} shows the wiring.
+A 12 V battery supplies the motor drivers.
+A buck converter (XY-3606) makes 5 V for the Nucleo and the ultrasonic sensor.
+The Nucleo 3.3 V supplies the encoders, the HC-12, the OLED and the driver logic.
+All grounds are common.
+
+Actuators: the two BTS7960 H-bridges with the DC gear motors.
+Sensors: the two wheel encoders and the HC-SR04 ultrasonic sensor.
+
 \begin{table}[H]
   \centering
   \caption{Sensors, actuators and interfaces.}
@@ -392,19 +400,20 @@ This covers the gain drop on the floor (about 7\,\%).
   \begin{tabular}{@{}lll@{}}
     \toprule
     \textbf{Device} & \textbf{Interface} & \textbf{Pins} \\ \midrule
-    2\(\times\) BTS7960 H-bridge   & PWM (TIM1)          & PA8--PA11, PB12/13 (EN) \\
-    2\(\times\) motor encoder      & Encoder (TIM3/TIM8) & PA6, PA7; PC6, PC7 \\
-    Ultrasonic sensor             & GPIO (trig/echo)    & [TBD] \\
-    OLED display                  & I\textsuperscript{2}C & [TBD] \\
-    Bluetooth module              & UART                & [TBD] \\ \bottomrule
+    2\(\times\) BTS7960 H-bridge & PWM TIM1, GPIO         & PA8--PA11; EN PB12, PB13 \\
+    2\(\times\) Hall encoder     & Encoder TIM3, TIM8     & PA6, PA7; PC6, PC7 \\
+    HC-SR04 ultrasonic          & GPIO, TIM2 CH1 capture & Trig PC11, Echo PA15 \\
+    OLED display                & I\textsuperscript{2}C1 & SCL PB8, SDA PB9 \\
+    HC-12 radio (433 MHz)       & USART1, 9600 baud      & TX PB6, RX PB7, SET PC9 \\
+    PC terminal (ST-Link)       & USART2, 115200 baud    & PA2, PA3 \\ \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[H]
   \centering
-  \fbox{\parbox[c][5cm][c]{0.8\linewidth}{\centering Schematic of the car}}
-  % \includegraphics[width=0.9\linewidth]{schematic.png}
+  \includegraphics[width=\linewidth]{MR2006B_A2.6_Car_Schematic.pdf}
   \caption{Wiring of the car.}
+  \label{fig:schematic}
 \end{figure}
 
 % ---------------------------------------------------------------------
