@@ -79,7 +79,7 @@ First, the plant is identified from open-loop tests.
 Then a PID controller is designed, tuned and discretized in MATLAB/Simulink.
 Finally, it runs on the NUCLEO-F446RE.
 The car drives a target distance with a trapezoidal speed profile.
-It stops at obstacles closer than \(30\,\mathrm{mm}\) and receives new parameters via Bluetooth.
+It stops at obstacles closer than \(30\,\mathrm{mm}\) and receives new parameters over a wireless serial link (HC-12).
 
 % ---------------------------------------------------------------------
 \section{Open-Loop Tests}
@@ -143,8 +143,6 @@ Duties: 20, 30, 40, 50, 70, 90 and 100\,\%.
     Dead zone (mean of both wheels)      & 7.0\,\% \\
     Duty-to-speed line, wheel L          & \(9.8\,\% + 0.1275\,\%/(\mathrm{mm/s})\) \\
     Duty-to-speed line, wheel R          & \(4.1\,\% + 0.1361\,\%/(\mathrm{mm/s})\) \\
-    Time constant of the step response   & 50 ms \\
-    Dead time                            & none measurable \\
     Highest speed (100\,\% duty)         & 680 mm/s \\
     On the floor, 60\,\% duty            & 374 mm/s \\ \bottomrule
   \end{tabular}
@@ -236,7 +234,7 @@ It runs the continuous and the discrete loop side by side.
   \label{fig:simulink}
 \end{figure}
 
-\subsection{Full Loop with Actuator and Sensor Models}
+\subsection{Full Loop with Actuator and Sensor Models}\label{sec:fullloop}
 The firmware runs a cascade.
 A position loop corrects the speed command, a PI controls the speed.
 The MATLAB script (Appendix~\ref{app:code}) simulates this full loop,
@@ -440,6 +438,27 @@ Sensors: the two wheel encoders and the HC-SR04 ultrasonic sensor.
 % ---------------------------------------------------------------------
 \section{Firmware Implementation}
 
+\subsection{CubeMX Configuration}
+Figure~\ref{fig:cubemx} shows the configuration screens.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.49\linewidth}\centering
+    \matfig{cubemx_pinout.png}{1}{Snapshot: pinout}\\[2pt]\small Pinout
+  \end{minipage}\hfill
+  \begin{minipage}{0.49\linewidth}\centering
+    \matfig{cubemx_clock.png}{1}{Snapshot: clock tree}\\[2pt]\small Clock tree (180 MHz)
+  \end{minipage}\\[6pt]
+  \begin{minipage}{0.49\linewidth}\centering
+    \matfig{cubemx_tim6.png}{1}{Snapshot: TIM6}\\[2pt]\small TIM6 (50 Hz interrupt)
+  \end{minipage}\hfill
+  \begin{minipage}{0.49\linewidth}\centering
+    \matfig{cubemx_tim1.png}{1}{Snapshot: TIM1}\\[2pt]\small TIM1 (PWM)
+  \end{minipage}
+  \caption{CubeMX configuration.}
+  \label{fig:cubemx}
+\end{figure}
+
 \subsection{Sampling Period}
 TIM6 runs at \(f_{TIM6} = 90\,\mathrm{MHz}\) (APB1 \(45\,\mathrm{MHz} \times 2\)).
 With PSC \(= 8999\) and ARR \(= 199\):
@@ -451,21 +470,23 @@ With PSC \(= 8999\) and ARR \(= 199\):
 \end{equation}
 
 \subsection{PWM Signal}
-% TODO: check APB2 timer clock and PSC/ARR of TIM1 in the .ioc file.
-TIM1 generates the PWM for both H-bridges at \(20\,\mathrm{kHz}\).
+TIM1 generates the PWM for both H-bridges (CH1--CH4).
+It sits on APB2, so its clock is \(f_{TIM1} = 180\,\mathrm{MHz}\).
+The target is 20 kHz (the BTS7960 allows up to 25 kHz).
+At start-up, \texttt{PWM\_Setup()} sets PSC \(= 0\) and ARR \(= 8999\).
+This overwrites the CubeMX value (ARR \(= 35999\)).
 \begin{equation}
-  f_{PWM} = \frac{f_{TIM1}}{(PSC+1)(ARR+1)}
+  f_{PWM} = \frac{f_{TIM1}}{(PSC+1)(ARR+1)} = \frac{180\cdot 10^6\,\mathrm{Hz}}{1 \cdot 9000} = 20\,\mathrm{kHz}
 \end{equation}
 \begin{equation}
-  (PSC+1)(ARR+1) = \frac{180\cdot 10^6\,\mathrm{Hz}}{20\cdot 10^3\,\mathrm{Hz}} = 9000
+  CCR = \frac{\text{Duty}}{100\,\%}\,(ARR+1)
 \end{equation}
-\begin{equation}
-  \text{Duty} = \frac{CCR}{ARR+1} \cdot 100\,\%
-\end{equation}
-Used values: PSC \(=\) [TBD], ARR \(=\) [TBD].
+This gives 9000 duty steps.
 
 \subsection{Distance and Speed}
-Each encoder gives \(N_{rev} = 3584\) counts per wheel revolution (x4 decoding).
+Each encoder gives \(N_{rev} = 3584\) counts per wheel revolution:
+64 counts per motor revolution (x4 decoding) times the gear ratio 56.
+The bench measured 3595 and 3618 (+0.3\,\%, +0.9\,\%).
 The wheel circumference is \(C_w \approx 228\,\mathrm{mm}\).
 \begin{equation}
   k_x = \frac{C_w}{N_{rev}} = \frac{228}{3584} \approx 0.0636\,\mathrm{mm/count}
@@ -477,22 +498,28 @@ The wheel circumference is \(C_w \approx 228\,\mathrm{mm}\).
 \end{equation}
 The speed resolution is \(k_x / T_s \approx 3.18\,\mathrm{mm/s}\).
 
-\subsection{PID Algorithm}
-The PID runs in the TIM6 callback, every \(T_s\):
+\subsection{Control Algorithm}
+The controller runs in the TIM6 callback, every \(T_s = 20\,\mathrm{ms}\).
+It is the cascade from Section~\ref{sec:fullloop}.
+The gains come from the simulation (Section~\ref{sec:tuning}):
+\(K_p = 0.045\,\%/(\mathrm{mm/s})\), \(K_i = 0.898\,\%/(\mathrm{mm/s\cdot s})\), \(K_d = 0\),
+\(K_{px} = 2\,\mathrm{s^{-1}}\).
 \begin{align}
-  e[k] &= r[k] - y[k] \\
-  I[k] &= I[k-1] + K_i\,T_s\,e[k] \\
-  u[k] &= K_p\,e[k] + I[k] + K_d\,\frac{e[k] - e[k-1]}{T_s}
+  v_{cmd}[k] &= v_{ref}[k] + \mathrm{sat}_{\pm 100}\bigl(K_{px}\,(x_{ref}[k] - x[k])\bigr) \\
+  e[k]       &= v_{cmd}[k] - v[k] \\
+  u[k]       &= u_{ff}[k] + K_p\,e[k] + I[k-1] \\
+  I[k]       &= \mathrm{sat}_{\pm 30}\bigl(I[k-1] + K_i\,T_s\,e[k]\bigr)
 \end{align}
-The output is limited to \(\pm 100\,\%\) duty.
-When the output saturates, the integral stops (anti-windup).
+\(u_{ff}\) is the feed-forward from Section~\ref{sec:fullloop}.
+The duty is limited to \(\pm 100\,\%\).
+While it is saturated, the integral stops (anti-windup).
 
 \begin{verbatim}
 TIM6 callback (every 20 ms):
-  read encoders            -> x, v
-  next reference point     -> x_ref, v_ref
-  if obstacle: hold reference, duty = 0
-  else:        PID -> duty -> CCR (TIM1)
+  read encoders (TIM3, TIM8)  -> x, v
+  next profile point          -> x_ref, v_ref, a_ref
+  if obstacle: hold profile, duty = 0
+  else:        P (position) + feed-forward + PI (speed) -> duty -> CCR (TIM1)
 \end{verbatim}
 
 \subsection{OLED Display}
@@ -501,19 +528,23 @@ The OLED shows the state (run / stop / obstacle), the target distance,
 the current distance and speed, and the PID gains.
 It is refreshed in the main loop, outside the interrupt.
 
-\subsection{Bluetooth}
-% TODO: match commands and baud rate to the code.
-Parameters are sent from a phone via the Bluetooth module (UART, [TBD] baud).
+\subsection{Wireless Commands (HC-12)}
+Target distance and parameters are sent over the HC-12 radio (USART1, 9600 baud).
+Each command ends with CR or LF.
 
 \begin{table}[H]
   \centering
-  \caption{Bluetooth commands.}
+  \caption{Commands.}
   \begin{tabular}{@{}ll@{}}
     \toprule
     \textbf{Command} & \textbf{Function} \\ \midrule
-    \texttt{D<mm>}   & Set target distance and start \\
-    {[TBD]}          & Set \(K_p\), \(K_i\), \(K_d\) \\
-    {[TBD]}          & Set \(v_{max}\), \(t_a\), \(t_d\) \\ \bottomrule
+    \texttt{D<mm>}             & Drive the target distance (negative: backward) \\
+    \texttt{V<mm/s>}           & Speed \(v_{max}\) \\
+    \texttt{T<ms>}, \texttt{T<ta> <td>} & Ramp times \(t_a\), \(t_d\) \\
+    \texttt{G<Kp> <Ki>}        & PI gains \\
+    \texttt{F<u0> <Kff>}       & Feed-forward \\
+    \texttt{s}                 & Stop \\
+    \texttt{p}, \texttt{a}     & Print status once / every 250 ms \\ \bottomrule
   \end{tabular}
 \end{table}
 
