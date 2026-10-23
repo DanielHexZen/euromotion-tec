@@ -217,8 +217,14 @@ It runs the continuous and the discrete loop side by side.
         \texttt{Ramp\_Down} starts at \(T - t_d\) with \(-v_{max}/t_d\).
         Their sum, limited at zero, is the trapezoidal speed profile.
   \item \textbf{Continuous loop:} \texttt{PID(s)} and the plant \(G(s) = K/(\tau s + 1)\).
+        It stays ideal, without actuator and sensor, as a reference.
   \item \textbf{Discrete loop:} \texttt{PID(z)} and the plant with zero-order hold,
         \(G(z) = b_d/(z - a_d)\) with \(a_d = e^{-T_s/\tau} = 0.670\) and \(b_d = K(1 - a_d) = 2.504\).
+  \item \textbf{Actuator model} (discrete loop): \texttt{Actuator\_Saturation} limits the duty to \(\pm 100\,\%\).
+        \texttt{Actuator\_DeadZone} removes \(\pm 7\,\%\), the dead zone of BTS7960 and motor.
+  \item \textbf{Sensor model} (discrete loop): \texttt{Sensor\_Quantizer} in the speed feedback.
+        The encoder gives whole counts per sample, so the speed comes in steps of
+        \(k_x/T_s = 3.18\,\mathrm{mm/s}\).
   \item \textbf{Distance:} integrators \(1/s\) and \(T_s/(z-1)\).
   \item \textbf{Scopes:} speed and distance of both loops.
 \end{itemize}
@@ -226,7 +232,7 @@ It runs the continuous and the discrete loop side by side.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{Simulink model.png}
-  \caption{Continuous and discrete control loop in Simulink.}
+  \caption{Simulink model: continuous loop (top), discrete loop with actuator and sensor models (bottom).}
   \label{fig:simulink}
 \end{figure}
 
