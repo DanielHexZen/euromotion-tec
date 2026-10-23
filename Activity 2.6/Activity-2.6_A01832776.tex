@@ -21,6 +21,7 @@
 \usepackage[a4paper,margin=2.54cm]{geometry}   % Normal margins (2.54 cm)
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{needspace}
 \lstset{language=Matlab, basicstyle=\ttfamily\scriptsize, breaklines=true, columns=fullflexible,
   frame=single, rulecolor=\color{black!25}, backgroundcolor=\color{black!3}, showstringspaces=false,
   keywordstyle=\color{blue!70!black}, commentstyle=\color{green!45!black}, stringstyle=\color{red!60!black}}
@@ -110,11 +111,32 @@ The breakaway duty comes from slow ramps.
 \subsection{Car Test (BTS7960, Wheels in the Air)}
 The same test was repeated on the car with the BTS7960 drivers.
 The wheels were lifted.
-Both wheels got duty steps and ramps, and the speed was logged.
+The MATLAB function \texttt{identify\_car} sends the command \texttt{I<duty>} over the serial port.
+The car applies a duty step to both wheels and logs the raw encoder counts every 20 ms.
+Then it sends the samples back to MATLAB.
+Duties: 20, 30, 40, 50, 70, 90 and 100\,\%.
+
+% TODO: run identify_car('ident_log.txt') and copy the table "Step responses (first-order fit)".
+\begin{table}[H]
+  \centering
+  \caption{Step responses per duty (first-order fit).}
+  \begin{tabular}{@{}ccccc@{}}
+    \toprule
+    \textbf{Duty [\%]} & \(V_{ss}\) \textbf{L [mm/s]} & \(V_{ss}\) \textbf{R [mm/s]}
+      & \(\tau\) \textbf{L [ms]} & \(\tau\) \textbf{R [ms]} \\ \midrule
+    20  & [TBD] & [TBD] & [TBD] & [TBD] \\
+    30  & [TBD] & [TBD] & [TBD] & [TBD] \\
+    40  & [TBD] & [TBD] & [TBD] & [TBD] \\
+    50  & [TBD] & [TBD] & [TBD] & [TBD] \\
+    70  & [TBD] & [TBD] & [TBD] & [TBD] \\
+    90  & [TBD] & [TBD] & [TBD] & [TBD] \\
+    100 & [TBD] & [TBD] & [TBD] & [TBD] \\ \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{table}[H]
   \centering
-  \caption{Car test results (BTS7960, wheels in the air).}
+  \caption{Car test summary (BTS7960, wheels in the air).}
   \begin{tabular}{@{}ll@{}}
     \toprule
     \textbf{Quantity} & \textbf{Value} \\ \midrule
@@ -128,6 +150,7 @@ Both wheels got duty steps and ramps, and the speed was logged.
   \end{tabular}
 \end{table}
 
+\needspace{5\baselineskip}
 Findings:
 \begin{itemize}
   \item Above the dead zone, the speed is linear in the duty.
@@ -139,18 +162,26 @@ Findings:
 
 \begin{figure}[H]
   \centering
-  \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering Open-loop step response (speed vs.\ time)}}
-  % \includegraphics[width=0.8\linewidth]{openloop.png}
-  \caption{Open-loop step response.}
+  \matfig{identify_result.png}{0.95}{Plot: open-loop step responses and static line (identify\_result.png)}
+  \caption{Open-loop step responses and static characteristic.}
 \end{figure}
 
 % ---------------------------------------------------------------------
 \section{Model Identification}
 Input \(u\) is the PWM duty in \%. Output \(v\) is the wheel speed in mm/s.
-A first-order model with dead time was fitted to the step data:
+The model is first order with dead time:
 \begin{equation}
   G(s) = \frac{V(s)}{U(s)} = \frac{K\,e^{-Ls}}{\tau s + 1}
 \end{equation}
+\texttt{identify\_car} identifies it in three steps:
+\begin{enumerate}
+  \item Each step is fitted with \(v(t) = V_{ss}\bigl(1 - e^{-(t-L)/\tau}\bigr)\) for \(t > L\)
+        (least squares, \texttt{fminsearch}).
+  \item The steady-state speeds give a line per wheel, \(V_{ss} = K\,(u - u_0)\) (\texttt{polyfit}).
+        \(K\) and \(u_0\) are the mean of both wheels.
+  \item \(\tau\) and \(L\) are the median of the steps above 40\,\% of the top speed.
+\end{enumerate}
+Result:
 \begin{itemize}
   \item \(K = 7.596\,\mathrm{(mm/s)/\%}\), slope of the steady-state speed over duty.
   \item \(\tau = 50\,\mathrm{ms}\), time constant.
@@ -159,7 +190,7 @@ A first-order model with dead time was fitted to the step data:
 \end{itemize}
 % TODO: load the step data into the System Identification app (process model P1D),
 %       add the screenshot and the fit value.
-In the MATLAB System Identification app, the model reaches a fit of [TBD]\,\%.
+As a cross-check, the MATLAB System Identification app reaches a fit of [TBD]\,\%.
 The position is the integral of the speed:
 \begin{equation}
   X(s) = \frac{G(s)}{s}\,U(s)
