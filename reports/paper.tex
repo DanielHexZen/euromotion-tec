@@ -1,0 +1,359 @@
+% =====================================================================
+%  Preliminary technical article -- MR2006B autonomous ground vehicle
+%  Two-column IEEE conference format.
+%  If IEEEtran.cls is present (e.g. on Overleaf) it is used; otherwise an
+%  IEEE-style two-column fallback (article class) is compiled.
+%  Red [bracketed] text = items the team still has to supply.
+% =====================================================================
+\IfFileExists{IEEEtran.cls}{%
+  \documentclass[conference]{IEEEtran}\newcommand{\haveieee}{}%
+}{%
+  \documentclass[10pt,twocolumn,letterpaper]{article}%
+}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,graphicx,xcolor,cite,balance,microtype}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,calc,fit,backgrounds}
+
+\makeatletter
+\@ifundefined{haveieee}{%
+  % ---------- IEEE-style fallback layout ----------
+  \usepackage{mathptmx}
+  \usepackage[letterpaper,top=0.75in,bottom=0.9in,left=0.625in,right=0.625in,columnsep=0.25in]{geometry}
+  \usepackage{titlesec}
+  \usepackage{caption}
+  \renewcommand\thesection{\Roman{section}}
+  \renewcommand\thesubsection{\Alph{subsection}}
+  \titleformat{\section}[block]{\centering\small\scshape}{\thesection.}{0.5em}{}
+  \titleformat{\subsection}[block]{\itshape\small}{\thesubsection.}{0.5em}{}
+  \titlespacing*{\section}{0pt}{1.2ex plus .3ex}{0.8ex}
+  \titlespacing*{\subsection}{0pt}{1ex plus .3ex}{0.5ex}
+  \setlength{\parskip}{0pt}
+  \captionsetup[figure]{name={Fig.},labelsep=period,font=footnotesize}
+  \captionsetup[table]{name=TABLE,labelsep=newline,font=footnotesize,textfont=sc,justification=centering,singlelinecheck=off}
+  \renewcommand{\thetable}{\Roman{table}}
+  \renewenvironment{abstract}{\noindent\small\bfseries\itshape Abstract\upshape---}{\par\vspace{0.6ex}\normalfont}
+  \newenvironment{IEEEkeywords}{\noindent\small\bfseries\itshape Keywords\upshape---\itshape}{\par\vspace{0.6ex}\normalfont}
+  \newcommand{\IEEEauthorblockN}[1]{\normalsize #1\\[0.3ex]}
+  \newcommand{\IEEEauthorblockA}[1]{\small\itshape #1}
+  \renewcommand{\@maketitle}{\newpage\null\vskip 1ex
+    \begin{center}{\fontsize{22}{24}\selectfont \@title\par}\vskip 2ex
+      {\lineskip .5em\begin{tabular}[t]{c}\@author\end{tabular}\par}\end{center}\par\vskip 1ex}
+  \newcommand{\refsize}{\footnotesize}
+}{\newcommand{\refsize}{}}
+\makeatother
+
+\newcommand{\todo}[1]{{\color{red}\textbf{[#1]}}}
+\newcommand{\st}[1]{\textsc{#1}}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+
+\tikzset{
+  blk/.style={draw=black!70,fill=green!8,rounded corners=1.5pt,minimum height=0.8cm,align=center,font=\scriptsize,inner sep=2pt},
+  prp/.style={blk,dashed,fill=blue!6,draw=blue!60!black},
+  arr/.style={-{Stealth[length=2mm]},thick},
+  parr/.style={-{Stealth[length=2mm]},thick,dashed,blue!60!black},
+  lb/.style={font=\tiny,inner sep=1pt}
+}
+
+\begin{document}
+
+\title{Design and Preliminary Control Architecture of an STM32-Controlled Differential-Drive Autonomous Ground Vehicle for Waypoint Navigation}
+
+\author{%
+\IEEEauthorblockN{Daniel Appel}
+\IEEEauthorblockA{Tecnol\'ogico de Monterrey\\Mexico\\\todo{campus, e-mail}}
+\and
+\IEEEauthorblockN{\todo{Team member 2}}
+\IEEEauthorblockA{Tecnol\'ogico de Monterrey\\Mexico\\\todo{campus, e-mail}}
+\and
+\IEEEauthorblockN{\todo{Team member 3}}
+\IEEEauthorblockA{Tecnol\'ogico de Monterrey\\Mexico\\\todo{campus, e-mail}}
+}
+
+\maketitle
+
+\begin{abstract}
+This paper documents the first design stage of an autonomous differential-drive ground vehicle for the John Deere challenge of course MR2006B. The battery-powered robot must complete an outdoor circuit of roughly 150~m, stop for 10~s at three waypoints, avoid obstacles and stay on paved paths, using an STM32 microcontroller as its only computer and no external positioning aids. The mechanical platform (two driven wheels, two passive casters), a geared brushed-DC drivetrain with Hall encoders and BTS7960 drivers, and a per-wheel cascade controller (trapezoidal profile, position loop, feedforward and PI speed loop) are implemented and have been identified on the bench. The proposed methodology fuses wheel odometry, a gyroscope and time-of-flight range sensors in an extended Kalman filter, and adds a cross-track path follower, a mission state machine and a radio telemetry link. Implemented components, proposed solutions and future work are separated explicitly. No experimental performance of the complete system is reported; the design target is a waypoint error of 10--20~cm, to be validated in later stages.
+\end{abstract}
+
+\begin{IEEEkeywords}
+autonomous ground vehicle, differential drive, STM32, sensor fusion, odometry calibration
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+\subsection{Background and Motivation}
+Autonomous ground vehicles (AGVs) integrate localization, perception, path planning and motion control so that a wheeled platform can perform a task without a human driver. In agriculture they are attractive because they reduce labor dependence and enable precise, repeatable operations; recent reviews name environmental perception, path planning and path-tracking control as the core technologies of autonomous field machinery~\cite{wu2025}. Deployment remains difficult because of vegetation occlusion, uneven terrain, variable illumination and intermittent communications~\cite{boros2026}, and earlier surveys of agricultural off-road vehicles already identified Kalman filtering and machine vision among the key navigation tools~\cite{mousazadeh2013}. Small educational platforms reproduce the same chain of problems (sensing, estimation, control and communication) at reduced scale.
+
+\subsection{The John Deere Challenge}
+The John Deere challenge of course MR2006B (Sensors \& Actuators / Microcontrollers) asks each team to build a four-wheeled vehicle with differential or Ackermann steering~\cite{brief}. Chassis, motors and drivers must be assembled by week~5; the vehicle needs at least one control loop that responds to a user reference, must send telemetry to an external system and must work in manual and automatic mode. In the final test it traverses a circuit on the paved paths of the Jard\'in de las Carreras (about 150~m, team estimate), avoids all grass, stops 10~s at each of three waypoints, returns to the start within 15~min, performs simple obstacle avoidance and runs on batteries. Grading rewards completing the circuit alone, using no external aids for the sensors, waypoint accuracy (2~points for 0--5~cm, decreasing logarithmically to 0 above 640~cm), obstacle avoidance (2~points for rerouting, 1~for waiting) and the exclusive use of an STM32 microcontroller~\cite{brief}.
+
+\subsection{Objectives and Engineering Requirements}
+Because speed is not graded, the objective is a vehicle that completes the circuit \emph{reliably} rather than quickly. The main requirements are: (R1) four wheels, differential steering; (R2) at least one feedback loop responding to a user reference; (R3) manual and automatic modes; (R4) telemetry to an external system; (R5) circuit completion in under 15~min with 10~s stops, no contact with grass; (R6) obstacle stop and reroute; (R7) battery supply, STM32 as the only computer, no external aids. The team targets waypoint errors of 10--20~cm (1.5 of 2 accuracy points), since each halving of the error bracket yields only 0.25 points.
+
+\section{State of the Art}
+
+\subsection{Autonomous Ground Vehicles and Agricultural Robotics}
+Reviews of agricultural navigation~\cite{wu2025,boros2026,mousazadeh2013} describe a common architecture of perception, localization, planning and path-tracking control. High-precision positioning, typically GNSS combined with inertial sensing, is central in field machinery, while SLAM and vision are discussed for conditions in which satellite signals degrade under vegetation~\cite{wu2025,boros2026}. Since the challenge excludes external aids and parts of the circuit lie under tree canopy, this design follows the relative-sensing branch: dead reckoning continuously corrected by the environment.
+
+\subsection{Ackermann and Differential Steering}
+In Ackermann steering the front wheels turn about separate axes so that all wheels roll about a common instantaneous center; the vehicle has a minimum turning radius and cannot rotate in place. In differential (skid) steering the left and right wheel speeds differ, the heading rate is $\omega=(v_R-v_L)/b$, and the vehicle pivots about its axle midpoint. Comparative studies of skid- and Ackermann-steered vehicles report different handling and energy trade-offs~\cite{maclaurin2008,goodell2019}; a simulation study of an eight-wheeled vehicle found that skid steering consumed more energy than Ackermann steering in every maneuver except straight-line driving~\cite{goodell2019}. For narrow paths and ungraded speed, the ability to turn in place outweighs this penalty.
+
+\subsection{Sensors for Navigation and Obstacle Detection}
+Time-of-flight (ToF) sensors such as the VL53L1X measure up to 4~m at up to 50~Hz with a 27$^\circ$ typical field of view using a 940~nm Class~1 laser~\cite{vl53l1x}; the usable range depends on ambient light, a key limitation outdoors. Wheel encoders provide the basic dead-reckoning signal, but systematic errors from unequal wheel diameters and uncertain track width accumulate without bound. The UMBmark procedure separates the two errors using clockwise and counter-clockwise square paths and reported an improvement of at least one order of magnitude in systematic odometry error~\cite{borenstein1996}. Fusing encoders and an inertial measurement unit (IMU) in an extended Kalman filter (EKF) reduced position error by up to 47\,\% relative to unfiltered data in a recent differential-drive study~\cite{amorim2025}.
+
+\subsection{Motor Control and Feedback}
+Brushed DC drives are commonly controlled by a feedforward term from the steady-state duty--speed model plus PI feedback. PI parameters for first-order-plus-delay plants follow from analytic rules such as SIMC~\cite{skogestad2003}, whose single tuning parameter is the closed-loop time constant. In cascaded loops, adjacent bandwidths are usually separated by a factor of 3--5.
+
+\subsection{Autonomous Navigation and Trajectory Following}
+Path tracking keeps a vehicle close to a reference path. Snider derived, tuned and compared several path-tracking methods for a car-like robot~\cite{snider2009}; Giesbrecht \emph{et~al.} selected geometric pure pursuit for an unmanned ground vehicle for its accuracy, simplicity and robustness~\cite{giesbrecht2005}; and a recent survey covers PID and pure pursuit for lateral and longitudinal control~\cite{jain2024}. Pure pursuit is simple but tends to cut corners, so a linear cross-track/heading law with curvature feedforward is attractive when the path is known in advance.
+
+\subsection{Wireless Communication and Telemetry}
+Intermittent connectivity in the field~\cite{boros2026} implies that autonomy must not depend on the link; telemetry is then used for monitoring and manual control. Low-cost serial radio modules such as the HC-12 provide a transparent UART bridge~\cite{hc12} but are half-duplex, so a slotted protocol with framing and checksums is needed to avoid collisions.
+
+\subsection{Comparison with the Team's Design}
+Table~\ref{tab:sota} relates the approaches found in the literature to the present design.
+
+\begin{table}[!t]
+\caption{Literature approaches versus the team's design}
+\label{tab:sota}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{1.6cm}p{2.9cm}p{3.1cm}@{}}
+\toprule
+\textbf{Topic} & \textbf{Literature} & \textbf{This design}\\
+\midrule
+Positioning & GNSS + IMU; SLAM/vision~\cite{wu2025,boros2026} & Encoders, gyro and ToF in an EKF; no GNSS (external aid)\\
+Steering & Ackermann or skid~\cite{maclaurin2008,goodell2019} & Differential, 2 driven wheels + 2 casters\\
+Odometry & Calibration, e.g.\ UMBmark~\cite{borenstein1996} & UMBmark planned; gyro supplies heading\\
+Fusion & EKF, encoders + IMU~\cite{amorim2025} & 5-state EKF with zero-velocity and boundary updates\\
+Speed loop & Feedforward + PI, SIMC~\cite{skogestad2003} & Implemented per wheel; gains from SIMC\\
+Path tracking & Pure pursuit~\cite{giesbrecht2005,snider2009} & Cross-track/heading law; pure pursuit as fallback\\
+Telemetry & Serial radio~\cite{hc12} & HC-12 UART, framed slotted protocol\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{System Design and Current Development}
+This section documents the work completed up to the previous challenge deliverable (state of October 2026). Measured values are taken from the team's technical reference~\cite{techref}.
+
+\subsection{Chassis and Mechanical Configuration}
+The chassis follows the differential-drive layout of Fig.~\ref{fig:chassis}: two driven wheels on a common axle through the body origin and two passive swivel casters that carry the remaining load. The concept envelope is $400\times350$~mm, so a turn in place sweeps a circle of 0.53~m diameter; the track width is $b=223.25$~mm (Table~\ref{tab:params}). The drive wheels are nominally $\varnothing 76$~mm; a straight-line run calibrated the effective rolling diameter to 72.6~mm (the firmware reported 1000~mm while 955~mm was measured on the ground). The wheels sit on 6~mm D-shaft to 12~mm hex aluminum adapters, which keeps the final wheel size open until the ramp-lip height of the course is measured; caster size depends on the same measurement.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[scale=0.92,font=\scriptsize]
+ \draw[thick,rounded corners=2pt,fill=gray!10] (-2.86,-2.5) rectangle (2.86,2.5);
+ \foreach \s in {1,-1}{\draw[fill=black!70] (-0.55,{\s*1.59-0.2}) rectangle (0.55,{\s*1.59+0.2});}
+ \foreach \s in {1,-1}{\draw[fill=white] ({\s*2.2},0) circle (0.2);\draw ({\s*2.2},0) circle (0.05);}
+ \draw[-{Stealth},thick] (0,0) -- (1.0,0) node[right]{$x_B$};
+ \draw[-{Stealth},thick] (0,0) -- (0,0.9) node[above]{$y_B$};
+ \fill (0,0) circle (0.05);
+ \draw[{Stealth}-{Stealth}] (0.75,-1.59) -- (0.75,1.59) node[midway,right]{$b$};
+ \draw[{Stealth}-{Stealth}] (-2.86,-2.85) -- (2.86,-2.85) node[midway,below]{400 mm (concept envelope)};
+ \draw[{Stealth}-{Stealth}] (3.15,-2.5) -- (3.15,2.5) node[midway,above,rotate=90]{350 mm};
+ \node at (-1.5,1.59) {drive wheel};
+ \node[align=center] at (-2.2,-0.55) {caster};
+ % planned sensors (proposed)
+ \foreach \s in {1,-1}{
+   \node[draw=blue!60!black,dashed,fill=blue!10,inner sep=1.2pt] at (1.4,{\s*0.95}) {};
+   \node[draw=blue!60!black,dashed,fill=blue!10,inner sep=1.2pt] at (1.4,{\s*2.1}) {};
+   \node[draw=blue!60!black,dashed,fill=blue!10,circle,inner sep=1.2pt] at (2.86,{\s*0.5}) {};
+   \node[draw=blue!60!black,dashed,fill=blue!10,diamond,inner sep=0.8pt] at (0.4,{\s*2.5}) {};}
+ \node[draw=blue!60!black,dashed,fill=blue!10,inner sep=1.2pt,label=right:{\tiny ground}] at (3.9,1.9) {};
+ \node[draw=blue!60!black,dashed,fill=blue!10,circle,inner sep=1.2pt,label=right:{\tiny forward}] at (3.9,1.4) {};
+ \node[draw=blue!60!black,dashed,fill=blue!10,diamond,inner sep=0.8pt,label=right:{\tiny lateral}] at (3.9,0.9) {};
+\end{tikzpicture}
+\caption{Top view of the differential-drive layout, drawn from design parameters (schematic, not the CAD model). Dashed blue symbols: planned VL53L1X sensors (proposed, not yet installed). \todo{Insert CAD screenshot or photograph of the assembled chassis}}
+\label{fig:chassis}
+\end{figure}
+
+\begin{table}[!t]
+\caption{Main vehicle parameters}
+\label{tab:params}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{2.6cm}p{5.0cm}@{}}
+\toprule
+\textbf{Item} & \textbf{Value (source)}\\
+\midrule
+Configuration & Differential; 2 driven wheels, 2 casters\\
+Track width $b$ & 223.25~mm (geometric)\\
+Drive wheel & $\varnothing 76$~mm nominal; 72.6~mm effective (calibrated)\\
+Motor & JGB37-3530, 12~V, 178~rpm no load, 56.3:1\\
+Encoder & Hall, 16~PPR/channel, $\times4$: 64 counts per motor rev.; 3595/3618 counts per wheel rev.\ (hand-measured)\\
+Driver & 2$\times$ BTS7960, 20~kHz PWM\\
+Controller & NUCLEO-F446RE, 180~MHz, FPU\\
+Battery & 3S LiPo, 2.2~Ah, 35C\\
+Vehicle mass & 3~kg (assumed, not yet measured)\\
+Cruise speed & 0.3~m/s (design value)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Motor and Driver Selection}
+Brushed DC gearmotors with encoders were preferred over NEMA~17 stepper motors because an overloaded DC motor slows down and the encoder observes it, whereas a stepper loses steps silently. The selected JGB37-3530 has a catalogue torque of 3.4~kgf\,cm and a stall current of 4.3~A. A first-order torque check (assumed 3~kg, rolling coefficient 0.02, $8^\circ$ grade, 0.3~m/s$^2$) gives about 0.10~N\,m per wheel, roughly 30\,\% of the catalogue value, so torque is not the limiting factor; traction and edge geometry are. Two BTS7960 half-bridge modules, one per motor, are driven at 20~kHz with module logic supplied at 3.3~V so that the 3.3~V STM32 outputs satisfy the input threshold~\cite{bts7960}. An earlier opto-isolated L298-type driver was used for the first bench identification and was retired after a failure.
+
+Bench tests without load confirmed the linear model $d=K_v n+K_s\,\mathrm{sgn}\,n$ ($R^2>0.999$, no-load speeds 181 and 177~rpm). Identification on the BTS7960 with the wheels in the air gave a first-order plant with static gain $K=7.60$~(mm/s)/\%, time constant $\tau_m=50$~ms and a 7\,\% dead zone~\cite{techref}. The two motors are not a matched pair (12\,\% speed and 20\,\% breakaway-duty difference at equal command), which the per-wheel feedforward and feedback must absorb.
+
+\subsection{Steering Mechanism}
+Steering is purely differential; there is no steering actuator. With wheel speeds $v_{L,R}$ and track width $b$,
+\begin{equation}
+v=\tfrac12(v_R+v_L),\qquad \omega=\frac{v_R-v_L}{b},
+\label{eq:kin}
+\end{equation}
+and the instantaneous center of rotation lies on the axle line, coinciding with the axle midpoint for a turn in place. Ackermann steering was rejected because it cannot rotate in place, needs a larger turning envelope at the ramp and earns no points in the grading scheme.
+
+\subsection{Material Selection and Engineering Justification}
+The selection criteria that follow from the requirements are: rigid mounting of the IMU at the axle midpoint (no elastic mounting), low mass for the assumed 3~kg vehicle, space for cabling without dangling wires, and procurement from local suppliers. \todo{Team to complete: chassis plate material, thickness, fasteners, the candidate materials compared and the quantitative justification (mass, stiffness, cost, manufacturability)}
+
+\subsection{Current System Architecture}
+The STM32F446RE (Cortex-M4F, 180~MHz) executes all functions without an operating system. TIM1 generates the PWM, TIM3 and TIM8 decode the two quadrature encoders, TIM6 provides the 50~Hz control tick, USART1 serves the HC-12 radio and USART2 a USB console (115200~Bd). A 3S LiPo pack feeds a motor branch and, through a 5~V buck converter and a 3.3~V regulator, a logic branch; both join only at a star point. Table~\ref{tab:status} lists each component, its function and its status, and Fig.~\ref{fig:blocks} shows the architecture.
+
+\begin{table}[!t]
+\caption{Component status}
+\label{tab:status}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{3.1cm}p{2.7cm}p{1.5cm}@{}}
+\toprule
+\textbf{Component} & \textbf{Function} & \textbf{Status}\\
+\midrule
+NUCLEO-F446RE & Main controller & Implemented\\
+Motors + Hall encoders & Traction, odometry & Implemented\\
+2$\times$ BTS7960 & Motor drivers & Implemented\\
+Wheel cascade (50~Hz) & Speed/position loop & Implemented\\
+HC-12 link, USB console & Commands, telemetry & Implemented\\
+LiPo, buck, 3.3~V LDO & Power & Implemented$^{*}$\\
+IMU (6-axis) & Heading rate & Pending (part undecided)\\
+8$\times$ VL53L1X & Edge, obstacles & Proposed\\
+EKF & Pose estimate & Proposed\\
+Path follower, mission logic & Automatic mode & Proposed\\
+Framed telemetry protocol & Link robustness & Proposed\\
+Course survey, UMBmark & Calibration & Future work\\
+\bottomrule
+\end{tabular}\\[1pt]
+{\scriptsize $^{*}$Fuses, main switch and battery-voltage divider still to be fitted.}
+\end{table}
+
+\section{Proposed Control and Automation Strategy}
+Everything in this section other than the wheel cascade is a proposal that has not yet been implemented or validated.
+
+\subsection{Manual and Automatic Operation}
+In manual mode the operator sends absolute set-points $(v,\omega)$ over the HC-12 link or the USB console; inverse kinematics from~\eqref{eq:kin} gives the wheel speeds. A heartbeat failsafe will set $v=\omega=0$ if no valid command arrives for 500~ms; a 2~s dead-man timeout already protects open-loop console commands. In automatic mode the vehicle follows a pre-programmed path of \textsc{line}, \textsc{arc} and \textsc{turn} segments, each carrying its corridor and speed limit. A mission state machine sequences \textsc{init} (gyro bias convergence), \textsc{drive}, \textsc{approach} (0.1~m/s), \textsc{hold} (10~s) and \textsc{turn}, with \textsc{obstacle\_stop}, \textsc{evade} and \textsc{fault} as exceptional states. Autonomy does not depend on the radio link, but a received stop command is always honored.
+
+\subsection{Feedback Control Loop (Implemented)}
+Each wheel runs a cascade at 50~Hz in the TIM6 interrupt: a trapezoidal profile, a proportional position loop, and a speed loop with model feedforward and PI feedback,
+\begin{equation}
+u=\mathrm{sgn}(v_c)\bigl(K_s+K_v|v_c|\bigr)+K_v\tau_m a_p+K_p e_v+I_k,
+\label{eq:law}
+\end{equation}
+where $v_c$ is the commanded speed, $a_p$ the profile acceleration, $e_v$ the speed error and $I_k$ the integrator clamped at $\pm30\,\%$. A synchronization term couples the two wheels so that heading transients decay faster than distance errors. The gains follow the SIMC rules,
+\begin{equation}
+K_p=\frac{\tau_m}{K(\tau_c+\theta)},\qquad T_i=\min\bigl(\tau_m,\,4(\tau_c+\theta)\bigr),
+\label{eq:simc}
+\end{equation}
+with $\theta=49$~ms (sample period plus speed filter) and $\tau_c=2\theta$. This yields $K_p\approx0.045\,\%/(\mathrm{mm/s})$, $T_i=50$~ms, a design crossover of 6.8~rad/s and a phase margin of about $71^\circ$. These are design values computed from the identified plant, not measured closed-loop results. A 1000~mm test move ended at 999.5 and 1000.3~mm in the firmware (encoder) frame; independent ground measurements and floor tests under load remain to be done.
+
+\subsection{Sensor Integration}
+Heading is taken from a gyroscope rather than from the wheel difference, because the latter depends on the effective track width, which changes with slip. A five-state EKF with state $[x\;y\;\theta\;b_g\;s]^{\top}$ (position, heading, gyro bias, odometry scale) predicts from the encoder distance and gyro rate. Corrections are optional and gated by a Mahalanobis test: a zero-velocity update of the gyro bias during each 10~s stop, edge-crossing constraints from downward-looking ToF sensors, range and heading fits to straight faces from lateral sensors, and post landmarks for along-track position. The eight VL53L1X sensors have distinct roles: four look down (run validity, drop-off safety, EKF measurement, evasion bound), two look forward (reflex stop, free space) and two sideways. Having no fix is the normal case, so the circuit must be completable by dead reckoning alone.
+
+\subsection{Autonomous Trajectory Following}
+The reference is a geometric path decoupled from time. With cross-track error $e_y$, heading error $e_\psi$ and path curvature $\kappa$, the path follower commands
+\begin{equation}
+\omega=\kappa v-k_\psi e_\psi-k_y e_y,\quad k_y=\frac{\omega_n^2}{v},\quad k_\psi=2\zeta\omega_n,
+\label{eq:path}
+\end{equation}
+with $\omega_n\approx1.5$--$2$~rad/s and $\zeta=0.7$, which respects the bandwidth separation from the 6.8~rad/s speed loop; pure pursuit is kept as a fallback. Corners are driven stop--turn--go on level ground, since turning on a slope corrupts the integrated heading. Obstacle evasion is treated as a one-dimensional lateral offset search inside the measured corridor; the inner ground sensors remain armed as an interlock during evasion.
+
+\subsection{Data Transmission and Telemetry}
+Telemetry and remote control use the HC-12 on USART1 at 9600~Bd, already running in parallel with the USB console. Because 9600~Bd limits throughput, the proposed protocol uses COBS framing with CRC-16, absolute (idempotent) commands, and the vehicle as timing master, which avoids half-duplex collisions: a 24-byte binary frame needs 25~ms, i.e.\ 25\,\% of the channel at 10~Hz, against 62.5\,\% for a 60-character text line. The regulatory status of the 433~MHz band in Mexico and the use of radio modules with their own firmware under the ``STM32 only'' criterion are open questions for the course instructor.
+
+\subsection{Preliminary Block Diagram}
+Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, actuators and communication. Solid green blocks are implemented; dashed blue blocks are proposed.
+
+\begin{figure*}[!t]
+\centering
+\resizebox{0.97\textwidth}{!}{%
+\begin{tikzpicture}[>=Stealth]
+ % STM32 background
+ \begin{scope}[on background layer]
+  \node[draw=black!60,fill=gray!6,rounded corners=3pt,minimum width=6.4cm,minimum height=7.1cm,anchor=south west] (mcu) at (5.4,-0.05) {};
+ \end{scope}
+ \node[font=\scriptsize\bfseries,anchor=north west] at (5.5,7.0) {STM32F446RE (no RTOS)};
+ % left side
+ \node[blk,minimum width=2.8cm] (ops) at (1.5,6.0) {Operator / ground\\station (PC, Python)};
+ \node[blk,minimum width=1.9cm] (radio) at (4.0,6.0) {HC-12\\9600 Bd};
+ \node[prp,minimum width=2.8cm] (vl) at (1.5,3.95) {8$\times$ VL53L1X\\ground, lateral, forward};
+ \node[prp,minimum width=2.8cm] (imu) at (1.5,2.95) {IMU\\gyro, accelerometer};
+ \node[blk,minimum width=2.8cm] (enc) at (1.5,1.85) {Hall encoders\\(motor shafts)};
+ % mcu blocks
+ \node[prp,minimum width=3.3cm] (mis) at (8.6,6.0) {Mission logic\\modes, waypoints, obstacles};
+ \node[prp,minimum width=3.3cm] (pf) at (8.6,4.85) {Path follower\\$e_y,\,e_\psi \rightarrow v,\omega$};
+ \node[prp,minimum width=3.3cm,minimum height=2.1cm] (ekf) at (8.6,2.95) {EKF\\$x,\,y,\,\theta,\,b_g,\,s$\\[-1pt]{\tiny predict, gate, correct}};
+ \node[blk,minimum width=3.3cm] (wc) at (8.6,0.8) {Wheel cascade L/R\\profile $\rightarrow$ P $\rightarrow$ FF + PI, 50 Hz};
+ % right side
+ \node[blk,minimum width=2.4cm] (drv) at (13.3,0.8) {2$\times$ BTS7960\\20 kHz PWM};
+ \node[blk,minimum width=2.6cm] (mot) at (16.2,0.8) {2$\times$ DC motor\\+ gearbox + wheels};
+ \node[blk,minimum width=2.6cm] (pwr) at (14.7,3.6) {3S LiPo, fuses,\\5 V buck, 3.3 V LDO};
+ % arrows
+ \draw[arr] (ops) -- (radio); \draw[arr] (radio) -- (ops);
+ \draw[arr] (radio) -- (mis);
+ \draw[arr] (mis) -- (pf);
+ \draw[arr] (ekf.north) -- (pf.south) node[lb,midway,right]{pose};
+ \draw[parr] (vl.east) -- (ekf.west |- vl.east) -- ($(ekf.west)+(0,0.8)$);
+ \draw[parr] (imu.east) -- (ekf.west |- imu.east);
+ \draw[arr] (enc.east) -- (ekf.west |- enc.east) -- ($(ekf.west)+(0,-0.8)$);
+ \draw[arr] (4.6,1.85) |- (wc.west);
+ \draw[arr] (pf.east) -- (10.9,4.85) -- (10.9,1.0) -- ($(wc.east)+(0,0.2)$) node[lb,pos=0.2,right]{$v,\omega$};
+ \draw[arr] ($(wc.east)+(0,-0.2)$) -- ($(drv.west)+(0,-0.2)$) node[lb,midway,above]{$u_L,u_R$};
+ \draw[arr] (drv) -- (mot);
+ \draw[arr,dashed] (mot.south) -- (16.2,-0.7) -- (1.5,-0.7) -- (enc.south) node[lb,pos=0.5,below]{wheel rotation};
+ \draw[arr,dashed] (pwr.south) -- (14.7,1.5) -- (14.7,1.25);
+ \draw[arr,dashed] (pwr.south) ++(-0.9,0) -- ++(0,-1.0) -- (13.3,1.25);
+ % legend
+ \node[blk,minimum width=1.0cm,minimum height=0.4cm] at (13.3,6.4) {};
+ \node[font=\scriptsize,anchor=west] at (13.9,6.4) {implemented};
+ \node[prp,minimum width=1.0cm,minimum height=0.4cm] at (13.3,5.7) {};
+ \node[font=\scriptsize,anchor=west] at (13.9,5.7) {proposed / pending};
+\end{tikzpicture}}
+\caption{Preliminary system block diagram: sensors, STM32 controller, drivers, actuators and telemetry link. The wheel cascade, drivers, motors, encoders and radio link exist; the estimator, path follower, mission logic, IMU and ToF sensors are proposed.}
+\label{fig:blocks}
+\end{figure*}
+
+\subsection{Expected Performance (Analytical, Not Validated)}
+An analytical error budget for a 40~m reference-free segment gives 21~cm lateral error for a $0.3^\circ$ entry-heading error and 8~cm along-track error for a 0.2\,\% scale error after per-surface calibration~\cite{techref}. Heading fits to straight faces and a landmark fix before each waypoint are expected to bring the error into the 10--20~cm bracket. These estimates are model-based and must be confirmed experimentally.
+
+\section{Future Work}
+\textbf{Pending components.} Select and order the IMU (the originally planned ICM-42688-P is unavailable; the LSM6DSV is the leading candidate); fit and test the eight VL53L1X sensors; fit fuses, main switch, battery-voltage divider and a hardware emergency stop; choose casters and wheel size after measuring the ramp lip; procure spares (Nucleo board, driver, motor); finalize the chassis and cabling.
+
+\textbf{Programming and integration.} Move to a cyclic executive with a 1~MHz timestamp base; implement the EKF, path follower and mission state machine; add IMU (SPI with DMA) and two I$^2$C buses with per-sensor shutdown lines for address assignment; implement the framed telemetry protocol and the PC ground station; verify battery-only start-up (the clock currently derives from the ST-Link) and the thermal load of the 3.3~V regulator.
+
+\textbf{Validation.} Survey the course (ramp lip and gradient, path widths, edging, landmarks); calibrate under load ($K_v$, $K_s$, per-surface scale); run UMBmark with a return-error target below 10~mm for a 2~m square~\cite{borenstein1996}; characterize the gyro by Allan variance; test the EKF stationary and hand-pushed (10~m within 10~cm); close a $10\times10$~m rectangle within 30~cm; then complete the circuit with waypoints within 40~cm (week~15) and 20~cm (week~16), and log telemetry for 15~min at 10~Hz with fewer than 1\,\% lost frames. Open questions for the instructor concern the ``four-wheeled'' definition with two casters, the legal radio band, and the ``STM32 only'' rule for modules with their own firmware.
+
+\balance
+{\refsize
+\begin{thebibliography}{99}
+\bibitem{wu2025} H.~Wu, X.~Wang, X.~Chen, Y.~Zhang and Y.~Zhang, ``Review on key technologies for autonomous navigation in field agricultural machinery,'' \emph{Agriculture}, vol.~15, no.~12, Art.~1297, Jun. 2025.
+\bibitem{boros2026} N.~Boros, B.~Ambrus and A.~Ny\'eki, ``Navigation and sensor fusion for autonomous field robots in precision agriculture: Narrative review,'' \emph{Sensors}, vol.~26, 2026, doi: 10.3390/s26165169.
+\bibitem{mousazadeh2013} H.~Mousazadeh, ``A technical review on navigation systems of agricultural autonomous off-road vehicles,'' \emph{J. Terramechanics}, vol.~50, no.~3, pp.~211--232, Jun. 2013.
+\bibitem{brief} Tecnol\'ogico de Monterrey, ``Challenge MR2006B,'' course brief, Sensors \& Actuators module, 2026.
+\bibitem{maclaurin2008} B.~Maclaurin, ``Comparing the steering performances of skid and Ackermann steered vehicles,'' \emph{Proc. IMechE Part D: J. Automobile Eng.}, vol.~222, no.~5, pp.~739--756, 2008.
+\bibitem{goodell2019} J.~D.~Goodell, ``Simulation and parameter sensitivity studies of skid-steering and Ackerman steering on an eight-wheeled vehicle,'' M.S. thesis, Univ. Texas at Austin, Austin, TX, USA, 2019.
+\bibitem{vl53l1x} STMicroelectronics, ``VL53L1X: A new generation, long distance ranging Time-of-Flight sensor based on ST's FlightSense technology,'' Datasheet DocID031281, Rev.~4, Oct. 2021.
+\bibitem{borenstein1996} J.~Borenstein and L.~Feng, ``Measurement and correction of systematic odometry errors in mobile robots,'' \emph{IEEE Trans. Robot. Autom.}, vol.~12, no.~6, pp.~869--880, Dec. 1996.
+\bibitem{amorim2025} J.~G.~J.~C.~Amorim, M.~F.~Pinto, G.~G.~R.~Castro, T.~M.~B.~Santos, A.~L.~C.~Canela and J.~S.~J.~C.~C.~Amorim, ``Optimized Kalman gain for enhanced localization in differential drive robots,'' in \emph{Proc. SBR/LARS}, Vit\'oria, Brazil, 2025, pp.~102--107.
+\bibitem{skogestad2003} S.~Skogestad, ``Simple analytic rules for model reduction and PID controller tuning,'' \emph{J. Process Control}, vol.~13, no.~4, pp.~291--309, 2003.
+\bibitem{snider2009} J.~M.~Snider, ``Automatic steering methods for autonomous automobile path tracking,'' Robotics Inst., Carnegie Mellon Univ., Pittsburgh, PA, USA, Tech. Rep. CMU-RI-TR-09-08, Feb. 2009.
+\bibitem{giesbrecht2005} J.~Giesbrecht, D.~Mackay, J.~Collier and S.~Verret, ``Path tracking for unmanned ground vehicle navigation: Implementation and adaptation of the pure pursuit algorithm,'' Defence R\&D Canada -- Suffield, Tech. Memo. TM 2005-224, Dec. 2005.
+\bibitem{jain2024} H.~Jain and P.~Babel, ``A comprehensive survey of PID and pure pursuit control algorithms for autonomous vehicle navigation,'' arXiv:2409.09848, Sep. 2024.
+\bibitem{hc12} HC Information Technology, ``HC-12 wireless serial port communication module,'' User manual.
+\bibitem{bts7960} Infineon Technologies, ``BTS7960: High current PN half bridge,'' Datasheet.
+\bibitem{techref} MR2006B team, ``MR2006B vehicle technical reference,'' Rev.~1.0, internal document, Oct. 2026.
+\end{thebibliography}}
+
+\end{document}
