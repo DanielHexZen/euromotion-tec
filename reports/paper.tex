@@ -56,7 +56,7 @@
   prp/.style={blk,dashed,fill=blue!6,draw=blue!60!black},
   arr/.style={-{Stealth[length=2mm]},thick},
   parr/.style={-{Stealth[length=2mm]},thick,dashed,blue!60!black},
-  lb/.style={font=\tiny,inner sep=1pt}
+  lb/.style={font=\scriptsize,inner sep=1.5pt}
 }
 
 \begin{document}
@@ -156,10 +156,10 @@ The chassis follows the differential-drive layout of Fig.~\ref{fig:chassis}: two
  \draw[-{Stealth},thick] (0,0) -- (1.0,0) node[right]{$x_B$};
  \draw[-{Stealth},thick] (0,0) -- (0,0.9) node[above]{$y_B$};
  \fill (0,0) circle (0.05);
- \draw[{Stealth}-{Stealth}] (0.75,-1.59) -- (0.75,1.59) node[midway,right]{$b$};
+ \draw[{Stealth}-{Stealth}] (-0.9,-1.59) -- (-0.9,1.59) node[midway,left]{$b$};
  \draw[{Stealth}-{Stealth}] (-2.86,-2.85) -- (2.86,-2.85) node[midway,below]{400 mm (concept envelope)};
- \draw[{Stealth}-{Stealth}] (3.15,-2.5) -- (3.15,2.5) node[midway,above,rotate=90]{350 mm};
- \node at (-1.5,1.59) {drive wheel};
+ \draw[{Stealth}-{Stealth}] (3.15,-2.5) -- (3.15,2.5) node[midway,below,sloped]{350 mm};
+ \node at (-1.9,1.59) {drive wheel};
  \node[align=center] at (-2.2,-0.55) {caster};
  % planned sensors (proposed)
  \foreach \s in {1,-1}{
@@ -167,9 +167,9 @@ The chassis follows the differential-drive layout of Fig.~\ref{fig:chassis}: two
    \node[draw=blue!60!black,dashed,fill=blue!10,inner sep=1.2pt] at (1.4,{\s*2.1}) {};
    \node[draw=blue!60!black,dashed,fill=blue!10,circle,inner sep=1.2pt] at (2.86,{\s*0.5}) {};
    \node[draw=blue!60!black,dashed,fill=blue!10,diamond,inner sep=0.8pt] at (0.4,{\s*2.5}) {};}
- \node[draw=blue!60!black,dashed,fill=blue!10,inner sep=1.2pt,label=right:{\tiny ground}] at (3.9,1.9) {};
- \node[draw=blue!60!black,dashed,fill=blue!10,circle,inner sep=1.2pt,label=right:{\tiny forward}] at (3.9,1.4) {};
- \node[draw=blue!60!black,dashed,fill=blue!10,diamond,inner sep=0.8pt,label=right:{\tiny lateral}] at (3.9,0.9) {};
+ \node[draw=blue!60!black,dashed,fill=blue!10,inner sep=1.2pt,label=right:{\tiny ground}] at (4.2,1.9) {};
+ \node[draw=blue!60!black,dashed,fill=blue!10,circle,inner sep=1.2pt,label=right:{\tiny forward}] at (4.2,1.4) {};
+ \node[draw=blue!60!black,dashed,fill=blue!10,diamond,inner sep=0.8pt,label=right:{\tiny lateral}] at (4.2,0.9) {};
 \end{tikzpicture}
 \caption{Top view of the differential-drive layout, drawn from design parameters (schematic, not the CAD model). Dashed blue symbols: planned VL53L1X sensors (proposed, not yet installed). \todo{Insert CAD screenshot or photograph of the assembled chassis}}
 \label{fig:chassis}
@@ -290,7 +290,7 @@ Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, a
  \node[font=\scriptsize\bfseries,anchor=north west] at (5.5,7.0) {STM32F446RE (no RTOS)};
  % left side
  \node[blk,minimum width=2.8cm] (ops) at (1.5,6.0) {Operator / ground\\station (PC, Python)};
- \node[blk,minimum width=1.9cm] (radio) at (4.0,6.0) {HC-12\\9600 Bd};
+ \node[blk,minimum width=1.7cm] (radio) at (4.3,6.0) {HC-12\\9600 Bd};
  \node[prp,minimum width=2.8cm] (vl) at (1.5,3.95) {8$\times$ VL53L1X\\ground, lateral, forward};
  \node[prp,minimum width=2.8cm] (imu) at (1.5,2.95) {IMU\\gyro, accelerometer};
  \node[blk,minimum width=2.8cm] (enc) at (1.5,1.85) {Hall encoders\\(motor shafts)};
@@ -304,20 +304,21 @@ Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, a
  \node[blk,minimum width=2.6cm] (mot) at (16.2,0.8) {2$\times$ DC motor\\+ gearbox + wheels};
  \node[blk,minimum width=2.6cm] (pwr) at (14.7,3.6) {3S LiPo, fuses,\\5 V buck, 3.3 V LDO};
  % arrows
- \draw[arr] (ops) -- (radio); \draw[arr] (radio) -- (ops);
+ \draw[thick,{Stealth[length=2mm]}-{Stealth[length=2mm]}] (ops) -- (radio);
  \draw[arr] (radio) -- (mis);
  \draw[arr] (mis) -- (pf);
- \draw[arr] (ekf.north) -- (pf.south) node[lb,midway,right]{pose};
+ \draw[arr] (ekf.north) -- (pf.south) node[lb,midway,right,xshift=3pt]{pose};
  \draw[parr] (vl.east) -- (ekf.west |- vl.east) -- ($(ekf.west)+(0,0.8)$);
  \draw[parr] (imu.east) -- (ekf.west |- imu.east);
  \draw[arr] (enc.east) -- (ekf.west |- enc.east) -- ($(ekf.west)+(0,-0.8)$);
  \draw[arr] (4.6,1.85) |- (wc.west);
- \draw[arr] (pf.east) -- (10.9,4.85) -- (10.9,1.0) -- ($(wc.east)+(0,0.2)$) node[lb,pos=0.2,right]{$v,\omega$};
- \draw[arr] ($(wc.east)+(0,-0.2)$) -- ($(drv.west)+(0,-0.2)$) node[lb,midway,above]{$u_L,u_R$};
+ \draw[arr] (pf.east) -- (10.9,4.85) -- node[lb,right]{$v,\omega$} (10.9,1.0) -- ($(wc.east)+(0,0.2)$);
+ \draw[arr] ($(wc.east)+(0,-0.2)$) -- ($(drv.west)+(0,-0.2)$) node[lb,midway,below]{$u_L,u_R$};
  \draw[arr] (drv) -- (mot);
- \draw[arr,dashed] (mot.south) -- (16.2,-0.7) -- (1.5,-0.7) -- (enc.south) node[lb,pos=0.5,below]{wheel rotation};
- \draw[arr,dashed] (pwr.south) -- (14.7,1.5) -- (14.7,1.25);
- \draw[arr,dashed] (pwr.south) ++(-0.9,0) -- ++(0,-1.0) -- (13.3,1.25);
+ \draw[arr,dashed] (mot.south) -- (16.2,-0.7) -- node[lb,below]{wheel rotation} (1.5,-0.7) -- (enc.south);
+ \draw[arr,dashed] (14.0,0 |- pwr.south) -- (14.0,0 |- drv.north);
+ \draw[arr,dashed] (15.4,0 |- pwr.south) -- (15.4,0 |- mot.north);
+ \fill (4.6,1.85) circle (1.5pt);
  % legend
  \node[blk,minimum width=1.0cm,minimum height=0.4cm] at (13.3,6.4) {};
  \node[font=\scriptsize,anchor=west] at (13.9,6.4) {implemented};
