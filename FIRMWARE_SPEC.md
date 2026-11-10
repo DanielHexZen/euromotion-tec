@@ -1411,7 +1411,7 @@ uint16_t crc16_ccitt(const uint8_t *d, size_t n);          /* CCITT-FALSE       
 - `tlm_fast()` / `tlm_slow()` assemble the frames of §8.4 from the published module outputs and send them on every port in `BINARY` mode.
 - In `TEXT` mode with auto-print on (`a`), every 250 ms a human-readable status line goes to that port (current behaviour, extended by mode, state and pose).
 - **Events.** `sys_event` entries are sent as `EVENT` frames immediately on binary ports and printed on text ports.
-- **Capture** (`FEAT_CAPTURE`, REQ-TLM-01). A static buffer of 48 KB. `CAPTURE(set, decim, duration)` starts recording one of the record sets below at the slot rate divided by `decim`. Recording stops when the buffer is full or the duration has passed. `CAP_GET` streams the buffer as `CAP_DATA` frames (index, up to 4 records per frame). Capture continues across mode changes and stops on `FAULT`, so the run-up to a fault is preserved.
+- **Capture** (`FEAT_CAPTURE`, REQ-TLM-01). A static buffer of 48 KB. `CAPTURE(set, decim, duration)` starts recording one of the record sets below at the slot rate divided by `decim`. Recording stops when the buffer is full or the duration has passed. `CAP_GET` streams the buffer as `CAP_DATA` frames (index of the first record, up to `n_max` records per frame: 3 for the 24-byte sets, 5 for the 16-byte set; REQ-TLM-02 below). Capture continues across mode changes and stops on `FAULT`, so the run-up to a fault is preserved.
 
 | Set | Rate | Record (little-endian, packed) | Size |
 |---|---|---|---|
@@ -1419,6 +1419,12 @@ uint16_t crc16_ccitt(const uint8_t *d, size_t n);          /* CCITT-FALSE       
 | 1 `EST` | `S_EST` (200 Hz) | `u32 t_us; i32 x, y [0.1 mm]; i16 th [1e-4 rad]; i16 bg [1e-6 rad/s]; i16 ds_L, ds_R [µm]; i16 dpsi [1e-5 rad]; u8 flags; u8 reserved` | 24 B → 2048 rec = 10 s |
 | 2 `NAV` | `S_CTRL` | `u32 t_us; i16 s [cm]; i16 e_y [0.1 mm]; i16 e_psi [1e-4 rad]; i16 v_ref [mm/s]; i16 w_ref [mrad/s]; i16 y_off [mm]; u8 seg, state; u16 gnd (4 × 4-bit class); u8 reserved[4]` | 24 B |
 | 3 `VL` | per new result | `u32 t_us; u8 id, status; u16 range [mm]; u16 signal [kcps/8]; u16 ambient; i16 h [0.1 mm]; u8 class; u8 pad` | 16 B → 3072 rec |
+
+**Capture download** (REQ-TLM-02, D-33):
+
+- **Packing.** A `CAP_DATA` payload is `4 + n·size` bytes and never exceeds the 96 bytes of §8.2, so `n ≤ n_max = floor((96 − 4) / size)`: 3 records for sets 0–2 (24 B, payload 76 B), 5 records for set 3 (16 B, payload 84 B). `index` is the buffer index of the first record in the frame; `set` is the recorded set and gives the record size. The receiver places the records by `index` and `n`. A frame whose `index` differs from the previous `index + n` reveals a lost frame.
+- **`CAP_GET(from, count)`.** With `N` records in the buffer when the command arrives, `first = min(from, N)` and `c = min(count, N − first)`. The vehicle replies `ACK` (`ST_OK`), then `ceil(c / n_max)` `CAP_DATA` frames with the records `first … first + c − 1` in ascending order (every frame holds `n_max` records, except the last, which holds the rest), then one end frame with `n = 0` and `index = first + c`. A range past the end is clipped and is not an error; `from ≥ N` or `count = 0` gives only the end frame. The PC fetches a lost frame again with a `CAP_GET` for the missing range. A new `CAP_GET` or `CAPTURE` ends a stream that is still running, without an end frame.
+- **USB only.** On the wire a frame is payload + 7 bytes (§8.3). A full `CAP_DATA` frame is 83 bytes ≈ 86.5 ms (24 B sets) or 91 bytes ≈ 94.8 ms (16 B set) at 9600 Bd, more than the 55 ms vehicle window. Even one 24 B record per frame (35 bytes ≈ 36.5 ms) does not fit together with `TELEM_FAST` (40.6 ms). `CAP_DATA` is therefore never sent on the radio port. `CAP_GET` received on the radio port, or in `AUTO`, is answered with `ACK` (`ST_STATE`) and no `CAP_DATA`.
 
 ### 7.26 `app` — composition
 
@@ -1489,7 +1495,7 @@ The HC-12 cannot receive while it transmits. The **vehicle is timing master** (R
 | 0x04 | `EVENT` | `u32 t_ms; u16 code; i32 arg` | 10 | on event |
 | 0x05 | `ACK` | `u8 type; u8 seq; u8 result (st_t)` | 3 | after every uplink command except `DRIVE` |
 | 0x06 | `PARAM_VAL` | `u16 id; f32 value; u8 result` | 7 | after `PARAM_GET`/`PARAM_SET` |
-| 0x07 | `CAP_DATA` | `u16 index; u8 set; u8 n; n × record` | 4 + n·size ≤ 96 | after `CAP_GET` |
+| 0x07 | `CAP_DATA` | `u16 index (first record in the frame); u8 set; u8 n; n × record` | 4 + n·size ≤ 96: `n` ≤ 3 (24 B records, ≤ 76) or ≤ 5 (16 B records, ≤ 84); 4 for the end frame (`n` = 0) | after `CAP_GET`, USB port only (§7.25, REQ-TLM-02) |
 | 0x08 | `TEXT` | ASCII, not terminated | ≤ 96 | debug messages |
 
 `TELEM_FAST` (32 bytes):
@@ -1546,7 +1552,7 @@ The HC-12 cannot receive while it transmits. The **vehicle is timing master** (R
 | 0x24 | `PARAM_GET` | `u16 id` | 2 | any | `PARAM_VAL` |
 | 0x25 | `PARAM_SET` | `u16 id; f32 value` | 6 | per parameter flag | `PARAM_VAL` |
 | 0x26 | `CAPTURE` | `u8 set; u8 decim; u16 duration [0.1 s]` | 4 | any | `ACK` |
-| 0x27 | `CAP_GET` | `u16 from; u16 count` | 4 | not `AUTO` | `CAP_DATA` stream |
+| 0x27 | `CAP_GET` | `u16 from; u16 count` | 4 | not `AUTO`; USB port only | `ACK`, then the `CAP_DATA` stream, clipped to the recorded range and closed by an end frame with `n` = 0 (§7.25, REQ-TLM-02); `ACK` (`ST_STATE`) alone in `AUTO` or on the radio port |
 | 0x28 | `CLEAR` | — | 0 | `FAULT`, `IDLE` | `ACK` |
 | 0x2F | `MODE_TEXT` | — | 0 | any | `ACK`, then the port switches to text |
 
@@ -1936,7 +1942,7 @@ Pure modules compile with the host compiler using `-std=gnu11 -Wall -Wextra -Wdo
 |---|---|---|
 | `t_crc` | proto | `crc16("123456789") == 0x29B1` |
 | `t_cobs` | proto | round-trip of 10⁴ random frames 0–101 B incl. all-zero and no-zero; decoder rejects corrupted frames |
-| `t_proto_msgs` | §8.4 | pack/unpack of every message matches the byte offsets of the tables |
+| `t_proto_msgs` | §8.4, REQ-TLM-02 | pack/unpack of every message matches the byte offsets of the tables; `CAP_DATA` is packed at `n_max` for each record size (3 × 24 B → 76 B, 5 × 16 B → 84 B) and its payload never exceeds 96 bytes |
 | `t_prof` | REQ-PRF-01/02 | x(T) = D within 1e-6 relative for trapezoid and triangle; v continuous; `prof_plan_v0` stops at D from v0 ∈ {0, 0.1, 0.3} |
 | `t_whl_law` | REQ-WHL-01..05 | feedforward values equal hand-computed ones; integrator clamps; conditional integration; breakaway switching with hysteresis; detectors fire after exactly 0.6 s |
 | `t_drv_move` | REQ-DRV-01/02 | with `sim_plant` (first-order wheels K = 7.6, τ = 50 ms, Coulomb friction, ±10 % L/R mismatch): `D300`, `D1000`, `D5000` end within 2 mm, never reverse; sync max < 3 mm |
@@ -2156,6 +2162,7 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-26 | The hard-fault record in the backup registers holds the code, MSP and the first 12 stack words raw, not PC/LR | the handler's own prologue shifts the exception frame by an unknown amount, so PC/LR cannot be picked reliably from MSP | naked-asm entry that selects the frame from `EXC_RETURN` |
 | D-27 | `main.c` includes `calib.h` only under `APP_CALIB`; the pre-spec code is kept under `#if 0` until H3 passes (§16.3 step 3); `app_hw_t` has `adc1` as `void *` until CubeMX generates ADC1 | `calib.c` is not in the repository; the build must not depend on it | delete the `#if 0` blocks after H3; type `adc1` when ADC1 exists |
 | D-28 | `I` is a chunked console job (`CON_JOB_INFO`). `console.c` stays host-buildable and asks the application for line *i* through `con_info_line()`, defined in `app_cmd.c`. Phase-0 content: version and hash, reset cause, tick rate and CPU, `S_CTRL`/`S_FAST` maxima and overruns, boot failures, parameter generation, `odo_m_per_cnt`. Memory use and the hard-fault record of §9 are not part of it (the record is printed once in `HELLO`) | the four lines are ~230 bytes; the radio TX buffer holds 128, and `com_write` drops a line that does not fit, so only two lines arrived over the radio (REQ-CON-01); verified on the vehicle 2026-11-09 | one `con_printf` per line again, USB only |
+| D-33 | A `CAP_DATA` frame carries at most `n_max = floor((96 − 4) / size)` records: **3** of 24 B (sets 0–2), **5** of 16 B (set 3), not "up to 4". `index` is the first record of the frame. `CAP_GET` is acknowledged, clipped to the recorded range and closed by an end frame with `n` = 0. Capture download is **USB only**; on the radio port `CAP_GET` gets `ACK` (`ST_STATE`) (§7.25 REQ-TLM-02, §8.4) | 4 records of 24 B need 4 + 96 = 100 B, more than the 96 B payload of §8.2, on which the COBS and airtime numbers of §8.2/§8.3 rest. On the radio a full frame is 83–91 bytes ≈ 86.5–94.8 ms, and even one 24 B record (≈ 36.5 ms) does not fit the 55 ms window together with `TELEM_FAST`. The end frame marks the end also when the last data frame is full | raise the payload limit to 100 B (4 × 24 B) and recompute §8.2 (maximum frame 105 B, ≤ 107 after COBS) and §8.3; for radio download send one record per frame in place of `TELEM_FAST` (2048 records ≈ 3.4 min) |
 
 ---
 
