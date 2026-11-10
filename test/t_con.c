@@ -19,7 +19,7 @@ size_t com_write(com_port_t p, const uint8_t *d, size_t n)
 size_t   com_tx_free(com_port_t p) { (void)p; return g_free; }
 int con_info_line(uint32_t i, char *buf, size_t n)
 {
-    return (i < 4U) ? snprintf(buf, n, "info line %u .....................................................", (unsigned)i) : -1;
+    return (i < 5U) ? snprintf(buf, n, "info line %u .....................................................", (unsigned)i) : -1;
 }
 uint32_t sys_ms(void) { return 1234U; }
 bool     sys_event_at(uint32_t i, sys_event_rec_t *o) { (void)i; (void)o; return false; }
@@ -162,9 +162,9 @@ void t_con(void)
         passes_i++;
         if (n > worst_i) { worst_i = n; }
     }
-    CHECK(passes_i > 1U);                       /* 4 lines > 200 bytes: more than one pass */
+    CHECK(passes_i > 1U);                       /* 5 lines > 200 bytes: more than one pass */
     CHECK(worst_i <= 200U + 96U);
-    for (unsigned k = 0; k < 4; k++) {
+    for (unsigned k = 0; k < 5; k++) {
         char key[16];
         snprintf(key, sizeof key, "info line %u", k);
         CHECK(strstr(g_out[COM_RADIO], key) != NULL);

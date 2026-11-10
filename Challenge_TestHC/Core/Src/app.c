@@ -11,6 +11,7 @@
 #include "mot.h"
 #include "par.h"
 #include "sys_fault.h"
+#include "sys_irq.h"
 #include "sys_sched.h"
 #include "sys_time.h"
 
@@ -268,5 +269,13 @@ void app_loop(void)
 
     con_cmd_t c;
     if (con_poll(&c)) { app_cmd_exec(&c); }
-    __WFI();
+
+    /* Race-free sleep (REQ-NFR-05). A tick that fired after sys_sched_take() has set a pending
+     * bit: do not sleep on it. With interrupts masked the check and the WFI cannot be separated
+     * by the tick; WFI still wakes on a pending interrupt, which is taken at the restore.
+     * UART bytes need no check: they are drained in S_FAST, at most 1 ms later. Without a
+     * scheduler (boot failure) nothing is ever pending and SysTick wakes the loop every 1 ms. */
+    const uint32_t pm = sys_irq_save();
+    if (!sys_sched_pending()) { __WFI(); }
+    sys_irq_restore(pm);
 }
