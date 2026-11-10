@@ -4,7 +4,7 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 1 and test H6 (§14.3): the odometry and 
 
 Do the steps in order. Stop at the first failure and write it down. Mark each box, keep the console log of every part (`screen`/CubeIDE terminal capture) and the tool output.
 
-**How this differs from the spec text.** §15 and H6 assume the separate calibration firmware (`calib.c`, `calib.h`, `CALIB_README.md`, `tools/calib_host.py`). None of them is in the repository, and CLAUDE.md forbids rewriting `calib.c`. Decision D-31 (§18.2): phase 1 is done with the **normal vehicle firmware and its text console**, plus the host tools in `tools/` (standard-library Python 3). The calibration firmware stays optional. Everything below is based on what `console.c`, `app_cmd.c`, `app.c` and `drv.c` do today, read on 2026-11-10; nothing here is promised from a later phase.
+**How this differs from the spec text.** Version 1.0 of the spec (§15 and H6) assumed the separate calibration firmware (`calib.c`, `calib.h`, `CALIB_README.md`, `tools/calib_host.py`). None of them is in the repository, and CLAUDE.md forbids rewriting `calib.c`. Decision D-31 (§18.2, spec version 1.1 follows this procedure in §14.3 H6 and §15): phase 1 is done with the **normal vehicle firmware and its text console**, plus the host tools in `tools/` (standard-library Python 3). The calibration firmware stays optional. Everything below is based on what `console.c`, `app_cmd.c`, `app.c` and `drv.c` do today, read on 2026-11-10; nothing here is promised from a later phase.
 
 ## Status
 
@@ -296,7 +296,7 @@ The `P` values are RAM only. The gate is passed only when they are the **compile
 | `whl_tau_m` | no 50 Hz data on the console, 300 ms print period | calibration firmware `K`/`G`, or `CAP` (phase 2) |
 | `odo_backlash_l/r` | IDs 204/205 not in `par_table.h`; consumed only in phase 5 | calibration firmware `L`, or a reversal test with `CAP` once the parameters exist |
 | `whl_ff_u_ref`, `whl_ff_norm_en = 1` | no battery divider, no voltage reading | divider wired and `bat` OK, then the same fit at two known voltages |
-| Spec H6 `A`, `L`, `G` | name calibration-firmware commands; `CALIB_README.md` is not in the repository and `A` cannot be verified | covered here: `G` (feedforward) by 5 and the odometry sequence by 3–4; `L` deferred as above; `A` unknown |
+| Spec 1.0 H6 `A`, `L`, `G` | named calibration-firmware commands; `CALIB_README.md` is not in the repository and `A` cannot be verified | covered here: `G` (feedforward) by 5 and the odometry sequence by 3–4; `L` deferred as above; `A` unknown |
 | Calibration firmware (`APP_CALIB=1`) | `calib.c`/`calib.h` are not in the repository; CLAUDE.md: do not rewrite | optional, if the teammate supplies it; its results map onto the same parameters (§19.2) |
 | Closed-loop feedforward validation | the console shows no tracking error | `CAP` (phase 2) |
 

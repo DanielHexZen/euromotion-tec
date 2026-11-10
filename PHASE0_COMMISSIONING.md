@@ -25,7 +25,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 2. **Release configuration:** in CubeIDE set `-Wextra`, `-Wdouble-promotion`, `-Wshadow` for Release (the Debug-only entry is the only one in `.cproject`), optionally `-Wno-unused-parameter` for the `Drivers` folder; build Release (H3b), flash, 3 × `D1000`/`D5000`, `I`, `FAULTINJ 4` → `ERR state Release build`.
 3. **Leftovers:** boot-to-`ready` < 2 s, `?`/`k`/`S`/`L`, legacy-command/range/`P…` checks of §7, deliberate HardFault trigger (§5).
 4. **Close-out (§8):** delete the `#if 0` blocks in `main.c` (also remove the unused legacy `BTS7960`/`Wheel_*` code), rebuild, one `D1000`; enter the Drivers-warning exception (if used) in spec §18.2 (H2 by self-measurement is D-32); commit with REQ IDs; `git tag phase0`; save logs under `tools/data/<date>/`.
-5. **Phase 1** only after that. **Blocker for phase 1:** `calib.c`/`calib.h` are not in the repository (`main.c` includes `calib.h` only under `APP_CALIB`, spec D-27). The calibration firmware cannot be built until they are supplied. CLAUDE.md says leave `calib.c` unchanged, so do not rewrite it.
+5. **Phase 1 (vehicle track)** only after that. Phase 1 is not blocked by `calib.c` (spec D-31): follow `PHASE1_CALIBRATION.md` with the normal console and the host tools in `tools/`. The calibration firmware stays optional: `calib.c`/`calib.h` are still not in the repository (`main.c` includes `calib.h` only under `APP_CALIB`, spec D-27) and are still not to be rewritten. Host-track work (pure modules, host tests, SIL, MATLAB design) does not wait for this step (spec §15, D-29).
 
 ### Changed this session (uncommitted)
 - `Core/Inc/console.h`, `Core/Src/console.c`, `Core/Src/app_cmd.c`, `test/t_con.c`: `I` is now a chunked job (`CON_JOB_INFO`, `con_info_line()`), spec D-28, REQ-CON-01. Reason: `I` printed four lines at once and the 128-byte radio TX buffer dropped lines 3 and 4. Host test added; verified over the radio.
@@ -197,4 +197,4 @@ User observation: the vehicle physically drives slightly FARTHER than commanded 
 - [ ] Open findings written down (backup-register record, any parameter changed during H3).
 - [ ] Commit: `Phase 0: restructure complete, H1–H5 passed (REQ-ARC-01..04, REQ-EXE-*, REQ-MOT-*, REQ-ENC-*, REQ-WHL-*, REQ-DRV-*, REQ-PAR-*, REQ-CON-*)`.
 - [ ] `git tag phase0`. Delete the `#if 0` blocks in `main.c` (spec §16.3 step 3), rebuild, repeat one `D1000`.
-- [ ] Only then start phase 1 (calibration).
+- [ ] Only then start phase 1 (calibration) on the vehicle (`PHASE1_CALIBRATION.md`); host-track work may run ahead (spec §15, D-29).

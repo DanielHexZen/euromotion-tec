@@ -454,7 +454,7 @@ path that stops the vehicle without passing through the planner.}
 \midrule
 4 Mission logic       & 20\,Hz  & --- & state machine, waypoint sequencing, obstacle decisions\\
 3 Path follower       & 100\,Hz & --- & cross-track/heading controller, TURN controller, speed profile\\
-\multicolumn{1}{@{}l}{\quad Estimator (EKF)} & 200\,Hz & --- & prediction from encoder+gyro, corrections\\
+\multicolumn{1}{@{}l}{\quad Estimator (EKF)} & 200\,Hz & --- & prediction from encoder+gyro, corrections (firmware spec D-30: one step per 50\,Hz control period)\\
 2 Wheel control       & 200\,Hz (PI) & \textbf{50\,Hz} & trapezoid profile, P position, FF + PI speed, L/R sync\\
 1 Actuation           & PWM     & \textbf{20\,kHz} & BTS7960 RPWM/LPWM, enable lines, slew limits\\
 \bottomrule
@@ -1972,7 +1972,7 @@ acquisition from the \qty{1}{MHz} time base: IMU by input capture of DRDY, VL53L
 at the middle of the integration window. Measurements older than the current
 state are applied with the state from a short history buffer (\qty{100}{ms}),
 or --- for latencies below one EKF step --- simply at the next step. Load: a
-five-state EKF at \qty{200}{Hz} costs well under \qty{1}{\percent} of the CPU.
+five-state EKF at \qty{50}{Hz} (the step rate of firmware spec D-30; \qty{200}{Hz} in the concept) costs well under \qty{1}{\percent} of the CPU.
 
 \paragraph{Initialisation.} INIT stands still until the variance of $b_g$ has
 converged; $x,y,\theta$ are zero by definition (start mark and start heading
@@ -2020,7 +2020,7 @@ discontinued, counterfeit-prone).
 \item \textbf{Interface.} SPI1 (PB3/PB4/PB5, CS PA4), \qty{5.625}{MHz} (APB2/16; the ISM330DHCX allows at most \qty{10}{MHz}); DRDY
 on PA1 = TIM2\_CH2 input capture gives a jitter-free timestamp; the capture
 interrupt starts the DMA read. The ISM330DHCX has no \qty{1}{kHz} output data rate: sample at \qty{833}{Hz} with the sensor's
-anti-aliasing filter and decimate by 4 to $\approx\qty{208}{Hz}$ for the \qty{200}{Hz} EKF \VERIFY\ (datasheet ODR table).
+anti-aliasing filter and decimate by 4 to $\approx\qty{208}{Hz}$ \VERIFY\ (datasheet ODR table); the yaw rate is integrated at that rate and the EKF steps at \qty{50}{Hz} (firmware spec D-30).
 \item \textbf{Mounting.} Rigid, at the axle midpoint (no lever-arm accelerations
 in turns), not soft-mounted (an elastic mount creates a resonance in the band of
 interest), thermally away from the drivers, under a light-coloured cover.
@@ -2486,7 +2486,7 @@ interrupt-driven.
 \begin{tikzpicture}[x=4.4mm,y=8.0mm]
   \foreach \lane/\name/\step/\col/\task in {
      0/{1 kHz}/1/accent/{encoder snapshot + timestamp, IMU DMA start, ADC trigger},
-     1/{200 Hz}/5/cold/{EKF prediction and corrections (wheel PI in the concept)},
+     1/{200 Hz}/5/cold/{EKF prediction and corrections (concept; firmware spec D-30: 50\,Hz)},
      2/{100 Hz}/10/good/{path follower, lateral sensor processing},
      3/{50 Hz}/20/warn/{ground VL53L1X; \textbf{wheel cascade today (TIM6)}},
      4/{20 Hz}/50/grey/{mission logic, obstacle evaluation},
