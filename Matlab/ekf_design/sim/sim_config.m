@@ -83,7 +83,10 @@ switch opt.truth
     otherwise
         error('sim_config: truth %s', opt.truth);
 end
-[rs, n7] = sim_randn(rs);  tr.lm_err = 0*tr.lm_err; %#ok<NASGU> survey errors drawn in sim_lat_init
+for k = 1:4                               % survey error of the landmarks (truth - map)
+    [rs, n7] = sim_randn(rs);  [rs, n8] = sim_randn(rs);
+    tr.lm_err(k, :) = [n7 n8]*0.02;
+end
 tr.kL = tr.scale*(1 - tr.eps_lr/2);
 tr.kR = tr.scale*(1 + tr.eps_lr/2);
 
