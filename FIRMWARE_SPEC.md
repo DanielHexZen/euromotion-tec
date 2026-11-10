@@ -1388,7 +1388,7 @@ com_stats_t com_stats(com_port_t p);                /* rx bytes, overruns, drops
 
 Line-based, terminated by CR or LF, max 48 characters. Echo `> <line>` before execution, so a corrupted radio command is visible. Command reference in §9.
 
-- REQ-CON-01 The console runs in the main loop (`con_poll`), never in an ISR. Long outputs (`k`, `L`, help) are emitted in chunks of ≤ 200 bytes per main-loop pass, so TX buffers never overflow.
+- REQ-CON-01 The console runs in the main loop (`con_poll`), never in an ISR. Long outputs (`k`, `L`, help, `I`) are emitted in chunks of ≤ 200 bytes per main-loop pass, so TX buffers never overflow.
 - REQ-CON-02 Each port has its own line buffer. The current firmware shares one buffer between both ports, which garbles concurrent input.
 - REQ-CON-03 Every received byte on a port counts as a sign of life for the open-loop dead-man on that port (2 s, as today).
 - REQ-CON-04 Unknown commands answer `ERR unknown, ? for help`; range errors answer `ERR range <min>..<max>`; mode errors `ERR state <mode>`.
@@ -2155,6 +2155,7 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-25 | Boot-time platform mismatches (TIM1 ARR ≠ 8999, TIM6 PSC/ARR ≠ 89/999, TIM2 PSC ≠ 89, clock check) all raise `F_CLOCK` (R4) | the catalogue has no code for "CubeMX not regenerated"; the reaction wanted is the same | add `F_PLATFORM` |
 | D-26 | The hard-fault record in the backup registers holds the code, MSP and the first 12 stack words raw, not PC/LR | the handler's own prologue shifts the exception frame by an unknown amount, so PC/LR cannot be picked reliably from MSP | naked-asm entry that selects the frame from `EXC_RETURN` |
 | D-27 | `main.c` includes `calib.h` only under `APP_CALIB`; the pre-spec code is kept under `#if 0` until H3 passes (§16.3 step 3); `app_hw_t` has `adc1` as `void *` until CubeMX generates ADC1 | `calib.c` is not in the repository; the build must not depend on it | delete the `#if 0` blocks after H3; type `adc1` when ADC1 exists |
+| D-28 | `I` is a chunked console job (`CON_JOB_INFO`). `console.c` stays host-buildable and asks the application for line *i* through `con_info_line()`, defined in `app_cmd.c`. Phase-0 content: version and hash, reset cause, tick rate and CPU, `S_CTRL`/`S_FAST` maxima and overruns, boot failures, parameter generation, `odo_m_per_cnt`. Memory use and the hard-fault record of §9 are not part of it (the record is printed once in `HELLO`) | the four lines are ~230 bytes; the radio TX buffer holds 128, and `com_write` drops a line that does not fit, so only two lines arrived over the radio (REQ-CON-01); verified on the vehicle 2026-11-09 | one `con_printf` per line again, USB only |
 
 ---
 

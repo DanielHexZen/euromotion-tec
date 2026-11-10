@@ -4,9 +4,12 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 
 **Always use the `/ponytail` skill** for work in this repository.
 
+## Current state
+Phase 0 is in commissioning and not closed (H3, H3b and the H2 scope part are open). Read the **Status** section of `PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Phase 1 is blocked until `calib.c`/`calib.h` exist.
+
 ## Sources of truth
-- `docs/FIRMWARE_SPEC.md`: normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.
-- `docs/MR2006B_Vehicle_Technical_Reference.pdf`: explains why (models, physics, rationale). Read it when a requirement is unclear; do not code from it.
+- `FIRMWARE_SPEC.md` (repository root): normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.
+- `MR2006B_Vehicle_Technical_Reference_source/MR2006B_Vehicle_Technical_Reference.pdf`: explains why (models, physics, rationale). Read it when a requirement is unclear; do not code from it.
 - Never invent a value tagged `[MEASURE]`, `[VERIFY]` or `[DECIDE]`. Make it a parameter in `par_table.h` and flag it.
 
 ## Hard rules

@@ -94,6 +94,8 @@ static int job_line(con_job_t j, uint32_t i, char *buf, size_t n)
         if (i == 0U) { return snprintf(buf, n, "latched mask 0x%08lX, first 0x%02X", (unsigned long)m, (unsigned)sys_fault_first()); }
         return (i < (uint32_t)F_COUNT) ? ((((m >> i) & 1U) != 0U) ? snprintf(buf, n, "active 0x%02lX", (unsigned long)i) : 0) : -1;
     }
+    case CON_JOB_INFO:
+        return con_info_line(i, buf, n);
     case CON_JOB_NONE:
     default:
         return -1;

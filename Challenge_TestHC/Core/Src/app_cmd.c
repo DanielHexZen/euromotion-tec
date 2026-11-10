@@ -93,20 +93,28 @@ static void reply_move_result(com_port_t p, st_t s)
     else if (s != ST_OK) { con_printf(p, "ERR range\r\n"); }
 }
 
-static void print_info(com_port_t p)
+int con_info_line(uint32_t i, char *buf, size_t n)
 {
-    const par_t *q = par();
-    con_printf(p, "MR2006B fw 0.1-phase0 %s calib=%d\r\n", BUILD_GIT, APP_CALIB);
-    con_printf(p, "reset cause 0x%02X, tick %lu.%lu Hz, cpu %lu.%lu %%\r\n", (unsigned)sys_reset_cause(),
-               (unsigned long)(g_app.tick_hz_x10 / 10U), (unsigned long)(g_app.tick_hz_x10 % 10U),
-               (unsigned long)(g_app.cpu_permille / 10U), (unsigned long)(g_app.cpu_permille % 10U));
     sys_sched_stats_t st;
-    sys_sched_stats(&st);
-    con_printf(p, "S_CTRL max %lu us, overruns %lu; S_FAST max %lu us\r\n",
-               (unsigned long)(st.max_cycles[SLOT_CTRL] / (SystemCoreClock / 1000000U)), (unsigned long)st.overrun[SLOT_CTRL],
-               (unsigned long)(st.max_cycles[SLOT_FAST] / (SystemCoreClock / 1000000U)));
-    con_printf(p, "boot failures 0x%04lX, par generation %lu, m/cnt %ld nm\r\n", (unsigned long)g_app.boot_status,
-               (unsigned long)par_generation(), lroundf(q->odo_m_per_cnt * 1.0e9f));
+    const uint32_t us = SystemCoreClock / 1000000U;
+    switch (i) {
+    case 0:
+        return snprintf(buf, n, "MR2006B fw 0.1-phase0 %s calib=%d", BUILD_GIT, APP_CALIB);
+    case 1:
+        return snprintf(buf, n, "reset cause 0x%02X, tick %lu.%lu Hz, cpu %lu.%lu %%", (unsigned)sys_reset_cause(),
+                        (unsigned long)(g_app.tick_hz_x10 / 10U), (unsigned long)(g_app.tick_hz_x10 % 10U),
+                        (unsigned long)(g_app.cpu_permille / 10U), (unsigned long)(g_app.cpu_permille % 10U));
+    case 2:
+        sys_sched_stats(&st);
+        return snprintf(buf, n, "S_CTRL max %lu us, overruns %lu; S_FAST max %lu us",
+                        (unsigned long)(st.max_cycles[SLOT_CTRL] / us), (unsigned long)st.overrun[SLOT_CTRL],
+                        (unsigned long)(st.max_cycles[SLOT_FAST] / us));
+    case 3:
+        return snprintf(buf, n, "boot failures 0x%04lX, par generation %lu, m/cnt %ld nm", (unsigned long)g_app.boot_status,
+                        (unsigned long)par_generation(), lroundf(par()->odo_m_per_cnt * 1.0e9f));
+    default:
+        return -1;
+    }
 }
 
 void app_cmd_exec(const con_cmd_t *c)
@@ -126,7 +134,7 @@ void app_cmd_exec(const con_cmd_t *c)
     case CMD_EVLOG:     con_job(p, CON_JOB_EVLOG); break;
     case CMD_FAULTS:    con_job(p, CON_JOB_FAULTS); break;
     case CMD_PRINT:     app_print_status(p); break;
-    case CMD_INFO:      print_info(p); break;
+    case CMD_INFO:      con_job(p, CON_JOB_INFO); break;
     case CMD_STATUS:
         app_print_status(p);
         con_printf(p, "mode %s, faults 0x%08lX, bat %ld mV%s\r\n", app_mode_name(), (unsigned long)sys_fault_mask(),

@@ -1,4 +1,5 @@
 /* Console parser and chunked output on the host. com_uart / sys_* are stubbed below. */
+#include <stdio.h>
 #include <string.h>
 
 #include "console.h"
@@ -16,6 +17,10 @@ size_t com_write(com_port_t p, const uint8_t *d, size_t n)
     return n;
 }
 size_t   com_tx_free(com_port_t p) { (void)p; return g_free; }
+int con_info_line(uint32_t i, char *buf, size_t n)
+{
+    return (i < 4U) ? snprintf(buf, n, "info line %u .....................................................", (unsigned)i) : -1;
+}
 uint32_t sys_ms(void) { return 1234U; }
 bool     sys_event_at(uint32_t i, sys_event_rec_t *o) { (void)i; (void)o; return false; }
 uint32_t sys_fault_mask(void) { return 0U; }
@@ -144,4 +149,24 @@ void t_con(void)
     g_free = 4096;
     for (int i = 0; i < 5; i++) { (void)con_poll(&c); }
     CHECK(says("D<mm> drive") && says("MODE IDLE|BENCH"));
+
+    REQ("REQ-CON-01: I is a chunked job, so it fits a small radio buffer");
+    clear_out();
+    con_job(COM_RADIO, CON_JOB_INFO);
+    size_t worst_i = 0, passes_i = 0;
+    while (passes_i < 20) {
+        const size_t before = g_out_n[COM_RADIO];
+        (void)con_poll(&c);
+        const size_t n = g_out_n[COM_RADIO] - before;
+        if (n == 0) { break; }
+        passes_i++;
+        if (n > worst_i) { worst_i = n; }
+    }
+    CHECK(passes_i > 1U);                       /* 4 lines > 200 bytes: more than one pass */
+    CHECK(worst_i <= 200U + 96U);
+    for (unsigned k = 0; k < 4; k++) {
+        char key[16];
+        snprintf(key, sizeof key, "info line %u", k);
+        CHECK(strstr(g_out[COM_RADIO], key) != NULL);
+    }
 }

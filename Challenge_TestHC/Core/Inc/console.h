@@ -40,7 +40,7 @@ typedef struct {
     const char *phase;          /* drv state                */
 } con_status_t;
 
-typedef enum { CON_JOB_NONE = 0, CON_JOB_HELP, CON_JOB_PARAMS, CON_JOB_DUMP, CON_JOB_EVLOG, CON_JOB_FAULTS } con_job_t;
+typedef enum { CON_JOB_NONE = 0, CON_JOB_HELP, CON_JOB_PARAMS, CON_JOB_DUMP, CON_JOB_EVLOG, CON_JOB_FAULTS, CON_JOB_INFO } con_job_t;
 
 void     con_rx_byte(com_port_t p, uint8_t b);          /* main loop, from com_uart_poll */
 /* Main loop, every pass: advances chunked output, executes at most one pending line. True when
@@ -52,6 +52,8 @@ bool     con_autoprint(com_port_t p);
 
 void con_printf(com_port_t p, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 void con_job(com_port_t p, con_job_t j);
+/* Line i of the `I` report, -1 past the end. Defined by the application (app_cmd.c), which owns the data. */
+int  con_info_line(uint32_t i, char *buf, size_t n);
 void con_err_state(com_port_t p, const char *mode);
 void con_err_range_par(com_port_t p, const par_desc_t *d);
 void con_print_status(com_port_t p, const con_status_t *s);
