@@ -14,7 +14,7 @@ function q = ekf_param_cast(p, cls)
 
 keep = {'ekf_hist_n','ekf_slip_n','imu_ring_n','gnd_n_deb','lat_n_min','lat_n_max', ...
         'vl_tb_ms','vl_imp_ms','vl_poll_ms','imu_odr_hz', ...
-        'mx_still_init','mx_still_F_bg','mx_hist_corr','mx_sf_mode','mx_freeze_s'};
+        'mx_still_init','mx_still_F_bg','mx_hist_corr','mx_sf_mode','mx_freeze_s','mx_slip_abs'};
 q = p;
 f = fieldnames(p);
 for i = 1:numel(f)

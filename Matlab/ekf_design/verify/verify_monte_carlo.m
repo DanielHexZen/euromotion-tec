@@ -23,8 +23,11 @@ function [R, out] = verify_monte_carlo(N, scenario, varargin)
 %       error < 15 cm; §1.4 waypoint <= 20 cm (week 16) / 40 cm (week 15)
 if nargin < 1 || isempty(N), N = 10; end
 if nargin < 2 || isempty(scenario), scenario = 'rect10'; end
-runs = 1:N;
-if numel(N) > 1, runs = N(:)';  N = numel(runs); end
+if numel(N) > 1
+    runs = N(:)';  N = numel(runs);
+else
+    runs = 1:N;
+end
 % own options (removed before the rest goes to sim_config)
 tag = '';
 keep = true(1, numel(varargin));
@@ -89,6 +92,29 @@ else
 end
 out.f_nees = f_nees;  out.f_anees = f_anees;  out.f_nis = f_nis;  out.clos = clos;
 out.wpe = wpe;  out.wpt = wpt;  out.anees = anees;
+% ---- waypoint budget: which direction and which state carries the error (§14.2)
+ids = unique(wpd(:, 2))';
+fprintf('\nWaypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = %d\n', N);
+fprintf('%-4s | %-22s | %-22s | %-9s | %-17s | %-9s | %s\n', 'wp', 'along: rms max sig mm', 'cross: rms max sig mm', '|e|>5 cm', 'scale: rms sig %', 'edges/leg', 'legs with 0 edges');
+out.wp_budget = zeros(numel(ids), 12);
+for i = 1:numel(ids)
+    m = wpd(:, 2) == ids(i);
+    W = wpd(m, :);
+    ne = W(:, 12);
+    if i > 1
+        for q = 1:size(W, 1)
+            pr = wpd(wpd(:, 1) == W(q, 1) & wpd(:, 2) == ids(i-1), 12);
+            if ~isempty(pr), ne(q) = ne(q) - pr(1); end
+        end
+    end
+    en = hypot(W(:, 4), W(:, 5));
+    b = [sqrt(mean(W(:,4).^2)), max(abs(W(:,4))), sqrt(mean(W(:,8).^2)), ...
+         sqrt(mean(W(:,5).^2)), max(abs(W(:,5))), sqrt(mean(W(:,9).^2)), ...
+         sum(en > 0.05), size(W, 1), sqrt(mean(W(:,7).^2)), sqrt(mean(W(:,11).^2)), mean(ne), sum(ne == 0)];
+    out.wp_budget(i, :) = b;
+    fprintf('%-4d | %6.1f %6.1f %6.1f   | %6.1f %6.1f %6.1f   | %2d of %-3d | %6.3f %6.3f     | %7.1f   | %d\n', ids(i), ...
+        1e3*b(1:6), b(7), b(8), 100*b(9), 100*b(10), b(11), b(12));
+end
 R = [];
 R = [R, vres(sprintf('MC %s N=%d all runs finished', scenario, N), double(all(fin)), sprintf('%d/%d', sum(fin), N), 'all')];
 R = [R, vres('MC NIS in 95 % band (spec §1.4)', double(f_nis >= 0.90), ...

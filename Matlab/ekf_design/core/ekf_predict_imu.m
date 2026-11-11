@@ -39,7 +39,13 @@ infl = cast(1, c);
 if e.slip > 0
     infl = p.ekf_slip_infl;
 end
-sig2_ds = p.ekf_kd*abs(dse)*infl;                 % distance noise
+d_abs = abs(dse);
+if e.slip > 0 && p.mx_slip_abs > 0
+    % finding F-11: in an in-place turn dse ~ 0, so the literal form adds nothing
+    % although a slipping wheel makes the vehicle pivot about it (translate)
+    d_abs = cast(0.5, c)*(abs(ds_l) + abs(ds_r));
+end
+sig2_ds = p.ekf_kd*d_abs*infl;                    % distance noise
 g = [s*cp; s*sp; 0; 0; 0];
 Q = Q + g*sig2_ds*g';
 if still == 0

@@ -1,0 +1,86 @@
+### literal spec scale-factor Q (mx_sf_mode = 0): per-run lines, seeds 101..110
+  MC run  1: finished 1, closure 0.036 m, wp est err [0.0801 0.0714 0.019], wp true err [0.0662 0.0563 0.00625], NEES in band 1.00, NIS 0.98, edges 24/0
+  MC run  2: finished 1, closure 0.037 m, wp est err [0.0764 0.019 0.0519], wp true err [0.0605 0.0331 0.0369], NEES in band 0.48, NIS 0.95, edges 31/0
+  MC run  3: finished 1, closure 0.123 m, wp est err [0.0156 0.115 0.145], wp true err [0.0315 0.0979 0.144], NEES in band 0.49, NIS 0.94, edges 38/0
+  MC run  4: finished 1, closure 0.052 m, wp est err [0.122 0.0876 0.0306], wp true err [0.123 0.0709 0.0486], NEES in band 0.83, NIS 0.99, edges 55/0
+  MC run  5: finished 1, closure 0.017 m, wp est err [0.121 0.0223 0.00849], wp true err [0.127 0.00466 0.0255], NEES in band 0.94, NIS 0.96, edges 41/0
+  MC run  6: finished 1, closure 0.053 m, wp est err [0.117 0.18 0.0455], wp true err [0.126 0.176 0.0295], NEES in band 1.00, NIS 0.98, edges 23/0
+  MC run  7: finished 1, closure 0.073 m, wp est err [0.103 0.0633 0.0396], wp true err [0.114 0.0803 0.0623], NEES in band 0.82, NIS 0.93, edges 35/0
+  MC run  8: finished 1, closure 0.026 m, wp est err [0.132 0.0552 0.00777], wp true err [0.131 0.0389 0.0134], NEES in band 0.83, NIS 0.98, edges 40/0
+  MC run  9: finished 1, closure 0.017 m, wp est err [0.0725 0.0382 0.0257], wp true err [0.0692 0.0541 0.0103], NEES in band 0.88, NIS 0.98, edges 34/0
+  MC run 10: finished 1, closure 0.062 m, wp est err [0.0447 0.0309 0.00646], wp true err [0.0288 0.0181 0.0195], NEES in band 0.47, NIS 0.99, edges 27/0
+
+### net-angle scale-factor Q (mx_sf_mode = 2): per-run lines, seeds 101..103
+  MC run  1: finished 1, closure 0.024 m, wp est err [0.0801 0.0732 0.0431], wp true err [0.0662 0.0582 0.0452], NEES in band 0.91, NIS 0.96, edges 50/0
+  MC run  2: finished 1, closure 0.007 m, wp est err [0.0764 0.00418 0.0442], wp true err [0.0605 0.0154 0.0324], NEES in band 0.93, NIS 0.96, edges 49/0
+  MC run  3: finished 1, closure 0.018 m, wp est err [0.0156 0.0601 0.00979], wp true err [0.0315 0.044 0.00633], NEES in band 0.82, NIS 0.94, edges 57/0
+
+### default parameters on rect10_all: per-run lines, seeds 101..103
+  MC run  1: finished 1, closure 0.011 m, wp est err [0.0769 0.0752 0.0297], wp true err [0.0612 0.0599 0.0312], NEES in band 0.92, NIS 0.97, edges 44/0
+  MC run  2: finished 1, closure 0.013 m, wp est err [0.0763 0.0386 0.0315], wp true err [0.0604 0.0241 0.0192], NEES in band 1.00, NIS 0.99, edges 61/0
+  MC run  3: finished 1, closure 0.003 m, wp est err [0.0156 0.034 0.0316], wp true err [0.0315 0.0241 0.0177], NEES in band 0.61, NIS 0.98, edges 40/0
+
+### literal spec scale-factor Q (mx_sf_mode = 0), N = 10, seeds 101..110
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 10
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   53.0   80.9   60.1   |   79.5  132.4   88.5   |  8 of 10  |  0.546  0.500     |     0.0   | 10
+2    |   59.9  113.9   80.3   |   57.4  178.1   55.6   |  6 of 10  |  0.354  0.324     |    12.3   | 1
+3    |   28.1   51.9   44.4   |   46.4  140.7   23.3   |  2 of 10  |  0.354  0.247     |    12.5   | 1
+99   |   48.0  106.8   40.5   |   11.0   18.8   11.8   |  3 of 10  |  0.421  0.216     |    10.0   | 0
+verify_monte_carlo: NIS 0.968, NEES 0.774, avg NEES 0.392, closure max 0.123 m, wp est max 0.180, wp true max 0.176
+MC rect10 N=10 all runs finished               1  10/10                                              all
+MC NIS in 95 % band (spec §1.4)               1  96.8 % (edge 97.1 %, ZUPT 96.7 %, n = 1225)        >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  77.4 % (<= upper: 79.1 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  39.1 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 12.3 cm, mean 5.0 cm                           < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 18.0 cm                                        < 5 cm
+true waypoint error (§14.2)                   0  max 17.6 cm                                        < 15 cm
+true waypoint error (§1.4 week 16)            1  max 17.6 cm                                        <= 20 cm
+### default model, seeds 101..103 only (for the N = 3 comparisons)
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   61.7   75.6   60.1   |   18.9   26.6   88.9   |  2 of 3   |  0.706  0.500     |     0.0   | 3
+2    |   36.9   54.4   85.3   |   18.0   26.4   17.1   |  1 of 3   |  0.355  0.296     |    18.3   | 0
+3    |   39.8   49.7   45.7   |   19.7   29.9   86.3   |  1 of 3   |  0.316  0.282     |    12.3   | 1
+99   |   19.9   31.9   76.4   |    7.6   13.0   20.4   |  0 of 3   |  0.224  0.223     |    18.7   | 0
+verify_monte_carlo: NIS 0.985, NEES 0.840, avg NEES 0.738, closure max 0.031 m, wp est max 0.080, wp true max 0.066
+MC rect10 N=3 all runs finished                1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  98.5 % (edge 99.3 %, ZUPT 98.1 %, n = 411)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  84.0 % (<= upper: 96.4 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  73.8 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 3.1 cm, mean 1.7 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 8.0 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 6.6 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 6.6 cm                                         <= 20 cm
+### net-angle scale-factor Q (mx_sf_mode = 2), N = 3, seeds 101..103
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   61.7   75.6   60.1   |   18.9   26.6   88.5   |  2 of 3   |  0.706  0.500     |     0.0   | 3
+2    |   53.6   71.0   84.5   |   10.8   17.5   53.5   |  2 of 3   |  0.371  0.299     |    11.0   | 0
+3    |   25.1   41.1   50.7   |   25.9   41.9   13.5   |  0 of 3   |  0.343  0.257     |    16.7   | 0
+99   |   11.3   19.4   41.2   |    6.8    9.5   32.1   |  0 of 3   |  0.300  0.226     |    24.3   | 0
+verify_monte_carlo: NIS 0.954, NEES 0.884, avg NEES 0.611, closure max 0.024 m, wp est max 0.080, wp true max 0.066
+MC rect10 N=3 all runs finished                1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  95.4 % (edge 96.8 %, ZUPT 94.6 %, n = 416)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  88.4 % (<= upper: 95.0 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  61.1 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 2.4 cm, mean 1.6 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 8.0 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 6.6 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 6.6 cm                                         <= 20 cm
+### default parameters, boundary also on leg 1 (rect10_all), N = 3
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   62.9   76.9   60.1   |    5.9   10.1   56.3   |  2 of 3   |  0.715  0.500     |     4.0   | 1
+2    |   48.9   73.0   66.6   |   19.3   26.4   56.6   |  1 of 3   |  0.375  0.305     |    18.7   | 0
+3    |   25.2   30.8   57.7   |   17.9   26.4   88.9   |  0 of 3   |  0.229  0.264     |     9.3   | 1
+99   |    7.8   11.9   78.7   |    4.3    7.2   21.3   |  0 of 3   |  0.209  0.219     |    16.3   | 0
+verify_monte_carlo: NIS 0.978, NEES 0.840, avg NEES 0.696, closure max 0.013 m, wp est max 0.077, wp true max 0.061
+MC rect10_all N=3 all runs finished            1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  97.8 % (edge 97.9 %, ZUPT 97.7 %, n = 407)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  84.0 % (<= upper: 96.4 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  69.6 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 1.3 cm, mean 0.9 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 7.7 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 6.1 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 6.1 cm                                         <= 20 cm

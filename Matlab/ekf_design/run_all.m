@@ -2,9 +2,11 @@ function S = run_all(varargin)
 %RUN_ALL  Design, verification and Simulink comparison of the MR2006B EKF.
 %
 %   S = run_all                       full run (MATLAB: ~10-20 min; Octave: hours)
-%   S = run_all('quick', true)        shorter: MC N = 3, 1e5-step long test, 1 seed
+%   S = run_all('quick', true)        shorter: MC N = 3, 1e5-step long test, 1 seed,
+%                                     no sensitivity sweep, slip study without rect10
 %   S = run_all('name', value, ...)   options:
-%       'mc_N'      Monte Carlo runs of rect10 (default 10)
+%       'mc_N'      Monte Carlo runs of rect10 (default 10), used for the default model
+%                   and for the literal-spec scale-factor variant (same seeds)
 %       'n_long'    steps of the symmetry/PD test (default 1e6)
 %       'seeds'     seeds of the 50/200 Hz comparison (default 1:2)
 %       'sens'      run the sensitivity sweep (default true)
@@ -109,6 +111,20 @@ try
 catch err
     R = [R, step_error('verify: 50 Hz vs 200 Hz (D-30)', err)];
 end
+step('verify: slip detector at 50 Hz vs 200 Hz (REQ-EKF-04)');
+try
+    [r, S.slip] = verify_slip(1, ~opt.quick);
+    R = [R, r];
+catch err
+    R = [R, step_error('verify: slip detector', err)];
+end
+step('verify: in-place-turn consistency / gyro scale-factor Q model (F-3, F-9)');
+try
+    [r, S.turn] = verify_turn_nees(1);
+    R = [R, r];
+catch err
+    R = [R, step_error('verify: in-place-turn consistency', err)];
+end
 step(sprintf('verify: Monte Carlo rect10, N = %d', opt.mc_N));
 try
     [r, S.mc] = verify_monte_carlo(opt.mc_N, 'rect10');
@@ -119,7 +135,7 @@ end
 step('verify: Monte Carlo rect10, literal spec scale-factor Q (mx_sf_mode = 0)');
 try
     ps = ekf_params();  ps.mx_sf_mode = 0;
-    [r, S.mc_spec_sf] = verify_monte_carlo(max(2, round(opt.mc_N/3)), 'rect10', 'p', ps);
+    [r, S.mc_spec_sf] = verify_monte_carlo(opt.mc_N, 'rect10', 'p', ps);   % same N and seeds as above
     for i = 1:numel(r)
         r(i).name = ['[spec SF] ' r(i).name];
         if r(i).pass >= 0, r(i).pass = -1; end      % comparison only

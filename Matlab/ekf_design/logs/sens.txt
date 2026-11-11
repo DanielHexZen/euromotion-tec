@@ -1,0 +1,12 @@
+
+=== Sensitivity (line40, truth fixed) ===
+parameter      factor  ct rms mm ct max mm  at end mm    NIS   NEES
+nominal          1.00        8.9      21.5     -198.9   0.98   0.96
+ekf_kd           0.25        8.9      21.5     -199.0   0.98   0.97
+ekf_kd           4.00        8.9      21.5     -198.5   0.98   0.96
+ekf_gyro_nd      0.25        9.0      21.3     -199.0   0.91   0.96
+ekf_gyro_nd      4.00        8.8      22.6     -199.0   0.92   0.96
+ekf_sig_edge     0.25       26.8      71.2     -207.1   0.57   0.13
+ekf_sig_edge     4.00       12.8      22.5     -201.3   0.89   0.94
+ekf_q_bg         0.25        9.0      21.5     -198.8   0.99   0.96
+ekf_q_bg         4.00        8.9      21.7     -199.3   0.97   0.96

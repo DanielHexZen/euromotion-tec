@@ -1,0 +1,33 @@
+
+##### verify: Jacobians
+verify_jacobians: worst relative errors
+  F IMU moving   4.385e-10
+  F IMU still    1.398e-10
+  F encoder      4.227e-10
+  H edge         1.229e-09
+  H face         8.790e-10
+  H heading      1.398e-10
+  H point        4.486e-10
+  H ZUPT         7.346e-13
+  literal spec F while still vs FD: max abs diff 0.02 (= dt)
+
+##### verify: static (float32)
+verify_static [design, single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.00000 deg, bias err -2.03e-03 deg/s
+verify_static [spec start (F-2), single]: sigma_bg(3 s) 0.0043 deg/s, drift 0.00028 deg, bias err -2.39e-03 deg/s
+verify_static [spec F still (F-1), single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.45815 deg, bias err -2.03e-03 deg/s
+verify_static long run (single, 100000 steps): asym 0, min eig 1.01e-09, Pbb 1.01e-09, faults 0
+
+##### verify: gate
+verify_gate: P(chi2_1 <= 9.00) = 0.99730, P(chi2_2 <= 9.21) = 0.99000
+
+##### verify: back-shift
+verify_backshift (hist_corr=1): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0 m
+verify_backshift (hist_corr=0): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0.0199 m
+
+##### verify: float32 vs float64
+verify_float32 maneuver: max dpos 0.707 mm, dth 0.0261 deg, dbg 1.43e-05, ds 0; final err single 0.0919 double 0.0912 m
+verify_float32 line40: max dpos 3.76 mm, dth 0.0873 deg, dbg 0.000105, ds 9.67e-06; final err single 0.2020 double 0.2007 m
+verify_float32 rect10: max dpos 138 mm, dth 21.7 deg, dbg 5.06e-05, ds 0.00213; final err single 0.0088 double 0.0330 m
+Psi offset      0 rad: bias error single -3.634e-05, double -3.635e-05 rad/s
+Psi offset    100 rad: bias error single -4.036e-05, double -3.635e-05 rad/s
+Psi offset   1000 rad: bias error single -8.727e-03, double -3.635e-05 rad/s

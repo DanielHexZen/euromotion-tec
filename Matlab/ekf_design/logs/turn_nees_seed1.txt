@@ -1,3 +1,0 @@
-
-In-place-turn consistency, maneuver course (50 Hz)
-seed variant     sf true | NEES<=hi  NEES_th  NEES_xy | e_th mrad  sig mrad  ratio |     sf*Th model sig
