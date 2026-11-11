@@ -107,3 +107,26 @@ Psi offset      0 rad: bias error single -1.948e-05, double -1.947e-05 rad/s
 Psi offset    100 rad: bias error single -9.427e-05, double -1.947e-05 rad/s
 Psi offset   1000 rad: bias error single -8.727e-03, double -1.947e-05 rad/s
 
+##### verify: 50 Hz vs 200 Hz (D-30)  [run separately: verify_rate_50_200(1, true)]
+
+50 Hz vs 200 Hz, maneuver scenario, seeds 1 (identical sensor data)
+phase            | 50 Hz: pos rms/max mm, th rms/max mdeg, NEES<=hi | 200 Hz                            
+straight         | 44.50/78.25  1500.8/2426.0  1.00 | 44.50/78.48  1498.3/2420.5  1.00
+arc 1.0 rad/s    | 77.11/86.15  1177.6/2299.7  1.00 | 77.18/86.21  1173.5/2295.3  1.00
+in-place turn    | 55.07/55.61  5204.0/8434.8  0.74 | 55.32/55.89  5208.6/8441.8  0.74
+back-shift error of 10..100 ms old queries (pos rms/max mm, th rms/max mrad):
+  standing         50 Hz  0.018/ 0.261   0.026/ 0.225   200 Hz  0.022/ 0.361   0.035/ 0.360
+  straight         50 Hz  0.497/ 1.265   0.027/ 0.271   200 Hz  0.472/ 1.262   0.028/ 0.283
+  arc 1.0 rad/s    50 Hz  0.384/ 1.184   0.251/ 0.476   200 Hz  0.377/ 1.138   0.249/ 0.485
+  in-place turn    50 Hz  0.024/ 0.083   0.275/ 0.692   200 Hz  0.024/ 0.085   0.275/ 0.731
+final position error (m): 50 Hz 0.0559, 200 Hz 0.0562
+final P_tt (rad^2):       50 Hz 0.00219, 200 Hz 0.00219
+rect10 closure (m): 50 Hz 0.136, 200 Hz 0.139
+rect10 max waypoint estimate error (m): 50 Hz 0.169, 200 Hz 0.165
+rect10 NEES in band: 50 Hz 0.99, 200 Hz 0.995
+
+##### verify: Monte Carlo rect10, N = 3  [run separately: verify_monte_carlo(3, 'rect10')]
+  MC run  1: finished 1, closure 0.003 m, wp est err [0.0838 0.0704 0.0308], wp true err [0.0708 0.0551 0.0311], NEES in band 0.86, NIS 0.96, edges 50/0
+  MC run  2: finished 1, closure 0.007 m, wp est err [0.0777 0.0341 0.0469], wp true err [0.062 0.0195 0.0333], NEES in band 0.98, NIS 0.99, edges 80/0
+  MC run  3: finished 1, closure 0.062 m, wp est err [0.0163 0.0316 0.0342], wp true err [0.0322 0.0223 0.0317], NEES in band 0.89, NIS 0.97, edges 56/0
+verify_monte_carlo: NIS 0.973, NEES 0.909, avg NEES 0.958, closure max 0.062 m, wp est max 0.084, wp true max 0.071

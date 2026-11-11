@@ -41,7 +41,7 @@ also runs in GNU Octave 8.
 
 | Part | Status |
 |---|---|
-| `core/`, `sim/`, `design/`, `verify/`, `run_all.m` | executed in **GNU Octave 8.4** (Linux), single precision filter, results below |
+| `core/`, `sim/`, `design/`, `verify/`, `run_all.m` | executed in **GNU Octave 8.4** (Linux), single precision filter, quick settings; sensitivity sweep and literal-spec Monte Carlo not run; results below |
 | figures | **not produced**: headless Octave here could not render text (`can_plot` returns false); MATLAB will write them |
 | `simulink/build_ekf_model.m`, `simulink/run_ekf_model.m` | **never executed** (no MATLAB/Simulink available). Written against documented APIs; expect small fixes on the first run in MATLAB |
 | MATLAB Function block code generation | **not checked**. The step functions were written for `%#codegen` (fixed sizes, no cell arrays, no dynamic fields, type-stable structs) but no code generator has seen them |
@@ -169,11 +169,48 @@ The pose history then holds one entry per 20 ms; 64 entries already cover the
 Each was checked numerically; the code implements the corrected form and the
 literal form stays selectable through an `mx_*` switch for comparison.
 
-RESULTS_FINDINGS_PLACEHOLDER
+| ID | Finding | Evidence (Octave run) | Switch for the literal spec form |
+|---|---|---|---|
+| F-1 | §7.17.2 lists `F(3,4) = -dt` unconditionally. While `still` the heading does not depend on `b_g`, so the entry must be 0; otherwise heading variance grows at standstill and every ZUPT moves the frozen heading (contradicts D-12). | 60 s static: heading drift 0.000 deg as designed, 0.450 deg with the literal matrix | `mx_still_F_bg = 1` |
+| F-2 | With the literal start the first 0.2 s count as motion although the vehicle stands. Starting with the standstill timer full avoids it. | static: σ(b_g) after 3 s 0.0035 deg/s (design) against 0.0043 deg/s, drift 0.0004 deg | `mx_still_init = 0` |
+| F-3 | `Q_tt += (sf·dθ)²` per step treats a constant gyro scale error as white noise: the variance depends on the step rate and is about ten times too small in σ for one 90° turn (0.027 deg at 50 Hz, 0.014 deg at 200 Hz, true 0.27 deg). Proposed: per-radian model `Q_tt += sf²·c·|dθ|`, rate-independent. The correlation angle `c` is a `[DECIDE]` (2π used). | `P_tt` after the turns identical at 50 and 200 Hz (0.00219 rad²) with the proposed model | `mx_sf_mode = 0` |
+| F-6 | The back-shift of a delayed measurement must contain motion only. With raw poses in the history, every correction applied after the measurement time leaks into the back-shift. Proposed: store pose minus accumulated corrections (3 floats, 3 additions per update). | leak 0 m with the correction, 19.9 mm without | `mx_hist_corr = 0` |
+| F-7 | The yaw integral Ψ grows without bound; in float32 its resolution degrades. Re-base the ring or keep Ψ in integer/double in the C code. | ZUPT bias error −1.9e-5 rad/s at Ψ = 0, −9.4e-5 at 100 rad, −8.7e-3 at 1000 rad (float32); unchanged in double | none |
+| F-8 | Accumulating `dt` in float for the standstill timer is precision-dependent (50 × 0.02f < 1.0f), which shifts the ZUPT by one step between float32 and float64. Accumulate integer microseconds. | by construction | none |
+
+None of these is in `FIRMWARE_SPEC.md` yet. They are proposals for §18.2.
 
 ## Results of the Octave run
 
-RESULTS_PLACEHOLDER
+Executed in GNU Octave 8.4, quick settings (one seed for the rate comparison, Monte Carlo N = 3, long test 1e5 steps, no sensitivity sweep). The first run was cut off by a container restart, so the 50/200 Hz comparison and the Monte Carlo stage were run separately; the literal-spec Monte Carlo variant and the sensitivity sweep were **not run**. The complete output is in `octave_quick_run.txt`. All noise parameters are placeholders, so these numbers check the filter logic, not the tuning.
+
+| Check | Result | Limit | Pass |
+|---|---|---|---|
+| Jacobians against finite differences | worst relative error 1.2e-9 | — | yes |
+| Static, float32, 1e5 steps | P symmetric, min eigenvalue 1.0e-9, no faults | positive definite | yes |
+| Gate probabilities | 0.99730 (scalar, 9.00), 0.99000 (2-D, 9.21) | — | yes |
+| Back-shift interpolation | 0.015 mm, leak 0 m | — | yes |
+| `t_ekf_line` | cross-track max 25.2 mm, NIS 97.1 %, NEES 94.6 %, 79 edges accepted, 0 rejected | — | yes |
+| float32 against float64 | manoeuvre 2.4 mm / 0.12 deg; rect10 70.9 mm / 8.7 deg mid-run (closed-loop timing diverges), final errors 6.5 mm and 21.6 mm | informational | — |
+| **D-30:** position RMS difference 50 against 200 Hz | 0.25 mm | < 2 mm | yes |
+| **D-30:** back-shift max error at 50 Hz | 1.265 mm (200 Hz: 1.262 mm) | < 2 mm | yes |
+| **D-30:** rect10 closure 50 / 200 Hz | 13.6 / 13.9 cm | informational | — |
+| **D-30:** rect10 max waypoint estimate error 50 / 200 Hz | 16.9 / 16.5 cm | informational | — |
+| **D-30:** NEES below upper bound 50 / 200 Hz | 1.00 / 1.00 straight and arc, 0.74 / 0.74 in-place turn | informational | — |
+| MC rect10, N = 3: all runs finished | 3/3 | all | yes |
+| MC NIS in 95 % band | 97.3 % (edge 98.9 %, ZUPT 96.2 %, n = 446) | ≥ 90 % | yes |
+| MC NEES per sample in 95 % band | 90.9 % | ≥ 90 % | yes |
+| MC rectangle closure | max 6.2 cm, mean 2.4 cm | < 30 cm | yes |
+| MC waypoint estimate against truth (§14.2) | max 8.4 cm | < 5 cm | **no** |
+| MC true waypoint error | max 7.1 cm | < 15 cm / ≤ 20 cm | yes |
+
+Reading of the results:
+
+* **50 Hz is sufficient in simulation.** 50 Hz and 200 Hz agree to 0.25 mm RMS on identical sensor data, and every other figure is the same within noise. This supports D-30; it does not replace a check on the vehicle.
+* **The 5 cm waypoint-estimate limit of §14.2 is missed** (8.4 cm) with the placeholder noise values and N = 3. Whether this is tuning, the placeholder noise or the limit itself is open.
+* **The filter is overconfident during in-place turns** (NEES in band 0.74 at both rates), so the cause is the model, not the rate.
+* **The odometry scale state is observable on the rectangle**: its σ falls to 0.37–0.42 of the prior, and freezing it raises mean NEES from about 1.2 to 3.8–4.9.
+* The slip-detector timing at 50 Hz was not examined beyond the threshold margin (×5 over the systematic residuals).
 
 ## What must be measured before the tuning is real
 
