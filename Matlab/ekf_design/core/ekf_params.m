@@ -28,7 +28,7 @@ p.odo_wheelbase   = 0.22325;     % 203  m      geometric; effective [MEASURE] UM
 % ------------------------------------------------------------- IMU (§10.2, §7.11)
 p.imu_timeout     = 0.020;       % 403  s
 p.imu_extrap_max  = 0.002;       % 404  s      extrapolation limit of the yaw integral
-p.imu_odr_hz      = 833;         % gyro sample rate, Hz. LSM6DS3 (replaces the LSM6DSV): gyro ODRs are
+p.imu_odr_hz      = 833;         % gyro sample rate, Hz. LSM6DS3 (spec D-42, replaces the LSM6DSV): gyro ODRs are
                                  % 12.5/26/52/104/208/416/833/1666 Hz, there is no 960 Hz. 833 Hz is
                                  % [VERIFY] pending the firmware decision (§7.11.1). Must be an integer
                                  % below 1000 here (at most one sample per 1 kHz tick, sim_yaw_step).
