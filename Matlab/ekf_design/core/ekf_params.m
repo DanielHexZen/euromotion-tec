@@ -132,7 +132,10 @@ p.mx_still_F_bg   = 0;   % 0: F(3,4)=0 while still (heading frozen, D-12); 1: li
 p.mx_hist_corr    = 1;   % 1: pose history excludes measurement corrections (back-shift = motion
                          %    only); 0: raw poses (corrections leak into the back-shift)
 p.mx_sf_mode      = 1;   % 1: per-radian model Q_tt += sf^2*mx_sf_corr*|dth| (rate-independent,
-                         %    finding F-3); 0: literal spec Q_tt += (sf*dth)^2 per step
+                         %    finding F-3); 0: literal spec Q_tt += (sf*dth)^2 per step;
+                         % 2: net-angle model Q_tt += sf^2*max(0, (Th+dth)^2 - Th^2), Th = net
+                         %    angle turned since init/reset (finding F-9; consistent for any
+                         %    number of turns in one direction, see verify_turn_nees)
 p.mx_sf_corr      = 2*pi;% correlation angle of the per-radian model, rad [DECIDE]: one full
                          %    circuit of turning, so (sf*Theta)^2 is matched for Theta = 2 pi
 p.mx_freeze_s     = 0;   % 1: odometry scale state frozen (no Q_ss, P_ss = 0) for the observability study

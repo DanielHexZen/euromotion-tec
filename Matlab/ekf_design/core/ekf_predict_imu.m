@@ -12,6 +12,8 @@ function e = ekf_predict_imu(e, p, ds_l, ds_r, dpsi, dt, sat)
 %     1. slip detector (uses b_g before the step)
 %     2. x+, F             (ekf_model_imu)
 %     3. Q                 (distance, gyro white, gyro scale factor, b_g RW, s RW)
+%                          scale-factor term: p.mx_sf_mode 0 literal spec, 1 per radian
+%                          (default), 2 net-angle (uses and updates e.th_net)
 %     4. P = F P F' + Q;  P = (P + P')/2
 %#codegen
 c     = class(e.x);
@@ -49,10 +51,21 @@ if still == 0
 end
 if p.mx_sf_mode == 0
     Q(3,3) = Q(3,3) + (p.ekf_gyro_sf*dth)^2;       % gyro scale factor, spec form
-else
+elseif p.mx_sf_mode == 1
     % proposal (see README, finding F-3): variance per radian turned, so a
     % 90 deg turn gets (sf*pi/2)^2 whatever the step rate
     Q(3,3) = Q(3,3) + p.ekf_gyro_sf*p.ekf_gyro_sf*cast(p.mx_sf_corr, c)*abs(dth);
+else
+    % mode 2 (see README, finding F-9): a CONSTANT scale error gives the heading
+    % error sf*Theta, Theta = net angle turned since the pose was (re)set. Add the
+    % increment of (sf*Theta)^2, never negative: exact for turning on in one
+    % direction, conservative after a reversal or after heading corrections.
+    th_new = e.th_net + dth;
+    dq = p.ekf_gyro_sf*p.ekf_gyro_sf*(th_new*th_new - e.th_net*e.th_net);
+    if dq > 0
+        Q(3,3) = Q(3,3) + dq;
+    end
+    e.th_net = th_new;
 end
 Q(4,4) = Q(4,4) + p.ekf_q_bg*dt;                   % bias random walk
 if p.mx_freeze_s == 0

@@ -43,6 +43,7 @@ e.slip   = 0;
 e.slip_cnt = 0;
 e.slip_episodes = 0;
 e.r_slip = cast(0, c);
+e.th_net = cast(0, c);         % net angle turned since init / pose reset (mx_sf_mode = 2 only)
 e.w_meas = cast(0, c);          % bias-corrected yaw rate of the last step (for nav_turn)
 e.hist_t = zeros(N, 1);
 e.hist_p = zeros(3, N, c);

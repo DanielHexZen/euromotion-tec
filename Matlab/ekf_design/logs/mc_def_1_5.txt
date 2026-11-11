@@ -1,0 +1,4 @@
+warning: colon arguments should be scalars
+warning: called from
+    verify_monte_carlo at line 26 column 6
+

@@ -9,4 +9,5 @@ e.P(1:3, :) = 0;  e.P(:, 1:3) = 0;
 e.P(1,1) = p.ekf_p0_xy^2;  e.P(2,2) = p.ekf_p0_xy^2;  e.P(3,3) = p.ekf_p0_th^2;
 e.hist_n = 0;  e.hist_head = 0;
 e.corr(:) = 0;
+e.th_net(:) = 0;
 end
