@@ -4,7 +4,7 @@ function A = allan_gyro(w, fs, varargin)
 %
 %   A = allan_gyro(w, fs)
 %   w   yaw-rate samples, rad/s (after axis mapping, IMU at rest), any length
-%   fs  sample rate, Hz (960 for the LSM6DSV setting of §7.11.1)
+%   fs  sample rate, Hz (p.imu_odr_hz: 833 for the LSM6DS3 setting, [VERIFY])
 %
 %   Model fitted (IEEE Std 952 terms that the EKF represents):
 %     sigma^2(tau) = N^2/tau + K^2*tau/3

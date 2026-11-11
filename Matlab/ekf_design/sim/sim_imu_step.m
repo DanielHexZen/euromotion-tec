@@ -1,5 +1,5 @@
 function [st, y] = sim_imu_step(st, yp, tr)
-%SIM_IMU_STEP  One gyro sample at 960 Hz (DRDY-timestamped, §7.11).
+%SIM_IMU_STEP  One gyro sample at tr.f_imu (833 Hz, LSM6DS3) (DRDY-timestamped, §7.11).
 %
 %   [st, y] = sim_imu_step(st, yp, tr), yp = latest plant output (1 kHz, held).
 %

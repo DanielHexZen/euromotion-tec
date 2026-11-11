@@ -70,7 +70,7 @@ c  = class(p.ekf_kd);
 e  = ekf_init(p, 0, 0, 0);
 r  = imu_yaw_init(p);
 rs = sim_rng_init(seed, 1);
-bg = 0.5*pi/180;  nd = 1e-4;  fi = 960;  t0 = 1/48000;  i = 0;
+bg = 0.5*pi/180;  nd = 1e-4;  fi = double(p.imu_odr_hz);  t0 = 1/(2*lcm(1000, round(fi)));  i = 0;
 first = true;  have = 0;  psi_prev = cast(0, c);
 for k = 0:round(Tend*1000)
     t = k*1e-3;

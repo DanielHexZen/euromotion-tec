@@ -49,7 +49,9 @@ tr.slip_t0  = zeros(1,4); tr.slip_t1 = zeros(1,4); tr.slip_side = zeros(1,4); tr
 % gyro
 tr.imu_on   = 1;
 tr.f_imu    = p.imu_odr_hz;
-tr.imu_t0   = 1/48000;                   % DRDY phase: never coincides with a 1 kHz tick
+tr.imu_t0   = 1/(2*lcm(1000, round(p.imu_odr_hz)));  % DRDY phase: half the common grid of 1 kHz and
+                                         % f_imu, so a sample never coincides with a 1 kHz tick
+                                         % (833 Hz: 1/1666000 s; 960 Hz: 1/48000 s)
 tr.nd       = p.ekf_gyro_nd;
 tr.q_bg     = p.ekf_q_bg;
 tr.bg_ramp  = 0;

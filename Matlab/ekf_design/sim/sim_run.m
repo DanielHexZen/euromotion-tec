@@ -4,7 +4,7 @@ function L = sim_run(cfg)
 %   L = sim_run(cfg)    cfg from sim_config
 %
 %   Scheduler, identical in order to the Simulink model of build_ekf_model.m:
-%     IMU samples at imu_t0 + i/960 s (never on a 1 kHz tick) use the plant
+%     IMU samples at imu_t0 + i/f_imu s (never on a 1 kHz tick) use the plant
 %     output of the last tick (zero-order hold)
 %     every 1 kHz tick k (t = k ms), in this order:
 %       plant (Moore: output at t_k, then integrate with the command of tick k-1)

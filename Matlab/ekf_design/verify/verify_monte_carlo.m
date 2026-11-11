@@ -2,9 +2,15 @@ function [R, out] = verify_monte_carlo(N, scenario, varargin)
 %VERIFY_MONTE_CARLO  Consistency and accuracy over N seeded runs of the rectangle.
 %
 %   [R, out] = verify_monte_carlo(N, scenario, 'name', value, ...)
-%   N         number of runs (default 10; each rect10 run is ~240 s simulated)
+%   N         number of runs (default 10; each rect10 run is ~240 s simulated),
+%             or a vector of run indices (seed = 100 + index), e.g. 4:6
 %   scenario  'rect10' (default), 'rect10_lm', 'rect10_all'
-%   options are passed to sim_config (e.g. 'ekf_rate', 200, 'p', p)
+%   options are passed to sim_config (e.g. 'ekf_rate', 200, 'p', p), except
+%     'tag', name   cache every run's metrics in results/mc_cache/<name>_<scenario>_<seed>.mat
+%                   and reuse them on the next call (the runs can then be split over
+%                   several processes and pooled afterwards; the tag must identify
+%                   the configuration, nothing checks it)
+%   out.wpd: one row per waypoint, see wp_detail below.
 %
 %   Truth 'prior': start pose, initial bias, odometry scale and gyro scale
 %   factor are drawn from the filter's own P0/Q model, so NEES tests the
@@ -17,30 +23,52 @@ function [R, out] = verify_monte_carlo(N, scenario, varargin)
 %       error < 15 cm; §1.4 waypoint <= 20 cm (week 16) / 40 cm (week 15)
 if nargin < 1 || isempty(N), N = 10; end
 if nargin < 2 || isempty(scenario), scenario = 'rect10'; end
+runs = 1:N;
+if numel(N) > 1, runs = N(:)';  N = numel(runs); end
+% own options (removed before the rest goes to sim_config)
+tag = '';
+keep = true(1, numel(varargin));
+for k = 1:2:numel(varargin)
+    if strcmp(varargin{k}, 'tag'), tag = varargin{k+1};  keep(k:k+1) = false; end
+end
+varargin = varargin(keep);
+cdir = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'results', 'mc_cache');
+if ~isempty(tag) && ~exist(cdir, 'dir'), mkdir(cdir); end
 nees = [];  fin = zeros(N, 1);  clos = zeros(N, 1);  wpe = [];  wpt = [];  nis = [];
-neesmat = [];
-for s = 1:N
-    cfg = sim_config(scenario, 100 + s, varargin{:});
-    L = sim_run(cfg);
-    M = sim_metrics(L);
+neesmat = [];  wpd = [];
+for q = 1:N
+    s = runs(q);
+    cf = fullfile(cdir, sprintf('%s_%s_%03d.mat', tag, scenario, 100 + s));
+    if ~isempty(tag) && exist(cf, 'file')
+        C = load(cf);  M = C.M;  D = C.D;  nL = C.nL;
+    else
+        cfg = sim_config(scenario, 100 + s, varargin{:});
+        L = sim_run(cfg);
+        M = sim_metrics(L);
+        D = wp_detail(L, M, 100 + s);
+        nL = L.n;
+        if ~isempty(tag), save('-v7', cf, 'M', 'D', 'nL'); end
+    end
     nees = [nees; M.nees3(M.i0:end)]; %#ok<AGROW>
-    nn = min(size(neesmat, 1), L.n);
-    if s == 1
+    nn = min(size(neesmat, 1), nL);
+    if q == 1
         neesmat = M.nees3;
     else
         neesmat = neesmat(1:nn, :);  neesmat(:, end+1) = M.nees3(1:nn); %#ok<AGROW>
     end
-    fin(s) = M.finished;  clos(s) = M.closure;
+    fin(q) = M.finished;  clos(q) = M.closure;
     w = M.wp(M.wp(:,1) < 99, :);
     wpe = [wpe; w(:,2)]; %#ok<AGROW>
     wpt = [wpt; w(:,3)]; %#ok<AGROW>
+    wpd = [wpd; D]; %#ok<AGROW>
     nis = [nis; M.nis]; %#ok<AGROW>
     fprintf('  MC run %2d: finished %d, closure %.3f m, wp est err %s, wp true err %s, NEES in band %.2f, NIS %.2f, edges %d/%d\n', ...
         s, M.finished, M.closure, mat2str(w(:,2)', 3), mat2str(w(:,3)', 3), M.f_nees3, M.f_nis, ...
         M.n_edge_acc, M.n_edge_rej);
-    out.runs(s) = struct('closure', M.closure, 'f_nees3', M.f_nees3, 'f_nis', M.f_nis, ...
+    out.runs(q) = struct('closure', M.closure, 'f_nees3', M.f_nees3, 'f_nis', M.f_nis, ...
         'n_edge', M.n_edge_acc, 'n_edge_rej', M.n_edge_rej, 'finished', M.finished);
 end
+out.wpd = wpd;
 b3 = chi2_quantile([0.025 0.975], 3);
 f_nees = mean(nees >= b3(1) & nees <= b3(2));
 f_nees_hi = mean(nees <= b3(2));
@@ -79,4 +107,37 @@ R = [R, vres('true waypoint error (§1.4 week 16)', double(max([wpt; 0]) <= 0.20
     sprintf('max %.1f cm', 100*max([wpt; 0])), '<= 20 cm')];
 fprintf('verify_monte_carlo: NIS %.3f, NEES %.3f, avg NEES %.3f, closure max %.3f m, wp est max %.3f, wp true max %.3f\n', ...
     f_nis, f_nees, f_anees, max(clos), max([wpe; 0]), max([wpt; 0]));
+end
+
+function D = wp_detail(L, M, seed)
+% One row per waypoint (and the finish, id 99), taken at the estimator step of
+% the waypoint record:
+%   [seed id t  e_along e_cross e_theta e_s  sig_along sig_cross sig_theta sig_s
+%    edges_accepted_so_far  d_since_last_edge  true_along_err true_cross_err]
+% along/cross are relative to the LINE segment that ends at the waypoint;
+% errors are estimate minus truth, sigmas from P.
+c = L.cfg.course;
+D = zeros(size(L.wp, 1), 15);
+for i = 1:size(L.wp, 1)
+    id = L.wp(i, 1);
+    if id == 99
+        k = find(c.type == 6, 1) - 1;
+    else
+        k = find(c.type == 4 & c.wp_id == id, 1) - 1;
+    end
+    dx = c.x1(k) - c.x0(k);  dy = c.y1(k) - c.y0(k);  Ls = hypot(dx, dy);
+    tx = dx/Ls;  ty = dy/Ls;
+    [~, n] = min(abs(L.t - L.wp(i, 2)));
+    e = M.e(n, :);
+    P = reshape(L.est(n, 34:58), 5, 5);
+    Rm = [tx ty; -ty tx];
+    Pr = Rm*P(1:2,1:2)*Rm';
+    ne = L.est(1:n, 18);
+    j = find(ne < ne(n), 1, 'last');
+    if isempty(j), dlast = NaN; else, dlast = L.est(n, 59) - L.est(j + 1, 59); end
+    pt = [L.wp(i,5) - c.x1(k), L.wp(i,6) - c.y1(k)];
+    D(i, :) = [seed, id, L.wp(i,2), e(1)*tx + e(2)*ty, -e(1)*ty + e(2)*tx, e(3), e(5), ...
+        sqrt(Pr(1,1)), sqrt(Pr(2,2)), sqrt(P(3,3)), sqrt(P(5,5)), ne(n), dlast, ...
+        pt(1)*tx + pt(2)*ty, -pt(1)*ty + pt(2)*tx];
+end
 end

@@ -28,9 +28,17 @@ p.odo_wheelbase   = 0.22325;     % 203  m      geometric; effective [MEASURE] UM
 % ------------------------------------------------------------- IMU (§10.2, §7.11)
 p.imu_timeout     = 0.020;       % 403  s
 p.imu_extrap_max  = 0.002;       % 404  s      extrapolation limit of the yaw integral
-p.imu_odr_hz      = 960;         % text §7.11.1 (LSM6DSV ODR) [VERIFY]
-p.imu_gyro_lsb    = 17.50e-3*pi/180; % text §7.11.1, rad/s per LSB at +-500 dps [VERIFY]
-p.imu_ring_n      = 32;          % text §7.11.3 ring length of the yaw integral
+p.imu_odr_hz      = 833;         % gyro sample rate, Hz. LSM6DS3 (replaces the LSM6DSV): gyro ODRs are
+                                 % 12.5/26/52/104/208/416/833/1666 Hz, there is no 960 Hz. 833 Hz is
+                                 % [VERIFY] pending the firmware decision (§7.11.1). Must be an integer
+                                 % below 1000 here (at most one sample per 1 kHz tick, sim_yaw_step).
+                                 % The white-noise level is ekf_gyro_nd (503) below; it stays the spec
+                                 % placeholder [MEASURE]. The LSM6DS3 datasheet rate noise density must
+                                 % be looked up and compared with it [VERIFY]; no datasheet number is
+                                 % assumed in this folder.
+p.imu_gyro_lsb    = 17.50e-3*pi/180; % text §7.11.1, rad/s per LSB at +-500 dps [VERIFY] for the LSM6DS3
+p.imu_ring_n      = 32;          % text §7.11.3 ring length of the yaw integral (32/833 Hz = 38.4 ms,
+                                 % covers one 20 ms EKF period; checked in verify_static)
 
 % ------------------------------------------------------------- estimator (§10.3)
 p.ekf_kd          = 1.0e-4;      % 500  m           distance noise [MEASURE] repeated D5000

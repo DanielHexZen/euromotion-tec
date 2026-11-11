@@ -18,15 +18,16 @@ function mdl = build_ekf_model(cfg, mdl)
 %   Structure (mirrors the firmware, D-30):
 %     Plant            1 kHz          truth: first-order wheels, mismatch, wheelbase, slip
 %     Sensors/Encoders 1 kHz          enc_snapshot_isr: counts + t_us
-%     Sensors/IMU      960 Hz, offset 1/48000 s   gyro with bias, RW, noise, SF, LSB
+%     Sensors/IMU      imu_odr_hz (833 Hz), offset one base step   gyro with bias, RW, noise, SF, LSB
 %     Sensors/Ground   1 kHz          G1..G4 ranging 50 Hz, polling, debounce, edge events
 %     Sensors/Lateral  1 kHz          S1/S2 ranging 50 Hz (EXTI timestamps)
-%     Estimator/YawIntegral 1 kHz     imu_drain: yaw-integral ring (960 Hz samples)
+%     Estimator/YawIntegral 1 kHz     imu_drain: yaw-integral ring (833 Hz samples)
 %     Estimator/EKF    50 Hz, offset 1 ms   app_est in S_CTRL: predict, ZUPT, aiding
 %     Guidance         50 Hz, offset 1 ms   msn + nav + drv_vel, after the EKF
 %     CmdDelay         Unit Delay 1 kHz: drv output acts from the next tick (no algebraic loop)
 %     StatusDelay      Unit Delay 50 Hz: EKF uses the drv status of the previous control tick
-%   Solver: fixed-step discrete, base step 1/48000 s (the 960 Hz samples never
+%   Solver: fixed-step discrete, base step tr.imu_t0 = 1/(2*lcm(1000, f_imu)) s
+%   (833 Hz: 1/1666000 s; the IMU samples never
 %   coincide with a 1 kHz tick, so the execution order equals sim_run's),
 %   single-tasking, algebraic loops = error.
 %   Logged (To Workspace, Array): sl_est (70), sl_upd (56), sl_gdn (10), sl_plant (13);
@@ -53,7 +54,7 @@ if exist(f, 'file'), delete(f); end
 new_system(mdl);
 load_system(mdl);
 set_param(mdl, 'SolverType', 'Fixed-step', 'Solver', 'FixedStepDiscrete', ...
-    'FixedStep', '1/48000', 'StopTime', sprintf('%.6f', cfg.T_end), ...
+    'FixedStep', sprintf('1/%d', round(1/cfg.tr.imu_t0)), 'StopTime', sprintf('%.6f', cfg.T_end), ...
     'SampleTimeConstraint', 'Unconstrained', 'AlgebraicLoopMsg', 'error', ...
     'ReturnWorkspaceOutputs', 'on', 'SignalLogging', 'on');
 trysp(mdl, 'EnableMultiTasking', 'off');          % R2019a+
@@ -62,7 +63,7 @@ trysp(mdl, 'SingleTaskRateTransMsg', 'none');
 trysp(mdl, 'PreLoadFcn', sprintf('addpath(genpath(''%s''));', root));
 trysp(mdl, 'InitFcn', sprintf('addpath(genpath(''%s''));', root));
 
-T1k = '1e-3';  T960 = '[1/960 1/48000]';  T50 = '[0.02 0.001]';
+T1k = '1e-3';  T960 = sprintf('[1/%d 1/%d]', round(cfg.tr.f_imu), round(1/cfg.tr.imu_t0));  % IMU rate, one base step offset  T50 = '[0.02 0.001]';
 
 % ------------------------------------------------------------ blocks
 % columns: x = 30 (plant), 260 (sensors), 520 (estimator), 800 (guidance)

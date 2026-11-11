@@ -6,7 +6,7 @@ function [R, out] = verify_static(cls, n_long)
 %   n_long  number of estimator steps of the long symmetry/PD test (default 1e6)
 %
 %   Part 1: 60 s stationary, true bias 0.5 deg/s, gyro white noise ekf_gyro_nd at
-%   960 Hz through the real yaw-integral ring, quantised to the LSB, EKF at 50 Hz
+%   p.imu_odr_hz (833 Hz) through the real yaw-integral ring, quantised to the LSB, EKF at 50 Hz
 %   with ZUPT. Pass: sigma_bg < 0.02 deg/s after 3 s; heading drift < 0.01 deg.
 %   Run three times: as designed, with the literal spec start (first 0.2 s
 %   counted as motion, finding F-2) and with the literal spec F(3,4) = -dt
@@ -70,14 +70,14 @@ fprintf('verify_static long run (%s, %g steps): asym %.3g, min eig %.3g, Pbb %.3
 end
 
 function o = static_run(p, Tend, bg, seed)
-% gyro at 960 Hz -> yaw ring -> EKF at 50 Hz, stationary
+% gyro at p.imu_odr_hz -> yaw ring -> EKF at 50 Hz, stationary
 c   = class(p.ekf_kd);
 e   = ekf_init(p, 0, 0, 0);
 r   = imu_yaw_init(p);
 rs  = sim_rng_init(seed, 1);
 nd  = double(p.ekf_gyro_nd);
 lsb = double(p.imu_gyro_lsb);
-fi  = 960;  t0 = 1/48000;  i = 0;
+fi  = double(p.imu_odr_hz);  t0 = 1/(2*lcm(1000, round(fi)));  i = 0;
 K   = round(Tend*1000);
 psi_prev = cast(0, c);  have = 0;
 o.sig_bg_3s = NaN;
