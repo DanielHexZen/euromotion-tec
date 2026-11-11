@@ -75,7 +75,8 @@ for it = 1:3                                  % allow immediate segment dispatch
                 D = ekf_wrap(c.th(gs.seg) - th);
                 gs.tu_th0 = th;  gs.tu_D = abs(D);  gs.tu_sgn = sign(D);
                 if gs.tu_sgn == 0, gs.tu_sgn = 1; end
-                [~, ~, gs.tu_T] = turn_prof(gs.tu_D, 0, p);
+                [~, ~, Tt] = turn_prof(gs.tu_D, 0, p);
+                gs.tu_T = Tt;
                 gs.tu_ok_t = 0;
             end
         case 5   % TURN

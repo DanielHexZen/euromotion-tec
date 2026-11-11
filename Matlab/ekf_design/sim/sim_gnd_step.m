@@ -71,6 +71,11 @@ elseif tr.gnd_mode == 2
                 [st.rng, ut] = sim_rand(st.rng);
                 [st.rng, ud] = sim_rand(st.rng);
                 dov = ln(1)*fx + ln(2)*fy + ne*tr.sig_edge_true;
+                [st.rng, uo] = sim_rand(st.rng);
+                if uo < tr.gnd_outlier_p
+                    [st.rng, us] = sim_rand(st.rng);
+                    dov = dov + tr.gnd_outlier_m*(0.5 + us)*(2*(us > 0.5) - 1);
+                end
                 tm  = t + (ut - 0.5)*st.poll;
                 td  = t + st.tb/2 + ud*st.poll + 0.001 + (p.gnd_n_deb - 1)*st.imp;
                 for q = 1:4

@@ -123,8 +123,9 @@ p.mx_still_init   = 1;   % 1: ekf_init starts with the standstill timer full (ve
 p.mx_still_F_bg   = 0;   % 0: F(3,4)=0 while still (heading frozen, D-12); 1: literal F(3,4)=-dt
 p.mx_hist_corr    = 1;   % 1: pose history excludes measurement corrections (back-shift = motion
                          %    only); 0: raw poses (corrections leak into the back-shift)
-p.mx_sf_mode      = 0;   % 0: spec Q_tt += (sf*dth)^2 per step; 1: per-radian model
-                         %    Q_tt += sf^2*mx_sf_corr*|dth| (rate-independent, proposal)
-p.mx_sf_corr      = pi/2;% correlation angle of the per-radian scale-factor model, rad [DECIDE]
+p.mx_sf_mode      = 1;   % 1: per-radian model Q_tt += sf^2*mx_sf_corr*|dth| (rate-independent,
+                         %    finding F-3); 0: literal spec Q_tt += (sf*dth)^2 per step
+p.mx_sf_corr      = 2*pi;% correlation angle of the per-radian model, rad [DECIDE]: one full
+                         %    circuit of turning, so (sf*Theta)^2 is matched for Theta = 2 pi
 p.mx_freeze_s     = 0;   % 1: odometry scale state frozen (no Q_ss, P_ss = 0) for the observability study
 end

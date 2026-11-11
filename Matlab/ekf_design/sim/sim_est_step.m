@@ -21,6 +21,7 @@ t  = y_enc(3);
 seg = y_gst(2);
 e  = es.ekf;
 e.n_rec = 0;
+e.rec(:) = 0;                      % records of THIS step only
 if es.started == 0
     [psi, stp] = imu_yaw_integral_at(r, p, t);
     es.prev_cnt = y_enc(1:2);
@@ -56,7 +57,7 @@ if es.feat_imu > 0
 end
 % 2. standstill
 changed = double(dcl ~= 0 || dcr ~= 0);
-[e, zdue, rm, T] = ekf_still_update(e, p, changed, y_gst(1), dpsi, dt);
+[e, zdue, rm, T] = ekf_still_update(e, p, changed, y_gst(1), dpsi, t - es.prev_t);
 % 3. prediction
 e = ekf_predict(e, p, ds_l, ds_r, dpsi, dt, t, 0);
 % 4. ZUPT
@@ -142,6 +143,6 @@ y(59) = 0.5*(y_enc(1) + y_enc(2))*double(p.odo_m_per_cnt);
 y(60) = es.imu_ok;
 y(61:65) = es.n_skip(:);
 y(66) = es.lat.n_face;  y(67) = es.lat.n_face_rej;  y(68) = es.lat.n_post;  y(69) = es.lat.n_post_rej;
-y(70) = double(e.t_nochg);
+y(70) = e.t_nochg_us*1e-6;
 yu = e.rec(:);
 end

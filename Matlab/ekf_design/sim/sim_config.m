@@ -62,6 +62,8 @@ tr.sig_spot     = 0.010;                 % physical mode: spot-position noise pe
 tr.sig_wobble   = 0.015;                 % physical mode: raggedness of the true boundary [assumption]
 tr.wob_lmin     = 0.3;  tr.wob_lmax = 3.0;  % wavelengths of the raggedness, m
 tr.bnd_offset   = 0;                     % survey error of the boundary line, m
+tr.gnd_outlier_p = 0;                    % periodic mode: probability of a false event (gate study)
+tr.gnd_outlier_m = 0.20;                 % its offset magnitude, m
 % lateral sensors
 tr.lat_on   = 0;
 tr.sig_lat_r = 0.02;                     % pessimistic sigma_r of tech. ref. §4.10

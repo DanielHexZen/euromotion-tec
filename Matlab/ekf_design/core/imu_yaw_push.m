@@ -10,13 +10,13 @@ function r = imu_yaw_push(r, p, t_us, wq, wr, roll, pitch)
 %   the measured effect. Keep Psi in double, in int64 LSB-microseconds, or
 %   re-base it (subtract a common offset from the ring) in the C code.
 %#codegen
-c  = class(r.psi);
+o  = r.psi(1)*0 + 1;               % 1 in the working class: v*o == cast(v, class)
 M  = numel(r.t);
-pd = (cast(wq, c)*sin(cast(roll, c)) + cast(wr, c)*cos(cast(roll, c)))/cos(cast(pitch, c));
+pd = ((wq*o)*sin(roll*o) + (wr*o)*cos(roll*o))/cos(pitch*o);
 if r.n == 0
-    psi = cast(0, c);
+    psi = 0*o;
 else
-    dt  = cast((t_us - r.t(r.head))*1e-6, c);
+    dt  = ((t_us - r.t(r.head))*1e-6)*o;
     psi = r.psi(r.head) + pd*dt;
 end
 r.head = mod(r.head, M) + 1;

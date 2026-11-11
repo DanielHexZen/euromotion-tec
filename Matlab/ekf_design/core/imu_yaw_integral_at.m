@@ -5,8 +5,8 @@ function [psi, st] = imu_yaw_integral_at(r, p, t_us)
 %   extrapolation with the newest rate by at most imu_extrap_max; otherwise
 %   st = 2 (ST_RANGE). st = 0 OK.
 %#codegen
-c   = class(r.psi);
-psi = cast(0, c);
+o   = r.psi(1)*0 + 1;            % 1 in the working class
+psi = 0*o;
 st  = 0;
 M   = numel(r.t);
 if r.n == 0
@@ -20,7 +20,7 @@ if t_us >= t_new
         st = 2;
         return;
     end
-    psi = r.psi(r.head) + r.rate(r.head)*cast(dt, c);
+    psi = r.psi(r.head) + r.rate(r.head)*(dt*o);
     return;
 end
 j = r.head;
@@ -30,7 +30,7 @@ for k = 1:(r.n - 1)
         i = M;
     end
     if r.t(i) <= t_us
-        a   = cast((t_us - r.t(i))/(r.t(j) - r.t(i)), c);
+        a   = ((t_us - r.t(i))/(r.t(j) - r.t(i)))*o;
         psi = r.psi(i) + a*(r.psi(j) - r.psi(i));
         return;
     end

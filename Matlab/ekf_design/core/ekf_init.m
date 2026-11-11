@@ -11,8 +11,8 @@ function e = ekf_init(p, x0, y0, th0)
 %   Fields (all fixed size, codegen-compatible):
 %     x, P              state and full 5x5 covariance (REQ-EKF-01)
 %     t_us              timestamp of the last prediction
-%     still, t_nochg    standstill flag and time without count change (§7.17.4)
-%     z_sum, z_T        ZUPT accumulator (sum of dpsi, sum of dt)
+%     still, t_nochg_us standstill flag and time without count change, integer us (§7.17.4)
+%     z_sum, z_T_us     ZUPT accumulator (sum of dpsi in the working class, window length in us)
 %     slip, slip_cnt, slip_episodes, r_slip   slip detector (REQ-EKF-04)
 %     hist_t, hist_p, hist_head, hist_n       pose history ring (§7.17.1)
 %     corr              cumulative measurement correction of x,y,theta (see ekf_hist_push)
@@ -33,12 +33,12 @@ if p.mx_still_init > 0
     % The vehicle is stationary when the EKF is (re)initialised: AUTO_INIT
     % requires it (REQ-MSN-02). Without this the first ekf_still_s seconds are
     % integrated as motion with b_g = 0 (0.1 deg heading error at 0.5 deg/s bias).
-    e.t_nochg = cast(p.ekf_still_s, c);
+    e.t_nochg_us = round(double(p.ekf_still_s)*1e6);
 else
-    e.t_nochg = cast(0, c);
+    e.t_nochg_us = 0;
 end
 e.z_sum  = cast(0, c);
-e.z_T    = cast(0, c);
+e.z_T_us = 0;
 e.slip   = 0;
 e.slip_cnt = 0;
 e.slip_episodes = 0;
