@@ -2015,8 +2015,8 @@ it.
 selected because of availability (firmware spec D-42). The ISM330DHCX
 (this document's earlier choice) and the LSM6DSV (default of the firmware spec
 versions 1.0--1.2) are replaced. The breakout board is
-not yet known \VERIFY. The exact variant (LSM6DS3 or LSM6DS3TR-C) is confirmed by
-reading WHO\_AM\_I (\texttt{0x69} or \texttt{0x6A}) \VERIFY. The LSM6DS3 gyro is
+not yet known \VERIFY. The variant is the plain LSM6DS3 (confirmed by the team), not the
+LSM6DS3TR-C; the probe checks WHO\_AM\_I (\texttt{0x69} \VERIFY). The LSM6DS3 gyro is
 noisier than that of the LSM6DSV (about 7 against 2.8\,mdps/$\sqrt{\mathrm{Hz}}$
 typical \VERIFY), so the noise and bias figures of the EKF design must come from
 the Allan-variance run of the part actually fitted \MEASURE. Criteria in
@@ -2851,7 +2851,7 @@ O-20 & Replacement Nucleo & board failure reported 10 Oct; re-verify clock tree 
 \toprule
 \# & \textbf{Decision} & \textbf{Options and recommendation} & \textbf{Blocks}\\
 \midrule
-D-1 & IMU & LSM6DS3 --- decided (availability; firmware spec D-42); variant and breakout board \VERIFY & week-8 milestone\\
+D-1 & IMU & LSM6DS3 --- decided (availability; firmware spec D-42); plain LSM6DS3 confirmed; breakout board \VERIFY & week-8 milestone\\
 D-2 & Radio & keep HC-12 / XBee 3 Pro (certified, own MCU) & week 10/14\\
 D-3 & Caster type and size & after F-1 & chassis\\
 D-4 & Ground-sensor mounting height and offsets & 100--200\,mm, offsets 15/25\,cm & spot size, thresholds\\
