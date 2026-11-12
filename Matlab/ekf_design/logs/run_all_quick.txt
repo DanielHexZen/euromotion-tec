@@ -1,0 +1,433 @@
+warning: using the gnuplot graphics toolkit is discouraged
+
+The gnuplot graphics toolkit is not actively maintained and has a number
+of limitations that are unlikely to be fixed.  Communication with gnuplot
+uses a one-directional pipe and limited information is passed back to the
+Octave interpreter so most changes made interactively in the plot window
+will not be reflected in the graphics properties managed by Octave.  For
+example, if the plot window is closed with a mouse click, Octave will not
+be notified and will not update its internal list of open figure windows.
+The qt toolkit is recommended instead.
+         line 0: warning: iconv failed to convert degree sign
+
+##### design: noise models / Allan
+
+=== Q/R mapping (all defaults are placeholders until measured) ===
+ekf_gyro_nd  = angle random walk N of the projected yaw rate [rad/s/sqrt(Hz)]
+               source: Allan deviation at tau = 1 s (slope -1/2), or datasheet noise
+               density [mdps/sqrt(Hz)] * pi/180e3.  Q_tt += nd^2*dt while moving.
+               default 1.0e-04 -> heading sigma after 100 s of driving: 0.057 deg
+ekf_q_bg     = rate random walk K^2 [(rad/s)^2/s]; Allan slope +1/2: sigma(tau) = K sqrt(tau/3)
+               default 1.0e-10 -> bias sigma growth over a 60 s leg: 0.0044 deg/s
+ZUPT R       = nd^2/T + ekf_zupt_floor^2: variance of the mean of white rate noise over T
+               T = 1.0 s -> sigma 1.06e-04 rad/s (0.0061 deg/s); one waypoint hold (10.5 s) of
+               ten ZUPTs -> 3.35e-05 rad/s, floor-limited at 3.5e-05
+             note: the floor is applied per ZUPT, so ten ZUPTs reduce it by sqrt(10); if the
+               floor stands for a correlated error (temperature, quantisation), that
+               reduction is optimistic.
+ekf_gyro_sf  = gyro scale-factor uncertainty after imu_gz_scale. From the 10-turn spin of H7:
+               residual delta (rad) after 20*pi rad -> sf = delta/(20 pi). H7 pass (0.5 deg):
+               sf <= 1.4e-04. Default 0.003 is the UNCALIBRATED value.
+               Q model (finding F-3): spec Q_tt += (sf*dth)^2 per step treats a constant
+               scale error as white. For one 90 deg turn it gives variance sf^2*(pi/2)^2/n_steps
+               (n_steps = 120 at 50 Hz, 480 at 200 Hz) instead of (sf*pi/2)^2:
+                  50 Hz: spec sigma 0.0272 deg, true 0.270 deg, per-radian (corr 2 pi) 0.540 deg
+                 200 Hz: spec sigma 0.0136 deg, true 0.270 deg, per-radian (corr 2 pi) 0.540 deg
+ekf_kd       = random distance noise [m]: variance per metre. From repeated D5000 (n runs):
+               kd = var(end error)/5 m AFTER removing the mean (the mean is the scale s).
+               default 1.0e-04 -> sigma 22.4 mm over 5 m, 63.2 mm over 40 m
+ekf_q_s      = drift of the odometry scale [1/s] (surface, load, tyre). Expected change ds over
+               a run of T s: q_s = ds^2/T. default 1.0e-09 -> sigma 0.09 % over 900 s
+ekf_sig_edge = sigma of the footprint position at the event: sqrt(spot^2 + ragged^2 +
+               (v_lateral*timestamp error)^2). Spot: ROI 4x4 at h0 = 0.12 m -> 31.6 mm
+               diameter; timestamp error +-poll/2 = 2.5 ms (negligible laterally).
+ekf_slip_thr = 0.15 rad/s vs. encoder yaw-rate resolution 1 count: 0.0143 rad/s at 50 Hz, 0.0570 at 200 Hz
+               and vs. systematic residuals: wheel mismatch 0.64 % at 0.45 m/s -> 0.013 rad/s,
+               wheelbase error 2 % at 1.5 rad/s -> 0.030 rad/s. Margin x5.0.
+
+Allan demo (simulated 2.0 h at 100 Hz): nd true 1.000e-04 fit 9.994e-05 (-0.1 %), q_bg true 1.00e-10 fit 7.72e-11 (-23 %)
+         line 0: warning: iconv failed to convert degree sign
+
+##### design: observability
+
+=== Observability: final sigma / prior sigma (Q = default | Q = 0) ===
+                              x     y     th    bg    s      x     y     th    bg    s
+A1 dead reckoning          21.02 2320.54 133.35  1.00  1.00    20.03 2320.49 133.34  1.00  1.00 
+A2 + ZUPT                  21.02 40.97  1.72  0.02  1.00    20.03 34.82  1.00  0.00  1.00 
+A3 straight + edges        21.02  0.76  0.18  0.01  1.00    20.03  0.43  0.02  0.00  1.00 
+A4 rect10 (leg1 no edge)    0.84  3.89  0.19  0.01  0.42     0.52  0.67  0.09  0.00  0.11 
+A5 rect10 all edges         0.84  3.78  0.19  0.01  0.37     0.46  0.49  0.08  0.00  0.09 
+A6 rect10 + face + post     0.84  3.88  0.19  0.01  0.42     0.50  0.66  0.08  0.00  0.10 
+A3, Q = 0: normalised eigenvalues [402 0.187 0.00249 0.000122 3.95e-09]
+  direction of the largest one (x y th bg s, normalised by the prior): [1 -3.1e-25 -5.3e-26 7.1e-17 0.05]
+  rect10 seed 1, freeze_s=0: NEES in band 0.92 (mean 4.91), wp est max 0.104 m, closure 0.040 m, s err -0.0008 (sigma 0.0021)
+  rect10 seed 2, freeze_s=0: NEES in band 0.95 (mean 2.49), wp est max 0.076 m, closure 0.054 m, s err -0.0030 (sigma 0.0022)
+  rect10 seed 1, freeze_s=1: NEES in band 0.27 (mean 8.88), wp est max 0.109 m, closure 0.133 m, s err -0.0064 (sigma 0.0000)
+  rect10 seed 2, freeze_s=1: NEES in band 0.91 (mean 4.27), wp est max 0.138 m, closure 0.043 m, s err -0.0075 (sigma 0.0000)
+
+##### design: gates
+
+=== Gates ===
+false rejection: scalar gate 9.00 -> 0.270 %, 2-D gate 9.21 -> 1.000 %
+scalar outlier of k sigma (sigma = sqrt(S)) rejected with probability:
+   k =  2: 0.159
+   k =  3: 0.500
+   k =  4: 0.841
+   k =  5: 0.977
+   k =  6: 0.999
+   k =  8: 1.000
+   k = 10: 1.000
+note: the gate measures k in units of sqrt(S), not of ekf_sig_edge. After a long edge-free
+  stretch S is dominated by P, so a false event 0.2 m off is accepted when the cross-track
+  sigma exceeds ~0.2/3 = 7 cm; the first edge after such a stretch is the vulnerable one.
+t_ekf_line + 10 % false edges, gate1 = 9: ct max 27.0 mm rms 10.0 mm, rejected 10 of 79
+t_ekf_line + 10 % false edges, gate1 = 1e+09: ct max 162.2 mm rms 41.9 mm, rejected 0 of 79
+
+##### verify: Jacobians
+verify_jacobians: worst relative errors
+  F IMU moving   4.385e-10
+  F IMU still    1.398e-10
+  F encoder      4.227e-10
+  H edge         1.229e-09
+  H face         8.790e-10
+  H heading      1.398e-10
+  H point        4.486e-10
+  H ZUPT         7.346e-13
+  literal spec F while still vs FD: max abs diff 0.02 (= dt)
+
+##### verify: static (float32)
+verify_static [design, single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.00000 deg, bias err -2.03e-03 deg/s
+verify_static [spec start (F-2), single]: sigma_bg(3 s) 0.0043 deg/s, drift 0.00028 deg, bias err -2.39e-03 deg/s
+verify_static [spec F still (F-1), single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.45815 deg, bias err -2.03e-03 deg/s
+verify_static long run (single, 100000 steps): asym 0, min eig 1.01e-09, Pbb 1.01e-09, faults 0
+
+##### verify: gate
+verify_gate: P(chi2_1 <= 9.00) = 0.99730, P(chi2_2 <= 9.21) = 0.99000
+
+##### verify: back-shift
+verify_backshift (hist_corr=1): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0 m
+verify_backshift (hist_corr=0): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0.0199 m
+
+##### verify: t_ekf_line
+verify_line: ct max 24.7 mm, NIS 97.1 %, NEES 94.6 %, edges 79 acc / 0 rej
+         line 0: warning: iconv failed to convert degree sign
+         line 0: warning: iconv failed to convert degree sign
+         line 0: warning: iconv failed to convert degree sign
+         line 0: warning: iconv failed to convert degree sign
+
+##### verify: float32 vs float64
+verify_float32 maneuver: max dpos 0.707 mm, dth 0.0261 deg, dbg 1.43e-05, ds 0; final err single 0.0919 double 0.0912 m
+verify_float32 line40: max dpos 3.76 mm, dth 0.0873 deg, dbg 0.000105, ds 9.67e-06; final err single 0.2020 double 0.2007 m
+verify_float32 rect10: max dpos 138 mm, dth 21.7 deg, dbg 5.06e-05, ds 0.00213; final err single 0.0088 double 0.0330 m
+Psi offset      0 rad: bias error single -3.634e-05, double -3.635e-05 rad/s
+Psi offset    100 rad: bias error single -4.036e-05, double -3.635e-05 rad/s
+Psi offset   1000 rad: bias error single -8.727e-03, double -3.635e-05 rad/s
+
+##### verify: 50 Hz vs 200 Hz (D-30)
+
+50 Hz vs 200 Hz, maneuver scenario, seeds 1 (identical sensor data)
+phase            | 50 Hz: pos rms/max mm, th rms/max mdeg, NEES<=hi | 200 Hz                            
+straight         | 44.92/79.26  1500.0/2391.6  1.00 | 44.93/79.50  1498.0/2387.6  1.00
+arc 1.0 rad/s    | 78.13/87.15  1157.4/2302.7  1.00 | 78.21/87.23  1153.8/2299.0  1.00
+in-place turn    | 49.48/51.30  4953.1/8026.7  0.82 | 49.13/50.89  4941.6/8018.2  0.82
+back-shift error of 10..100 ms old queries (pos rms/max mm, th rms/max mrad):
+  standing         50 Hz  0.018/ 0.257   0.023/ 0.199   200 Hz  0.021/ 0.356   0.033/ 0.380
+  straight         50 Hz  0.497/ 1.251   0.026/ 0.277   200 Hz  0.473/ 1.251   0.028/ 0.298
+  arc 1.0 rad/s    50 Hz  0.377/ 1.184   0.251/ 0.476   200 Hz  0.371/ 1.138   0.250/ 0.489
+  in-place turn    50 Hz  0.024/ 0.083   0.268/ 0.664   200 Hz  0.024/ 0.085   0.267/ 0.671
+final position error (m): 50 Hz 0.0475, 200 Hz 0.0467
+final P_tt (rad^2):       50 Hz 0.00219, 200 Hz 0.00219
+rect10 closure (m): 50 Hz 0.16, 200 Hz 0.175
+rect10 max waypoint estimate error (m): 50 Hz 0.237, 200 Hz 0.243
+rect10 NEES in band: 50 Hz 0.982, 200 Hz 0.969
+
+##### verify: slip detector at 50 Hz vs 200 Hz (REQ-EKF-04)
+
+=== Slip detector: events (thr 0.15 rad/s; one wheel loses fraction f of its ground motion for T) ===
+manoeuvre    f  T ms  r nom | estimator    det  delay  e@det  e_end  th_end sig_add  ratio
+straight  0.15    30   0.20 | 50Hz n=3       0    NaN    NaN   0.66    -1.2    0.08   8.17
+straight  0.15    30   0.20 | 50Hz n=2       0    NaN    NaN   0.66    -1.2    0.08   8.17
+straight  0.15    30   0.20 | 50Hz n=1       1     21   0.47   0.66    -1.2    7.74   0.09
+straight  0.15    30   0.20 | 200Hz n=3      1     15   0.34   0.66    -1.2    7.70   0.09
+straight  0.15    30   0.20 | 50Hz n=2 lit   0    NaN    NaN   0.66    -1.2    0.08   8.17
+straight  0.15    50   0.20 | 50Hz n=3       0    NaN    NaN   1.10     2.5    0.11  10.47
+straight  0.15    50   0.20 | 50Hz n=2       1     41   0.92   1.10     2.5    7.70   0.14
+straight  0.15    50   0.20 | 50Hz n=1       1     21   0.47   1.10     2.5   10.91   0.10
+straight  0.15    50   0.20 | 200Hz n=3      1     15   0.34   1.10     2.5   10.88   0.10
+straight  0.15    50   0.20 | 50Hz n=2 lit   1     41   0.92   1.10     2.5    7.70   0.14
+straight  0.15    70   0.20 | 50Hz n=3       1     61   1.37   1.54    -7.4    7.70   0.20
+straight  0.15    70   0.20 | 50Hz n=2       1     41   0.92   1.54    -7.4   10.88   0.14
+straight  0.15    70   0.20 | 50Hz n=1       1     21   0.47   1.54    -7.4   13.35   0.12
+straight  0.15    70   0.20 | 200Hz n=3      1     15   0.34   1.54    -7.4   13.35   0.12
+straight  0.15    70   0.20 | 50Hz n=2 lit   1     41   0.92   1.54    -7.4   10.88   0.14
+straight  0.15   100   0.20 | 50Hz n=3       1     61   1.37   2.20    -8.6   13.35   0.16
+straight  0.15   100   0.20 | 50Hz n=2       1     41   0.92   2.20    -8.6   15.41   0.14
+straight  0.15   100   0.20 | 50Hz n=1       1     21   0.47   2.20    -8.6   17.24   0.13
+straight  0.15   100   0.20 | 200Hz n=3      1     15   0.34   2.20    -8.6   16.34   0.13
+straight  0.15   100   0.20 | 50Hz n=2 lit   1     41   0.92   2.20    -8.6   15.41   0.14
+straight  0.15   300   0.20 | 50Hz n=3       1     61   1.37   6.58   -12.6   27.79   0.24
+straight  0.15   300   0.20 | 50Hz n=2       1     41   0.92   6.58   -12.6   28.84   0.23
+straight  0.15   300   0.20 | 50Hz n=1       1     21   0.47   6.58   -12.6   29.86   0.22
+straight  0.15   300   0.20 | 200Hz n=3      1     15   0.34   6.58   -12.6   29.35   0.22
+straight  0.15   300   0.20 | 50Hz n=2 lit   1     41   0.92   6.58   -12.6   28.84   0.23
+straight  0.30    30   0.40 | 50Hz n=3       0    NaN    NaN   1.32    -2.5    0.11  11.83
+straight  0.30    30   0.40 | 50Hz n=2       1     41   1.34   1.32    -2.5    7.70   0.17
+straight  0.30    30   0.40 | 50Hz n=1       1     21   0.94   1.32    -2.5   10.91   0.12
+straight  0.30    30   0.40 | 200Hz n=3      1     15   0.67   1.32    -2.5    7.70   0.17
+straight  0.30    30   0.40 | 50Hz n=2 lit   1     41   1.34   1.32    -2.5    7.70   0.17
+straight  0.30    50   0.40 | 50Hz n=3       1     61   2.24   2.20     4.8    7.70   0.29
+straight  0.30    50   0.40 | 50Hz n=2       1     41   1.84   2.20     4.8   10.88   0.20
+straight  0.30    50   0.40 | 50Hz n=1       1     21   0.94   2.20     4.8   13.35   0.16
+straight  0.30    50   0.40 | 200Hz n=3      1     15   0.67   2.20     4.8   10.88   0.20
+straight  0.30    50   0.40 | 50Hz n=2 lit   1     41   1.84   2.20     4.8   10.88   0.20
+straight  0.30    70   0.40 | 50Hz n=3       1     61   2.73   3.08   -14.9   10.88   0.28
+straight  0.30    70   0.40 | 50Hz n=2       1     41   1.84   3.08   -14.9   13.33   0.23
+straight  0.30    70   0.40 | 50Hz n=1       1     21   0.94   3.08   -14.9   15.41   0.20
+straight  0.30    70   0.40 | 200Hz n=3      1     15   0.67   3.08   -14.9   13.35   0.23
+straight  0.30    70   0.40 | 50Hz n=2 lit   1     41   1.84   3.08   -14.9   13.33   0.23
+straight  0.30   100   0.40 | 50Hz n=3       1     61   2.73   4.40   -17.4   13.35   0.33
+straight  0.30   100   0.40 | 50Hz n=2       1     41   1.84   4.40   -17.4   15.41   0.29
+straight  0.30   100   0.40 | 50Hz n=1       1     21   0.94   4.40   -17.4   17.25   0.26
+straight  0.30   100   0.40 | 200Hz n=3      1     15   0.67   4.40   -17.4   16.35   0.27
+straight  0.30   100   0.40 | 50Hz n=2 lit   1     41   1.84   4.40   -17.4   15.41   0.29
+straight  0.30   300   0.40 | 50Hz n=3       1     61   2.73  13.15   -25.3   27.79   0.47
+straight  0.30   300   0.40 | 50Hz n=2       1     41   1.84  13.15   -25.3   28.84   0.46
+straight  0.30   300   0.40 | 50Hz n=1       1     21   0.94  13.15   -25.3   29.86   0.44
+straight  0.30   300   0.40 | 200Hz n=3      1     15   0.67  13.15   -25.3   29.35   0.45
+straight  0.30   300   0.40 | 50Hz n=2 lit   1     41   1.84  13.15   -25.3   28.84   0.46
+straight  1.00    30   1.34 | 50Hz n=3       0    NaN    NaN   4.41    -8.4    0.18  24.57
+straight  1.00    30   1.34 | 50Hz n=2       1     41   4.48   4.41    -8.4    7.70   0.57
+straight  1.00    30   1.34 | 50Hz n=1       1     21   3.14   4.41    -8.4   10.91   0.40
+straight  1.00    30   1.34 | 200Hz n=3      1     15   2.24   4.41    -8.4    7.70   0.57
+straight  1.00    30   1.34 | 50Hz n=2 lit   1     41   4.48   4.41    -8.4    7.70   0.57
+straight  1.00    50   1.34 | 50Hz n=3       1     61   7.47   7.34    16.0    7.70   0.95
+straight  1.00    50   1.34 | 50Hz n=2       1     41   6.13   7.34    16.0   10.89   0.67
+straight  1.00    50   1.34 | 50Hz n=1       1     21   3.14   7.34    16.0   13.35   0.55
+straight  1.00    50   1.34 | 200Hz n=3      1     15   2.24   7.34    16.1   10.89   0.67
+straight  1.00    50   1.34 | 50Hz n=2 lit   1     41   6.13   7.34    16.0   10.89   0.67
+straight  1.00    70   1.34 | 50Hz n=3       1     61   9.11  10.28   -49.7   10.88   0.94
+straight  1.00    70   1.34 | 50Hz n=2       1     41   6.13  10.28   -49.7   13.33   0.77
+straight  1.00    70   1.34 | 50Hz n=1       1     21   3.14  10.28   -49.7   15.41   0.67
+straight  1.00    70   1.34 | 200Hz n=3      1     15   2.24  10.28   -49.6   13.89   0.74
+straight  1.00    70   1.34 | 50Hz n=2 lit   1     41   6.13  10.28   -49.7   13.33   0.77
+straight  1.00   100   1.34 | 50Hz n=3       1     61   9.11  14.67   -58.1   13.35   1.10
+straight  1.00   100   1.34 | 50Hz n=2       1     41   6.13  14.67   -58.1   15.41   0.95
+straight  1.00   100   1.34 | 50Hz n=1       1     21   3.14  14.67   -58.1   17.24   0.85
+straight  1.00   100   1.34 | 200Hz n=3      1     15   2.24  14.67   -58.1   16.80   0.87
+straight  1.00   100   1.34 | 50Hz n=2 lit   1     41   6.13  14.67   -58.1   15.41   0.95
+straight  1.00   300   1.34 | 50Hz n=3       1     61   9.11  43.61   -84.4   27.78   1.57
+straight  1.00   300   1.34 | 50Hz n=2       1     41   6.13  43.61   -84.4   28.82   1.51
+straight  1.00   300   1.34 | 50Hz n=1       1     21   3.14  43.61   -84.4   29.84   1.46
+straight  1.00   300   1.34 | 200Hz n=3      1     15   2.24  43.61   -84.3   29.33   1.49
+straight  1.00   300   1.34 | 50Hz n=2 lit   1     41   6.13  43.61   -84.4   28.82   1.51
+arc       0.15    30   0.28 | 50Hz n=3       0    NaN    NaN   0.93     1.9    0.42   2.23
+arc       0.15    30   0.28 | 50Hz n=2       0    NaN    NaN   0.93     1.9    0.42   2.23
+arc       0.15    30   0.28 | 50Hz n=1       1     21   0.65   0.93     1.9    7.71   0.12
+arc       0.15    30   0.28 | 200Hz n=3      1     15   0.46   0.93     1.9    7.73   0.12
+arc       0.15    30   0.28 | 50Hz n=2 lit   0    NaN    NaN   0.93     1.9    0.42   2.23
+arc       0.15    50   0.28 | 50Hz n=3       0    NaN    NaN   1.56    -3.3    0.55   2.84
+arc       0.15    50   0.28 | 50Hz n=2       1     41   1.27   1.56    -3.3    7.74   0.20
+arc       0.15    50   0.28 | 50Hz n=1       1     21   0.65   1.56    -3.3   10.91   0.14
+arc       0.15    50   0.28 | 200Hz n=3      1     15   0.46   1.56    -3.3   10.93   0.14
+arc       0.15    50   0.28 | 50Hz n=2 lit   1     41   1.27   1.56    -3.3    7.74   0.20
+arc       0.15    70   0.28 | 50Hz n=3       1     61   1.89   2.17    10.5    7.72   0.28
+arc       0.15    70   0.28 | 50Hz n=2       1     41   1.27   2.17    10.5   10.92   0.20
+arc       0.15    70   0.28 | 50Hz n=1       1     21   0.65   2.17    10.5   13.36   0.16
+arc       0.15    70   0.28 | 200Hz n=3      1     15   0.46   2.17    10.5   13.37   0.16
+arc       0.15    70   0.28 | 50Hz n=2 lit   1     41   1.27   2.17    10.5   10.92   0.20
+arc       0.15   100   0.28 | 50Hz n=3       1     61   1.89   3.10    12.2   13.38   0.23
+arc       0.15   100   0.28 | 50Hz n=2       1     41   1.27   3.10    12.2   15.44   0.20
+arc       0.15   100   0.28 | 50Hz n=1       1     21   0.65   3.10    12.2   17.25   0.18
+arc       0.15   100   0.28 | 200Hz n=3      1     15   0.46   3.10    12.2   16.37   0.19
+arc       0.15   100   0.28 | 50Hz n=2 lit   1     41   1.27   3.10    12.2   15.44   0.20
+arc       0.15   300   0.28 | 50Hz n=3       1     61   1.89   9.30    17.5   27.83   0.33
+arc       0.15   300   0.28 | 50Hz n=2       1     41   1.27   9.30    17.5   28.88   0.32
+arc       0.15   300   0.28 | 50Hz n=1       1     21   0.65   9.30    17.5   29.89   0.31
+arc       0.15   300   0.28 | 200Hz n=3      1     15   0.46   9.30    17.5   29.39   0.32
+arc       0.15   300   0.28 | 50Hz n=2 lit   1     41   1.27   9.30    17.5   28.88   0.32
+arc       0.30    30   0.55 | 50Hz n=3       0    NaN    NaN   1.86     3.5    0.59   3.16
+arc       0.30    30   0.55 | 50Hz n=2       1     41   1.86   1.86     3.5    7.74   0.24
+arc       0.30    30   0.55 | 50Hz n=1       1     21   1.30   1.86     3.5   10.91   0.17
+arc       0.30    30   0.55 | 200Hz n=3      1     15   0.93   1.87     3.5    7.74   0.24
+arc       0.30    30   0.55 | 50Hz n=2 lit   1     41   1.86   1.86     3.5    7.74   0.24
+arc       0.30    50   0.55 | 50Hz n=3       1     61   3.10   3.12    -6.6    7.73   0.40
+arc       0.30    50   0.55 | 50Hz n=2       1     41   2.54   3.12    -6.6   10.93   0.29
+arc       0.30    50   0.55 | 50Hz n=1       1     21   1.30   3.12    -6.6   13.36   0.23
+arc       0.30    50   0.55 | 200Hz n=3      1     15   0.93   3.12    -6.6   10.94   0.28
+arc       0.30    50   0.55 | 50Hz n=2 lit   1     41   2.54   3.12    -6.6   10.93   0.29
+arc       0.30    70   0.55 | 50Hz n=3       1     61   3.78   4.34    20.7   10.94   0.40
+arc       0.30    70   0.55 | 50Hz n=2       1     41   2.54   4.34    20.7   13.38   0.32
+arc       0.30    70   0.55 | 50Hz n=1       1     21   1.30   4.34    20.7   15.44   0.28
+arc       0.30    70   0.55 | 200Hz n=3      1     15   0.93   4.34    20.7   13.38   0.32
+arc       0.30    70   0.55 | 50Hz n=2 lit   1     41   2.54   4.34    20.7   13.38   0.32
+arc       0.30   100   0.55 | 50Hz n=3       1     61   3.78   6.21    24.2   13.40   0.46
+arc       0.30   100   0.55 | 50Hz n=2       1     41   2.54   6.21    24.2   15.46   0.40
+arc       0.30   100   0.55 | 50Hz n=1       1     21   1.30   6.21    24.2   17.27   0.36
+arc       0.30   100   0.55 | 200Hz n=3      1     15   0.93   6.21    24.2   16.39   0.38
+arc       0.30   100   0.55 | 50Hz n=2 lit   1     41   2.54   6.21    24.2   15.46   0.40
+arc       0.30   300   0.55 | 50Hz n=3       1     61   3.78  18.62    35.1   27.87   0.67
+arc       0.30   300   0.55 | 50Hz n=2       1     41   2.54  18.62    35.1   28.92   0.64
+arc       0.30   300   0.55 | 50Hz n=1       1     21   1.30  18.62    35.1   29.92   0.62
+arc       0.30   300   0.55 | 200Hz n=3      1     15   0.93  18.63    35.1   29.43   0.63
+arc       0.30   300   0.55 | 50Hz n=2 lit   1     41   2.54  18.62    35.1   28.92   0.64
+arc       1.00    30   1.84 | 50Hz n=3       1     41   6.20   6.22    11.7    7.79   0.80
+arc       1.00    30   1.84 | 50Hz n=2       1     21   4.34   6.22    11.7   10.95   0.57
+arc       1.00    30   1.84 | 50Hz n=1       1      1   0.21   6.22    11.7   13.40   0.46
+arc       1.00    30   1.84 | 200Hz n=3      1     15   3.10   6.22    11.7    7.79   0.80
+arc       1.00    30   1.84 | 50Hz n=2 lit   1     21   4.34   6.22    11.7   10.95   0.57
+arc       1.00    50   1.84 | 50Hz n=3       1     41   8.47  10.39   -22.1   10.99   0.95
+arc       1.00    50   1.84 | 50Hz n=2       1     21   4.34  10.39   -22.1   13.42   0.77
+arc       1.00    50   1.84 | 50Hz n=1       1      1   0.21  10.39   -22.1   15.48   0.67
+arc       1.00    50   1.84 | 200Hz n=3      1     15   3.10  10.39   -22.1   11.01   0.94
+arc       1.00    50   1.84 | 50Hz n=2 lit   1     21   4.34  10.39   -22.1   13.42   0.77
+arc       1.00    70   1.84 | 50Hz n=3       1     41   8.47  14.48    68.7   13.46   1.08
+arc       1.00    70   1.84 | 50Hz n=2       1     21   4.34  14.48    68.7   15.51   0.93
+arc       1.00    70   1.84 | 50Hz n=1       1      1   0.21  14.48    68.7   17.32   0.84
+arc       1.00    70   1.84 | 200Hz n=3      1     15   3.10  14.48    68.7   14.00   1.03
+arc       1.00    70   1.84 | 50Hz n=2 lit   1     21   4.34  14.48    68.7   15.51   0.93
+arc       1.00   100   1.84 | 50Hz n=3       1     41   8.47  20.70    80.3   15.56   1.33
+arc       1.00   100   1.84 | 50Hz n=2       1     21   4.34  20.70    80.3   17.36   1.19
+arc       1.00   100   1.84 | 50Hz n=1       1      1   0.21  20.70    80.3   18.99   1.09
+arc       1.00   100   1.84 | 200Hz n=3      1     15   3.10  20.70    80.3   16.93   1.22
+arc       1.00   100   1.84 | 50Hz n=2 lit   1     21   4.34  20.70    80.3   17.36   1.19
+arc       1.00   300   1.84 | 50Hz n=3       1     41   8.47  62.03   116.4   29.10   2.13
+arc       1.00   300   1.84 | 50Hz n=2       1     21   4.34  62.03   116.4   30.10   2.06
+arc       1.00   300   1.84 | 50Hz n=1       1      1   0.21  62.03   116.4   31.07   2.00
+arc       1.00   300   1.84 | 200Hz n=3      1     15   3.10  62.03   116.4   29.86   2.08
+arc       1.00   300   1.84 | 50Hz n=2 lit   1     21   4.34  62.03   116.4   30.10   2.06
+in-place  0.15    30   0.06 | 50Hz n=3       0    NaN    NaN   0.20     0.3    0.00    Inf
+in-place  0.15    30   0.06 | 50Hz n=2       0    NaN    NaN   0.20     0.3    0.00    Inf
+in-place  0.15    30   0.06 | 50Hz n=1       0    NaN    NaN   0.20     0.3    0.00    Inf
+in-place  0.15    30   0.06 | 200Hz n=3      0    NaN    NaN   0.20     0.3    0.00    Inf
+in-place  0.15    30   0.06 | 50Hz n=2 lit   0    NaN    NaN   0.20     0.3    0.00    Inf
+in-place  0.15    50   0.06 | 50Hz n=3       0    NaN    NaN   0.34    -0.8    0.00    Inf
+in-place  0.15    50   0.06 | 50Hz n=2       0    NaN    NaN   0.34    -0.8    0.00    Inf
+in-place  0.15    50   0.06 | 50Hz n=1       0    NaN    NaN   0.34    -0.8    0.00    Inf
+in-place  0.15    50   0.06 | 200Hz n=3      0    NaN    NaN   0.34    -0.8    0.00    Inf
+in-place  0.15    50   0.06 | 50Hz n=2 lit   0    NaN    NaN   0.34    -0.8    0.00    Inf
+in-place  0.15    70   0.06 | 50Hz n=3       0    NaN    NaN   0.47     2.2    0.00    Inf
+in-place  0.15    70   0.06 | 50Hz n=2       0    NaN    NaN   0.47     2.2    0.00    Inf
+in-place  0.15    70   0.06 | 50Hz n=1       0    NaN    NaN   0.47     2.2    0.00    Inf
+in-place  0.15    70   0.06 | 200Hz n=3      0    NaN    NaN   0.47     2.2    0.00    Inf
+in-place  0.15    70   0.06 | 50Hz n=2 lit   0    NaN    NaN   0.47     2.2    0.00    Inf
+in-place  0.15   100   0.06 | 50Hz n=3       0    NaN    NaN   0.67     2.5    0.00    Inf
+in-place  0.15   100   0.06 | 50Hz n=2       0    NaN    NaN   0.67     2.5    0.00    Inf
+in-place  0.15   100   0.06 | 50Hz n=1       0    NaN    NaN   0.67     2.5    0.00    Inf
+in-place  0.15   100   0.06 | 200Hz n=3      0    NaN    NaN   0.67     2.5    0.00    Inf
+in-place  0.15   100   0.06 | 50Hz n=2 lit   0    NaN    NaN   0.67     2.5    0.00    Inf
+in-place  0.15   300   0.06 | 50Hz n=3       0    NaN    NaN   2.01     3.7    0.00    Inf
+in-place  0.15   300   0.06 | 50Hz n=2       0    NaN    NaN   2.01     3.7    0.00    Inf
+in-place  0.15   300   0.06 | 50Hz n=1       0    NaN    NaN   2.01     3.7    0.00    Inf
+in-place  0.15   300   0.06 | 200Hz n=3      0    NaN    NaN   2.01     3.7    0.00    Inf
+in-place  0.15   300   0.06 | 50Hz n=2 lit   0    NaN    NaN   2.01     3.7    0.00    Inf
+in-place  0.30    30   0.12 | 50Hz n=3       0    NaN    NaN   0.40     0.7    0.00    Inf
+in-place  0.30    30   0.12 | 50Hz n=2       0    NaN    NaN   0.40     0.7    0.00    Inf
+in-place  0.30    30   0.12 | 50Hz n=1       0    NaN    NaN   0.40     0.7    0.00    Inf
+in-place  0.30    30   0.12 | 200Hz n=3      0    NaN    NaN   0.40     0.7    0.00    Inf
+in-place  0.30    30   0.12 | 50Hz n=2 lit   0    NaN    NaN   0.40     0.7    0.00    Inf
+in-place  0.30    50   0.12 | 50Hz n=3       0    NaN    NaN   0.67    -1.5    0.00    Inf
+in-place  0.30    50   0.12 | 50Hz n=2       0    NaN    NaN   0.67    -1.5    0.00    Inf
+in-place  0.30    50   0.12 | 50Hz n=1       0    NaN    NaN   0.67    -1.5    0.00    Inf
+in-place  0.30    50   0.12 | 200Hz n=3      0    NaN    NaN   0.67    -1.5    0.00    Inf
+in-place  0.30    50   0.12 | 50Hz n=2 lit   0    NaN    NaN   0.67    -1.5    0.00    Inf
+in-place  0.30    70   0.12 | 50Hz n=3       0    NaN    NaN   0.94     4.4    0.00    Inf
+in-place  0.30    70   0.12 | 50Hz n=2       0    NaN    NaN   0.94     4.4    0.00    Inf
+in-place  0.30    70   0.12 | 50Hz n=1       0    NaN    NaN   0.94     4.4    0.00    Inf
+in-place  0.30    70   0.12 | 200Hz n=3      0    NaN    NaN   0.94     4.4    0.00    Inf
+in-place  0.30    70   0.12 | 50Hz n=2 lit   0    NaN    NaN   0.94     4.4    0.00    Inf
+in-place  0.30   100   0.12 | 50Hz n=3       0    NaN    NaN   1.34     5.1    0.00    Inf
+in-place  0.30   100   0.12 | 50Hz n=2       0    NaN    NaN   1.34     5.1    0.00    Inf
+in-place  0.30   100   0.12 | 50Hz n=1       0    NaN    NaN   1.34     5.1    0.00    Inf
+in-place  0.30   100   0.12 | 200Hz n=3      0    NaN    NaN   1.34     5.2    0.00    Inf
+in-place  0.30   100   0.12 | 50Hz n=2 lit   0    NaN    NaN   1.34     5.1    0.00    Inf
+in-place  0.30   300   0.12 | 50Hz n=3       0    NaN    NaN   4.02     7.4    0.00    Inf
+in-place  0.30   300   0.12 | 50Hz n=2       0    NaN    NaN   4.02     7.4    0.00    Inf
+in-place  0.30   300   0.12 | 50Hz n=1       1    281   3.77   4.02     7.4    4.30   0.94
+in-place  0.30   300   0.12 | 200Hz n=3      0    NaN    NaN   4.02     7.4    0.00    Inf
+in-place  0.30   300   0.12 | 50Hz n=2 lit   0    NaN    NaN   4.02     7.4    0.00    Inf
+in-place  1.00    30   0.40 | 50Hz n=3       0    NaN    NaN   1.34     2.5    0.00    Inf
+in-place  1.00    30   0.40 | 50Hz n=2       1     41   1.34   1.34     2.5    4.22   0.32
+in-place  1.00    30   0.40 | 50Hz n=1       1     21   0.94   1.34     2.5    5.97   0.23
+in-place  1.00    30   0.40 | 200Hz n=3      1     15   0.67   1.34     2.5    4.22   0.32
+in-place  1.00    30   0.40 | 50Hz n=2 lit   1     41   1.34   1.34     2.5    0.00    Inf
+in-place  1.00    50   0.40 | 50Hz n=3       1     61   2.24   2.24    -4.8    4.22   0.53
+in-place  1.00    50   0.40 | 50Hz n=2       1     41   1.84   2.24    -4.8    5.97   0.38
+in-place  1.00    50   0.40 | 50Hz n=1       1     21   0.94   2.24    -4.8    7.31   0.31
+in-place  1.00    50   0.40 | 200Hz n=3      1     15   0.67   2.24    -4.8    5.97   0.38
+in-place  1.00    50   0.40 | 50Hz n=2 lit   1     41   1.84   2.24    -4.8    0.00    Inf
+in-place  1.00    70   0.40 | 50Hz n=3       1     61   2.73   3.14    14.9    5.97   0.53
+in-place  1.00    70   0.40 | 50Hz n=2       1     41   1.84   3.14    14.9    7.31   0.43
+in-place  1.00    70   0.40 | 50Hz n=1       1     21   0.94   3.14    14.9    8.44   0.37
+in-place  1.00    70   0.40 | 200Hz n=3      1     15   0.67   3.14    14.9    7.31   0.43
+in-place  1.00    70   0.40 | 50Hz n=2 lit   1     41   1.84   3.14    14.9    0.00    Inf
+in-place  1.00   100   0.40 | 50Hz n=3       1     61   2.73   4.48    17.4    7.31   0.61
+in-place  1.00   100   0.40 | 50Hz n=2       1     41   1.84   4.48    17.4    8.44   0.53
+in-place  1.00   100   0.40 | 50Hz n=1       1     21   0.94   4.48    17.4    9.44   0.47
+in-place  1.00   100   0.40 | 200Hz n=3      1     15   0.67   4.48    17.5    8.99   0.50
+in-place  1.00   100   0.40 | 50Hz n=2 lit   1     41   1.84   4.48    17.4    0.00    Inf
+in-place  1.00   300   0.40 | 50Hz n=3       1     61   2.73  13.43    25.3   15.24   0.88
+in-place  1.00   300   0.40 | 50Hz n=2       1     41   1.84  13.43    25.3   15.81   0.85
+in-place  1.00   300   0.40 | 50Hz n=1       1     21   0.94  13.43    25.3   16.37   0.82
+in-place  1.00   300   0.40 | 200Hz n=3      1     15   0.67  13.43    25.3   16.09   0.83
+in-place  1.00   300   0.40 | 50Hz n=2 lit   1     41   1.84  13.43    25.3    0.00    Inf
+
+Summary over the 45 events (r nom = f*v_wheel/b is the residual the slip produces):
+estimator     detected  delay mean ms   delay max ms     e@det max mm missed: e_end max mm
+50Hz n=3       27/35             57.3           61.0             9.11           4.41
+50Hz n=2       33/35             38.0           41.0             6.13           0.93
+50Hz n=1       35/35             18.1           21.0             3.14           0.00
+200Hz n=3      35/35             15.0           15.0             3.10           0.00
+50Hz n=2 lit   33/35             38.0           41.0             6.13           0.93
+shortest detected full slip on the straight (of [30 50 70 100 300] ms): [50 30 30 30 30] ms
+in-place turn, detected events, 50 Hz n=2: error up to 13.4 mm; variance added: literal (mx_slip_abs = 0) sigma 0.00 mm, adopted (D-45) 15.81 mm (worst ratio 0.85)
+same events by direction (principal axes of the added covariance), mm:
+    f   T ms |  e major    sigma  ratio |  e minor    sigma  ratio |    d_M
+ 1.00     30 |    1.344    4.221   0.32 |    0.018    0.000    NaN |   0.32
+ 1.00     50 |    2.240    5.970   0.38 |    0.028    0.030   0.93 |   1.00
+ 1.00     70 |    3.135    7.311   0.43 |    0.038    0.054   0.70 |   0.82
+ 1.00    100 |    4.479    8.442   0.53 |    0.042    0.075   0.56 |   0.77
+ 1.00    300 |   13.429   15.807   0.85 |    0.121    0.497   0.24 |   0.88
+
+=== Slip detector: residual without slip (maneuver course, seed 1) ===
+rate      max |r|  p99.9 |r|      rms r  steps > thr | episodes for n = 1, 2, 3
+50 Hz      0.0549     0.0502     0.0183        0/3562   | 0, 0, 0
+200 Hz     0.1421     0.1344     0.0292        0/14246  | 0, 0, 0
+one encoder count of wheel difference = 0.0143 rad/s at 50 Hz, 0.0570 rad/s at 200 Hz (threshold 0.15)
+
+##### verify: in-place-turn consistency / gyro scale-factor Q model (F-3, F-9)
+
+In-place-turn consistency, maneuver course (50 Hz)
+seed variant     sf true | NEES<=hi  NEES_th  NEES_xy | e_th mrad  sig mrad  ratio |     sf*Th model sig
+1    base       -0.00413 |    0.82     4.85     0.33 |   -141.69     46.77   3.03 |   -154.07     45.94
+1    sf = 0      0.00000 |    1.00     0.14     1.16 |     12.77     46.86   0.27 |      0.00     45.94
+1    b = b_odo  -0.00413 |    0.81     4.99     0.14 |   -144.67     47.22   3.06 |   -157.15     46.40
+1    eps = 0    -0.00413 |    0.81     4.74     0.75 |   -140.15     46.57   3.01 |   -152.59     45.72
+1    corr 12pi  -0.00413 |    1.00     0.85     0.20 |   -141.69    112.67   1.26 |   -154.07    112.53
+1    mode 2     -0.00413 |    1.00     1.34     0.27 |   -141.69    111.87   1.27 |   -154.07     45.94
+1    mode 0     -0.00413 |    0.00    82.65     0.52 |   -141.69      9.64  14.70 |   -154.07     45.94
+
+##### verify: Monte Carlo rect10, N = 3
+  MC run  1: finished 1, closure 0.031 m, wp est err [0.0801 0.0567 0.058], wp true err [0.0662 0.0424 0.047], NEES in band 0.92, NIS 0.99, edges 53/0
+  MC run  2: finished 1, closure 0.018 m, wp est err [0.0764 0.0261 0.0393], wp true err [0.0605 0.0155 0.025], NEES in band 0.99, NIS 0.99, edges 55/0
+  MC run  3: finished 1, closure 0.003 m, wp est err [0.0156 0.034 0.0316], wp true err [0.0315 0.0241 0.0177], NEES in band 0.61, NIS 0.98, edges 40/0
+
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   61.7   75.6   60.1   |   18.9   26.6   88.9   |  2 of 3   |  0.706  0.500     |     0.0   | 3
+2    |   36.9   54.4   85.3   |   18.0   26.4   17.1   |  1 of 3   |  0.355  0.296     |    18.3   | 0
+3    |   39.8   49.7   45.7   |   19.7   29.9   86.3   |  1 of 3   |  0.316  0.282     |    12.3   | 1
+99   |   19.9   31.9   76.4   |    7.6   13.0   20.4   |  0 of 3   |  0.224  0.223     |    18.7   | 0
+verify_monte_carlo: NIS 0.985, NEES 0.840, avg NEES 0.738, closure max 0.031 m, wp est max 0.080, wp true max 0.066
+
+##### verify: Monte Carlo rect10, literal spec scale-factor Q (mx_sf_mode = 0)
+  MC run  1: finished 1, closure 0.036 m, wp est err [0.0801 0.0714 0.019], wp true err [0.0662 0.0563 0.00625], NEES in band 1.00, NIS 0.98, edges 24/0
+  MC run  2: finished 1, closure 0.037 m, wp est err [0.0764 0.019 0.0519], wp true err [0.0605 0.0331 0.0369], NEES in band 0.48, NIS 0.95, edges 31/0
+  MC run  3: finished 1, closure 0.123 m, wp est err [0.0156 0.115 0.145], wp true err [0.0315 0.0979 0.144], NEES in band 0.49, NIS 0.94, edges 38/0
+
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   61.7   75.6   60.1   |   18.9   26.6   88.5   |  2 of 3   |  0.706  0.500     |     0.0   | 3
+2    |   78.1  113.9   74.6   |   10.3   14.2   45.1   |  2 of 3   |  0.381  0.292     |    15.0   | 0
+3    |   37.4   51.9   44.1   |   81.3  140.7   38.1   |  2 of 3   |  0.456  0.257     |     5.0   | 1
+99   |   68.9  106.8   43.5   |    9.3   13.6   14.5   |  2 of 3   |  0.484  0.210     |    11.0   | 0
+verify_monte_carlo: NIS 0.958, NEES 0.655, avg NEES 0.436, closure max 0.123 m, wp est max 0.145, wp true max 0.144

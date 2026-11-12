@@ -246,7 +246,7 @@ Wheel control & Per-wheel cascade (trapezoid profile $\to$ P position $\to$ FF +
 Odometry & Effective rolling diameter calibrated (72.6\,mm with a common 3584 counts/rev);
 per-wheel scale and wheelbase still to be calibrated (UMBmark)\\
 Communication & HC-12 at 9600\,Bd running in parallel to the USB console\\
-IMU & ICM-42688-P unobtainable; \textbf{Adafruit ISM330DHCX} selected, not yet integrated\\
+IMU & ICM-42688-P unobtainable; \textbf{LSM6DS3} selected (availability; replaces the ISM330DHCX and the LSM6DSV), not yet integrated\\
 Ground / boundary sensing & 5\,$\times$\,VL53L1X ordered: 4 planned on I2C1 (ground), 1 spare; not yet installed \OPEN\\
 EKF, path follower, mission & designed, not implemented \OPEN\\
 \bottomrule
@@ -454,7 +454,7 @@ path that stops the vehicle without passing through the planner.}
 \midrule
 4 Mission logic       & 20\,Hz  & --- & state machine, waypoint sequencing, obstacle decisions\\
 3 Path follower       & 100\,Hz & --- & cross-track/heading controller, TURN controller, speed profile\\
-\multicolumn{1}{@{}l}{\quad Estimator (EKF)} & 200\,Hz & --- & prediction from encoder+gyro, corrections\\
+\multicolumn{1}{@{}l}{\quad Estimator (EKF)} & 200\,Hz & --- & prediction from encoder+gyro, corrections (firmware spec D-30: one step per 50\,Hz control period)\\
 2 Wheel control       & 200\,Hz (PI) & \textbf{50\,Hz} & trapezoid profile, P position, FF + PI speed, L/R sync\\
 1 Actuation           & PWM     & \textbf{20\,kHz} & BTS7960 RPWM/LPWM, enable lines, slew limits\\
 \bottomrule
@@ -574,7 +574,7 @@ Standoffs & 1 set & driver underside can short & \tw{to order}\\
 \midrule
 \multicolumn{4}{@{}l}{\textbf{\textsf{Sensing}}}\\
 VL53L1X ToF breakout & 5 & 4 fitted downward (ground/edge, I2C1), 1 spare; the 2 forward (reflex) and 2 lateral (benches, posts) positions are not covered \DECIDE; individual XSHUT for address assignment & \tw{ordered}\\
-IMU (6-axis) & 1 & ICM-42688-P planned but unobtainable (0 stock, 16-week lead time); \textbf{Adafruit ISM330DHCX} selected; SPI + DMA, DRDY on input capture & \tw{to order/fit}\\
+IMU (6-axis) & 1 & ICM-42688-P planned but unobtainable (0 stock, 16-week lead time); \textbf{LSM6DS3} selected (breakout board \VERIFY); SPI + DMA, DRDY on input capture & \tw{to order/fit}\\
 \midrule
 \multicolumn{4}{@{}l}{\textbf{\textsf{Communication}}}\\
 HC-12 radio (SI4463 based) & 2 & \qty{433}{MHz} band, transparent UART at \qty{9600}{Bd}, FU3, CH001; vehicle on USART1, ground station on FT232RL; SET on PC9 & \tg{running}\\
@@ -1972,7 +1972,7 @@ acquisition from the \qty{1}{MHz} time base: IMU by input capture of DRDY, VL53L
 at the middle of the integration window. Measurements older than the current
 state are applied with the state from a short history buffer (\qty{100}{ms}),
 or --- for latencies below one EKF step --- simply at the next step. Load: a
-five-state EKF at \qty{200}{Hz} costs well under \qty{1}{\percent} of the CPU.
+five-state EKF at \qty{50}{Hz} (the step rate of firmware spec D-30; \qty{200}{Hz} in the concept) costs well under \qty{1}{\percent} of the CPU.
 
 \paragraph{Initialisation.} INIT stands still until the variance of $b_g$ has
 converged; $x,y,\theta$ are zero by definition (start mark and start heading
@@ -2011,16 +2011,23 @@ it.
 \subsection{IMU integration}\label{sec:imu}
 
 \begin{itemize}[leftmargin=6mm]
-\item \textbf{Selection.} ICM-42688-P unobtainable; \textbf{ISM330DHCX}
-(Adafruit breakout) selected. Criteria in
+\item \textbf{Selection.} ICM-42688-P unobtainable; \textbf{LSM6DS3}
+selected because of availability (firmware spec D-42). The ISM330DHCX
+(this document's earlier choice) and the LSM6DSV (default of the firmware spec
+versions 1.0--1.2) are replaced. The breakout board is
+not yet known \VERIFY. The variant is the plain LSM6DS3 (confirmed by the team), not the
+LSM6DS3TR-C; the probe checks WHO\_AM\_I (\texttt{0x69} \VERIFY). The LSM6DS3 gyro is
+noisier than that of the LSM6DSV (about 7 against 2.8\,mdps/$\sqrt{\mathrm{Hz}}$
+typical \VERIFY), so the noise and bias figures of the EKF design must come from
+the Allan-variance run of the part actually fitted \MEASURE. Criteria in
 order: gyro temperature-offset stability, noise density, SPI for DMA, a data-ready
 output for hardware timestamping, local availability. MPU-6050/9250 and
 ICM-20948 only as bring-up placeholders (poor temperature stability,
 discontinued, counterfeit-prone).
-\item \textbf{Interface.} SPI1 (PB3/PB4/PB5, CS PA4), \qty{5.625}{MHz} (APB2/16; the ISM330DHCX allows at most \qty{10}{MHz}); DRDY
+\item \textbf{Interface.} SPI1 (PB3/PB4/PB5, CS PA4), \qty{5.625}{MHz} (APB2/16; the LSM6DS3 allows at most \qty{10}{MHz} \VERIFY); DRDY
 on PA1 = TIM2\_CH2 input capture gives a jitter-free timestamp; the capture
-interrupt starts the DMA read. The ISM330DHCX has no \qty{1}{kHz} output data rate: sample at \qty{833}{Hz} with the sensor's
-anti-aliasing filter and decimate by 4 to $\approx\qty{208}{Hz}$ for the \qty{200}{Hz} EKF \VERIFY\ (datasheet ODR table).
+interrupt starts the DMA read. The LSM6DS3 has no \qty{1}{kHz} output data rate (ODRs up to \qty{833}{Hz} and \qty{1666}{Hz} \VERIFY): sample at \qty{833}{Hz} with the sensor's
+anti-aliasing filter and decimate by 4 to $\approx\qty{208}{Hz}$ \VERIFY\ (datasheet ODR table); the yaw rate is integrated at that rate and the EKF steps at \qty{50}{Hz} (firmware spec D-30). The firmware spec D-42 integrates at the full \qty{833}{Hz} instead of decimating; the integral is timestamp-based, so the EKF result does not depend on the choice.
 \item \textbf{Mounting.} Rigid, at the axle midpoint (no lever-arm accelerations
 in turns), not soft-mounted (an elastic mount creates a resonance in the band of
 interest), thermally away from the drivers, under a light-coloured cover.
@@ -2486,7 +2493,7 @@ interrupt-driven.
 \begin{tikzpicture}[x=4.4mm,y=8.0mm]
   \foreach \lane/\name/\step/\col/\task in {
      0/{1 kHz}/1/accent/{encoder snapshot + timestamp, IMU DMA start, ADC trigger},
-     1/{200 Hz}/5/cold/{EKF prediction and corrections (wheel PI in the concept)},
+     1/{200 Hz}/5/cold/{EKF prediction and corrections (concept; firmware spec D-30: 50\,Hz)},
      2/{100 Hz}/10/good/{path follower, lateral sensor processing},
      3/{50 Hz}/20/warn/{ground VL53L1X; \textbf{wheel cascade today (TIM6)}},
      4/{20 Hz}/50/grey/{mission logic, obstacle evaluation},
@@ -2844,7 +2851,7 @@ O-20 & Replacement Nucleo & board failure reported 10 Oct; re-verify clock tree 
 \toprule
 \# & \textbf{Decision} & \textbf{Options and recommendation} & \textbf{Blocks}\\
 \midrule
-D-1 & IMU & ISM330DHCX (Adafruit) --- decided & week-8 milestone\\
+D-1 & IMU & LSM6DS3 --- decided (availability; firmware spec D-42); plain LSM6DS3 confirmed; breakout board \VERIFY & week-8 milestone\\
 D-2 & Radio & keep HC-12 / XBee 3 Pro (certified, own MCU) & week 10/14\\
 D-3 & Caster type and size & after F-1 & chassis\\
 D-4 & Ground-sensor mounting height and offsets & 100--200\,mm, offsets 15/25\,cm & spot size, thresholds\\
@@ -2892,7 +2899,7 @@ Q-12 & How is waypoint accuracy aggregated (per waypoint, mean, worst)? & profes
 \midrule
 Course not surveyed in time & wheel size, landmarks, budget all unknown & one afternoon, now (F-1\ldots F-14)\\
 No spare parts & a failure costs a week (already happened once) & D-10\\
-IMU not delivered by week 8 & milestone and all heading aiding late & order the ISM330DHCX now; placeholder IMU for bring-up\\
+IMU not delivered by week 8 & milestone and all heading aiding late & order the LSM6DS3 now; placeholder IMU for bring-up\\
 Clock without USB fails & no autonomous run on battery & O-3: test, power bank, crystal\\
 CubeMX regeneration reverts values & wrong tick rate, lost flags; ``mysterious'' behaviour & commit, \code{git diff}, start-up rate printout\\
 Turn on a slope & 35--62\,cm cross-track error from one manoeuvre & turn on level ground, slope projection\\
@@ -2962,7 +2969,7 @@ battery fixed where it rides during calibration.
 \textbf{Next five actions.} (1) Fix TIM6 = 199 and confirm the flashed build
 (O-1, O-19) on the replacement board (O-20). (2) Survey the course (F-1\ldots
 F-14). (3) Run calibration \code{A}, \code{L}, \code{G} and the odometry sequence.
-(4) Order the IMU (D-1, ISM330DHCX); the five VL53L1X are ordered. (5) Ask the professor Q-5, Q-7, Q-10.
+(4) Order the IMU (D-1, LSM6DS3); the five VL53L1X are ordered. (5) Ask the professor Q-5, Q-7, Q-10.
 \end{keybox}
 % =====================================================================
 \clearpage

@@ -1,0 +1,7 @@
+results/*
+!results/*.png
+simulink/slprj/
+simulink/*.slxc
+simulink/*.mex*
+slprj/
+*.asv

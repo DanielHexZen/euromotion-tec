@@ -1,0 +1,439 @@
+
+##### design: noise models / Allan
+
+=== Q/R mapping (all defaults are placeholders until measured) ===
+ekf_gyro_nd  = angle random walk N of the projected yaw rate [rad/s/sqrt(Hz)]
+               source: Allan deviation at tau = 1 s (slope -1/2), or datasheet noise
+               density [mdps/sqrt(Hz)] * pi/180e3.  Q_tt += nd^2*dt while moving.
+               default 1.0e-04 -> heading sigma after 100 s of driving: 0.057 deg
+ekf_q_bg     = rate random walk K^2 [(rad/s)^2/s]; Allan slope +1/2: sigma(tau) = K sqrt(tau/3)
+               default 1.0e-10 -> bias sigma growth over a 60 s leg: 0.0044 deg/s
+ZUPT R       = nd^2/T + ekf_zupt_floor^2: variance of the mean of white rate noise over T
+               T = 1.0 s -> sigma 1.06e-04 rad/s (0.0061 deg/s); one waypoint hold (10.5 s) of
+               ten ZUPTs -> 3.35e-05 rad/s, floor-limited at 3.5e-05
+             note: the floor is applied per ZUPT, so ten ZUPTs reduce it by sqrt(10); if the
+               floor stands for a correlated error (temperature, quantisation), that
+               reduction is optimistic.
+ekf_gyro_sf  = gyro scale-factor uncertainty after imu_gz_scale. From the 10-turn spin of H7:
+               residual delta (rad) after 20*pi rad -> sf = delta/(20 pi). H7 pass (0.5 deg):
+               sf <= 1.4e-04. Default 0.003 is the UNCALIBRATED value.
+               Q model (finding F-3): spec Q_tt += (sf*dth)^2 per step treats a constant
+               scale error as white. For one 90 deg turn it gives variance sf^2*(pi/2)^2/n_steps
+               (n_steps = 120 at 50 Hz, 480 at 200 Hz) instead of (sf*pi/2)^2:
+                  50 Hz: spec sigma 0.0272 deg, true 0.270 deg, per-radian (corr 2 pi) 0.540 deg
+                 200 Hz: spec sigma 0.0136 deg, true 0.270 deg, per-radian (corr 2 pi) 0.540 deg
+ekf_kd       = random distance noise [m]: variance per metre. From repeated D5000 (n runs):
+               kd = var(end error)/5 m AFTER removing the mean (the mean is the scale s).
+               default 1.0e-04 -> sigma 22.4 mm over 5 m, 63.2 mm over 40 m
+ekf_q_s      = drift of the odometry scale [1/s] (surface, load, tyre). Expected change ds over
+               a run of T s: q_s = ds^2/T. default 1.0e-09 -> sigma 0.09 % over 900 s
+ekf_sig_edge = sigma of the footprint position at the event: sqrt(spot^2 + ragged^2 +
+               (v_lateral*timestamp error)^2). Spot: ROI 4x4 at h0 = 0.12 m -> 31.6 mm
+               diameter; timestamp error +-poll/2 = 2.5 ms (negligible laterally).
+ekf_slip_thr = 0.15 rad/s vs. encoder yaw-rate resolution 1 count: 0.0143 rad/s at 50 Hz, 0.0570 at 200 Hz
+               and vs. systematic residuals: wheel mismatch 0.64 % at 0.45 m/s -> 0.013 rad/s,
+               wheelbase error 2 % at 1.5 rad/s -> 0.030 rad/s. Margin x5.0.
+
+Allan demo (simulated 2.0 h at 100 Hz): nd true 1.000e-04 fit 9.994e-05 (-0.1 %), q_bg true 1.00e-10 fit 7.72e-11 (-23 %)
+
+##### design: observability
+
+=== Observability: final sigma / prior sigma (Q = default | Q = 0) ===
+                              x     y     th    bg    s      x     y     th    bg    s
+A1 dead reckoning          21.02 2320.54 133.35  1.00  1.00    20.03 2320.49 133.34  1.00  1.00 
+A2 + ZUPT                  21.02 40.97  1.72  0.02  1.00    20.03 34.82  1.00  0.00  1.00 
+A3 straight + edges        21.02  0.76  0.18  0.01  1.00    20.03  0.43  0.02  0.00  1.00 
+A4 rect10 (leg1 no edge)    0.84  3.89  0.19  0.01  0.42     0.52  0.67  0.09  0.00  0.11 
+A5 rect10 all edges         0.84  3.78  0.19  0.01  0.37     0.46  0.49  0.08  0.00  0.09 
+A6 rect10 + face + post     0.84  3.88  0.19  0.01  0.42     0.50  0.66  0.08  0.00  0.10 
+A3, Q = 0: normalised eigenvalues [402 0.187 0.00249 0.000122 3.95e-09]
+  direction of the largest one (x y th bg s, normalised by the prior): [1 -3.1e-25 -5.3e-26 7.1e-17 0.05]
+  rect10 seed 1, freeze_s=0: NEES in band 1.00 (mean 1.22), wp est max 0.100 m, closure 0.034 m, s err -0.0012 (sigma 0.0022)
+  rect10 seed 2, freeze_s=0: NEES in band 0.66 (mean 1.18), wp est max 0.075 m, closure 0.028 m, s err -0.0016 (sigma 0.0022)
+  rect10 seed 1, freeze_s=1: NEES in band 0.97 (mean 3.81), wp est max 0.100 m, closure 0.070 m, s err -0.0064 (sigma 0.0000)
+  rect10 seed 2, freeze_s=1: NEES in band 0.99 (mean 4.88), wp est max 0.084 m, closure 0.167 m, s err -0.0075 (sigma 0.0000)
+
+##### design: gates
+
+=== Gates ===
+false rejection: scalar gate 9.00 -> 0.270 %, 2-D gate 9.21 -> 1.000 %
+scalar outlier of k sigma (sigma = sqrt(S)) rejected with probability:
+   k =  2: 0.159
+   k =  3: 0.500
+   k =  4: 0.841
+   k =  5: 0.977
+   k =  6: 0.999
+   k =  8: 1.000
+   k = 10: 1.000
+note: the gate measures k in units of sqrt(S), not of ekf_sig_edge. After a long edge-free
+  stretch S is dominated by P, so a false event 0.2 m off is accepted when the cross-track
+  sigma exceeds ~0.2/3 = 7 cm; the first edge after such a stretch is the vulnerable one.
+t_ekf_line + 10 % false edges, gate1 = 9: ct max 27.5 mm rms 10.2 mm, rejected 10 of 79
+t_ekf_line + 10 % false edges, gate1 = 1e+09: ct max 162.0 mm rms 41.9 mm, rejected 0 of 79
+
+##### verify: Jacobians
+verify_jacobians: worst relative errors
+  F IMU moving   4.385e-10
+  F IMU still    1.398e-10
+  F encoder      4.227e-10
+  H edge         1.229e-09
+  H face         8.790e-10
+  H heading      1.398e-10
+  H point        4.486e-10
+  H ZUPT         7.346e-13
+  literal spec F while still vs FD: max abs diff 0.02 (= dt)
+
+##### verify: static (float32)
+verify_static [design, single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.00000 deg, bias err -3.05e-03 deg/s
+verify_static [spec start (F-2), single]: sigma_bg(3 s) 0.0043 deg/s, drift 0.00042 deg, bias err -3.02e-03 deg/s
+verify_static [spec F still (F-1), single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.44989 deg, bias err -3.05e-03 deg/s
+verify_static long run (single, 100000 steps): asym 0, min eig 1.01e-09, Pbb 1.01e-09, faults 0
+
+##### verify: gate
+verify_gate: P(chi2_1 <= 9.00) = 0.99730, P(chi2_2 <= 9.21) = 0.99000
+
+##### verify: back-shift
+verify_backshift (hist_corr=1): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0 m
+verify_backshift (hist_corr=0): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0.0199 m
+
+##### verify: t_ekf_line
+verify_line: ct max 25.2 mm, NIS 97.1 %, NEES 94.6 %, edges 79 acc / 0 rej
+
+##### verify: float32 vs float64
+verify_float32 maneuver: max dpos 2.44 mm, dth 0.122 deg, dbg 5.77e-05, ds 0; final err single 0.0899 double 0.0923 m
+verify_float32 line40: max dpos 2.23 mm, dth 0.0477 deg, dbg 6.18e-05, ds 5.67e-06; final err single 0.2021 double 0.2009 m
+verify_float32 rect10: max dpos 70.9 mm, dth 8.71 deg, dbg 5.78e-05, ds 0.00271; final err single 0.0065 double 0.0216 m
+Psi offset      0 rad: bias error single -1.948e-05, double -1.947e-05 rad/s
+Psi offset    100 rad: bias error single -9.427e-05, double -1.947e-05 rad/s
+Psi offset   1000 rad: bias error single -8.727e-03, double -1.947e-05 rad/s
+
+##### verify: 50 Hz vs 200 Hz (D-30)  [run separately: verify_rate_50_200(1, true)]
+
+50 Hz vs 200 Hz, maneuver scenario, seeds 1 (identical sensor data)
+phase            | 50 Hz: pos rms/max mm, th rms/max mdeg, NEES<=hi | 200 Hz                            
+straight         | 44.50/78.25  1500.8/2426.0  1.00 | 44.50/78.48  1498.3/2420.5  1.00
+arc 1.0 rad/s    | 77.11/86.15  1177.6/2299.7  1.00 | 77.18/86.21  1173.5/2295.3  1.00
+in-place turn    | 55.07/55.61  5204.0/8434.8  0.74 | 55.32/55.89  5208.6/8441.8  0.74
+back-shift error of 10..100 ms old queries (pos rms/max mm, th rms/max mrad):
+  standing         50 Hz  0.018/ 0.261   0.026/ 0.225   200 Hz  0.022/ 0.361   0.035/ 0.360
+  straight         50 Hz  0.497/ 1.265   0.027/ 0.271   200 Hz  0.472/ 1.262   0.028/ 0.283
+  arc 1.0 rad/s    50 Hz  0.384/ 1.184   0.251/ 0.476   200 Hz  0.377/ 1.138   0.249/ 0.485
+  in-place turn    50 Hz  0.024/ 0.083   0.275/ 0.692   200 Hz  0.024/ 0.085   0.275/ 0.731
+final position error (m): 50 Hz 0.0559, 200 Hz 0.0562
+final P_tt (rad^2):       50 Hz 0.00219, 200 Hz 0.00219
+rect10 closure (m): 50 Hz 0.136, 200 Hz 0.139
+rect10 max waypoint estimate error (m): 50 Hz 0.169, 200 Hz 0.165
+rect10 NEES in band: 50 Hz 0.99, 200 Hz 0.995
+
+##### verify: Monte Carlo rect10, N = 3  [run separately: verify_monte_carlo(3, 'rect10')]
+  MC run  1: finished 1, closure 0.003 m, wp est err [0.0838 0.0704 0.0308], wp true err [0.0708 0.0551 0.0311], NEES in band 0.86, NIS 0.96, edges 50/0
+  MC run  2: finished 1, closure 0.007 m, wp est err [0.0777 0.0341 0.0469], wp true err [0.062 0.0195 0.0333], NEES in band 0.98, NIS 0.99, edges 80/0
+  MC run  3: finished 1, closure 0.062 m, wp est err [0.0163 0.0316 0.0342], wp true err [0.0322 0.0223 0.0317], NEES in band 0.89, NIS 0.97, edges 56/0
+verify_monte_carlo: NIS 0.973, NEES 0.909, avg NEES 0.958, closure max 0.062 m, wp est max 0.084, wp true max 0.071
+
+
+################################################################################
+##### SECOND RUN, 2026-11-11: LSM6DS3, IMU sample rate 833 Hz (imu_odr_hz, [VERIFY])
+##### Everything above this line was run with the 960 Hz sample rate of the LSM6DSV.
+##### Everything below was run at 833 Hz, single precision, GNU Octave 8.4, one
+##### Octave process per stage; the files are in logs/.
+################################################################################
+
+##### yaw ring at 833 Hz  [logs/yaw_ring_833.txt]
+yaw ring: 32 samples at 833 Hz span 37.22 ms; query 20 ms back st=0, 37 ms back st=0, 38 ms back st=2
+maneuver 30 s at 50 Hz: imu_ok in 1499 of 1499 steps
+
+##### short checks repeated at 833 Hz  [logs/quick_checks_833.txt]
+##### verify: Jacobians
+verify_jacobians: worst relative errors
+  F IMU moving   4.385e-10
+  F IMU still    1.398e-10
+  F encoder      4.227e-10
+  H edge         1.229e-09
+  H face         8.790e-10
+  H heading      1.398e-10
+  H point        4.486e-10
+  H ZUPT         7.346e-13
+  literal spec F while still vs FD: max abs diff 0.02 (= dt)
+
+##### verify: static (float32)
+verify_static [design, single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.00000 deg, bias err -2.03e-03 deg/s
+verify_static [spec start (F-2), single]: sigma_bg(3 s) 0.0043 deg/s, drift 0.00028 deg, bias err -2.39e-03 deg/s
+verify_static [spec F still (F-1), single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.45815 deg, bias err -2.03e-03 deg/s
+verify_static long run (single, 100000 steps): asym 0, min eig 1.01e-09, Pbb 1.01e-09, faults 0
+
+##### verify: gate
+verify_gate: P(chi2_1 <= 9.00) = 0.99730, P(chi2_2 <= 9.21) = 0.99000
+
+##### verify: back-shift
+verify_backshift (hist_corr=1): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0 m
+verify_backshift (hist_corr=0): interp err 1.5e-05 m / 9.54e-08 rad, correction leak 0.0199 m
+
+##### verify: float32 vs float64
+verify_float32 maneuver: max dpos 0.707 mm, dth 0.0261 deg, dbg 1.43e-05, ds 0; final err single 0.0919 double 0.0912 m
+verify_float32 line40: max dpos 3.76 mm, dth 0.0873 deg, dbg 0.000105, ds 9.67e-06; final err single 0.2020 double 0.2007 m
+verify_float32 rect10: max dpos 138 mm, dth 21.7 deg, dbg 5.06e-05, ds 0.00213; final err single 0.0088 double 0.0330 m
+Psi offset      0 rad: bias error single -3.634e-05, double -3.635e-05 rad/s
+Psi offset    100 rad: bias error single -4.036e-05, double -3.635e-05 rad/s
+Psi offset   1000 rad: bias error single -8.727e-03, double -3.635e-05 rad/s
+
+##### verify: t_ekf_line at 833 Hz  [verify_line('single', 1)]
+verify_line: ct max 24.7 mm, NIS 97.1 %, NEES 94.6 %, edges 79 acc / 0 rej
+
+##### design: sensitivity  [design_sensitivity(); logs/sens.txt]
+=== Sensitivity (line40, truth fixed) ===
+parameter      factor  ct rms mm ct max mm  at end mm    NIS   NEES
+nominal          1.00        8.9      21.5     -198.9   0.98   0.96
+ekf_kd           0.25        8.9      21.5     -199.0   0.98   0.97
+ekf_kd           4.00        8.9      21.5     -198.5   0.98   0.96
+ekf_gyro_nd      0.25        9.0      21.3     -199.0   0.91   0.96
+ekf_gyro_nd      4.00        8.8      22.6     -199.0   0.92   0.96
+ekf_sig_edge     0.25       26.8      71.2     -207.1   0.57   0.13
+ekf_sig_edge     4.00       12.8      22.5     -201.3   0.89   0.94
+ekf_q_bg         0.25        9.0      21.5     -198.8   0.99   0.96
+ekf_q_bg         4.00        8.9      21.7     -199.3   0.97   0.96
+
+##### verify: 50 Hz vs 200 Hz (D-30) at 833 Hz  [verify_rate_50_200(1, true); logs/rate_833.txt]
+50 Hz vs 200 Hz, maneuver scenario, seeds 1 (identical sensor data)
+phase            | 50 Hz: pos rms/max mm, th rms/max mdeg, NEES<=hi | 200 Hz                            
+straight         | 44.92/79.26  1500.0/2391.6  1.00 | 44.93/79.50  1498.0/2387.6  1.00
+arc 1.0 rad/s    | 78.13/87.15  1157.4/2302.7  1.00 | 78.21/87.23  1153.8/2299.0  1.00
+in-place turn    | 49.48/51.30  4953.1/8026.7  0.82 | 49.13/50.89  4941.6/8018.2  0.82
+back-shift error of 10..100 ms old queries (pos rms/max mm, th rms/max mrad):
+  standing         50 Hz  0.018/ 0.257   0.023/ 0.199   200 Hz  0.021/ 0.356   0.033/ 0.380
+  straight         50 Hz  0.497/ 1.251   0.026/ 0.277   200 Hz  0.473/ 1.251   0.028/ 0.298
+  arc 1.0 rad/s    50 Hz  0.377/ 1.184   0.251/ 0.476   200 Hz  0.371/ 1.138   0.250/ 0.489
+  in-place turn    50 Hz  0.024/ 0.083   0.268/ 0.664   200 Hz  0.024/ 0.085   0.267/ 0.671
+final position error (m): 50 Hz 0.0475, 200 Hz 0.0467
+final P_tt (rad^2):       50 Hz 0.00219, 200 Hz 0.00219
+rect10 closure (m): 50 Hz 0.16, 200 Hz 0.175
+rect10 max waypoint estimate error (m): 50 Hz 0.237, 200 Hz 0.243
+rect10 NEES in band: 50 Hz 0.982, 200 Hz 0.969
+(result rows, computed from the lines above: pos RMS difference 50 vs 200 Hz max 0.35 mm, limit < 2 mm: pass;
+ back-shift max error at 50 Hz 1.251 mm, 200 Hz 1.251 mm, limit < 2 mm: pass)
+
+##### verify: slip detector  [verify_slip(1, true); full event table in logs/slip.txt]
+=== Slip detector: events (thr 0.15 rad/s; one wheel loses fraction f of its ground motion for T) ===
+manoeuvre    f  T ms  r nom | estimator    det  delay  e@det  e_end  th_end sig_add  ratio
+  ... 225 rows, see logs/slip.txt ...
+
+Summary over the 45 events (r nom = f*v_wheel/b is the residual the slip produces):
+estimator     detected  delay mean ms   delay max ms     e@det max mm missed: e_end max mm
+50Hz n=3       27/35             57.3           61.0             9.11           4.41
+50Hz n=2       33/35             38.0           41.0             6.13           0.93
+50Hz n=1       35/35             18.1           21.0             3.14           0.00
+200Hz n=3      35/35             15.0           15.0             3.10           0.00
+50Hz n=2 abs   33/35             38.0           41.0             6.13           0.93
+shortest detected full slip on the straight (of [30 50 70 100 300] ms): [50 30 30 30 30] ms
+in-place turn, detected events, 50 Hz n=2: error up to 13.4 mm; variance added: literal sigma 0.00 mm, with mx_slip_abs 15.81 mm (worst ratio 0.85)
+
+=== Slip detector: residual without slip (maneuver course, seed 1) ===
+rate      max |r|  p99.9 |r|      rms r  steps > thr | episodes for n = 1, 2, 3
+50 Hz      0.0549     0.0502     0.0183        0/3562   | 0, 0, 0
+200 Hz     0.1421     0.1344     0.0292        0/14246  | 0, 0, 0
+one encoder count of wheel difference = 0.0143 rad/s at 50 Hz, 0.0570 rad/s at 200 Hz (threshold 0.15)
+rect10 closed loop, 50 Hz, ekf_slip_n = 1: 0 episodes (steps with slip flag 0 of 12000)
+rect10 closed loop, 200 Hz, ekf_slip_n = 1: 0 episodes (steps with slip flag 0 of 48001)
+
+##### verify: in-place-turn consistency  [verify_turn_nees(1), verify_turn_nees(2); logs/turn_nees.txt]
+In-place-turn consistency, maneuver course (50 Hz)
+seed variant     sf true | NEES<=hi  NEES_th  NEES_xy | e_th mrad  sig mrad  ratio |     sf*Th model sig
+1    base       -0.00413 |    0.82     4.85     0.33 |   -141.69     46.77   3.03 |   -154.07     45.94
+1    sf = 0      0.00000 |    1.00     0.14     1.16 |     12.77     46.86   0.27 |      0.00     45.94
+1    b = b_odo  -0.00413 |    0.81     4.99     0.14 |   -144.67     47.22   3.06 |   -157.15     46.40
+1    eps = 0    -0.00413 |    0.81     4.74     0.75 |   -140.15     46.57   3.01 |   -152.59     45.72
+1    corr 12pi  -0.00413 |    1.00     0.85     0.20 |   -141.69    112.67   1.26 |   -154.07    112.53
+1    mode 2     -0.00413 |    1.00     1.34     0.27 |   -141.69    111.87   1.27 |   -154.07     45.94
+1    mode 0     -0.00413 |    0.00    82.65     0.52 |   -141.69      9.64  14.70 |   -154.07     45.94
+2    base       -0.00082 |    1.00     0.10     0.29 |    -24.28     46.88   0.52 |    -30.59     45.97
+2    sf = 0      0.00000 |    1.00     0.04     0.46 |      6.28     46.89   0.13 |      0.00     45.97
+2    b = b_odo  -0.00082 |    1.00     0.11     0.18 |    -25.30     47.32   0.53 |    -31.21     46.43
+2    eps = 0    -0.00082 |    1.00     0.10     0.41 |    -24.06     46.67   0.52 |    -30.30     45.75
+2    corr 12pi  -0.00082 |    1.00     0.02     0.26 |    -24.28    112.93   0.21 |    -30.59    112.60
+2    mode 2     -0.00082 |    1.00     0.03     0.28 |    -24.28    112.40   0.22 |    -30.59     45.97
+2    mode 0     -0.00082 |    0.18     1.85     0.33 |    -24.28      9.65   2.52 |    -30.59     45.97
+
+##### verify: Monte Carlo rect10, default model, N = 10, seeds 101..110
+#####   [verify_monte_carlo(1:5, 'rect10', 'tag', 'def833') and (6:10, ...) in two processes,
+#####    pooled with verify_monte_carlo(10, 'rect10', 'tag', 'def833'); logs/mc_def_N10.txt]
+  MC run  1: finished 1, closure 0.031 m, wp est err [0.0801 0.0567 0.058], wp true err [0.0662 0.0424 0.047], NEES in band 0.92, NIS 0.99, edges 53/0
+  MC run  2: finished 1, closure 0.018 m, wp est err [0.0764 0.0261 0.0393], wp true err [0.0605 0.0155 0.025], NEES in band 0.99, NIS 0.99, edges 55/0
+  MC run  3: finished 1, closure 0.003 m, wp est err [0.0156 0.034 0.0316], wp true err [0.0315 0.0241 0.0177], NEES in band 0.61, NIS 0.98, edges 40/0
+  MC run  4: finished 1, closure 0.113 m, wp est err [0.122 0.116 0.103], wp true err [0.123 0.0993 0.101], NEES in band 0.97, NIS 0.98, edges 26/0
+  MC run  5: finished 1, closure 0.005 m, wp est err [0.121 0.0711 0.0392], wp true err [0.127 0.0554 0.0488], NEES in band 0.98, NIS 0.96, edges 47/1
+  MC run  6: finished 1, closure 0.064 m, wp est err [0.117 0.18 0.0603], wp true err [0.126 0.176 0.0446], NEES in band 1.00, NIS 0.98, edges 39/0
+  MC run  7: finished 1, closure 0.092 m, wp est err [0.103 0.025 0.0951], wp true err [0.114 0.0387 0.113], NEES in band 0.88, NIS 0.95, edges 36/0
+  MC run  8: finished 1, closure 0.016 m, wp est err [0.132 0.118 0.0274], wp true err [0.131 0.101 0.0115], NEES in band 1.00, NIS 0.94, edges 33/0
+  MC run  9: finished 1, closure 0.017 m, wp est err [0.0725 0.0296 0.0262], wp true err [0.0692 0.0229 0.0412], NEES in band 1.00, NIS 0.98, edges 44/0
+  MC run 10: finished 1, closure 0.031 m, wp est err [0.0447 0.0354 0.0292], wp true err [0.0288 0.0222 0.016], NEES in band 0.95, NIS 0.97, edges 37/0
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 10
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   53.0   80.9   60.1   |   79.5  132.4   88.9   |  8 of 10  |  0.546  0.500     |     0.0   | 10
+2    |   62.5  117.6   89.6   |   58.1  178.1   68.4   |  5 of 10  |  0.346  0.323     |    14.3   | 1
+3    |   44.3   88.1   62.2   |   36.6   97.5   67.9   |  4 of 10  |  0.368  0.299     |    11.3   | 2
+99   |   42.5   96.6   66.1   |   12.2   27.5   26.9   |  2 of 10  |  0.276  0.257     |    15.4   | 0
+verify_monte_carlo: NIS 0.973, NEES 0.930, avg NEES 0.934, closure max 0.113 m, wp est max 0.180, wp true max 0.176
+MC rect10 N=10 all runs finished               1  10/10                                              all
+MC NIS in 95 % band (spec §1.4)               1  97.3 % (edge 98.8 %, ZUPT 96.6 %, n = 1286)        >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        1  93.0 % (<= upper: 97.3 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           1  93.4 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 11.3 cm, mean 3.9 cm                           < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 18.0 cm                                        < 5 cm
+true waypoint error (§14.2)                   0  max 17.6 cm                                        < 15 cm
+true waypoint error (§1.4 week 16)            1  max 17.6 cm                                        <= 20 cm
+
+per waypoint (id 99 = finish), mm / mrad / %:  [logs/mc_def_N10_waypoints.txt]
+file                         id    t   e_al  e_ct  e_th   e_s%  | s_al  s_ct  s_th  s_s% | edges dlast | true_al true_ct
+def833_rect10_101             1    38   75.6 -26.6  -6.0  0.835 |  60.1  88.9   9.2 0.500 |   0    NaN |  -59.7   28.7
+def833_rect10_101             2    88   54.4  16.0   2.4  0.444 |  84.6  26.4   5.9 0.292 |  11   4.04 |  -40.0  -13.8
+def833_rect10_101             3   138   49.7 -29.9  -8.6  0.370 |  48.9   8.4   5.2 0.270 |  24   0.53 |  -34.2   32.3
+def833_rect10_101            99   187   -5.3 -13.0  -4.2  0.218 |  39.6  10.5   4.5 0.221 |  53   0.74 |   18.8   24.2
+def833_rect10_102             1    38   74.0  19.2   3.8  0.891 |  60.1  88.9   9.2 0.500 |   0    NaN |  -58.1  -17.0
+def833_rect10_102             2    88   25.8  -3.8   1.2  0.426 |  84.3   8.9   4.6 0.285 |  16   0.27 |  -10.8   11.1
+def833_rect10_102             3   138   38.8   6.6  -0.1  0.404 |  42.3  25.0   5.6 0.265 |  40   4.20 |  -24.6   -4.5
+def833_rect10_102            99   188   31.9   2.3   1.6  0.275 |  44.6  17.5   5.5 0.211 |  55   2.58 |  -17.7   -0.1
+def833_rect10_103             1    38  -15.6   0.1  -0.8  0.066 |  60.1  88.9   9.2 0.500 |   0    NaN |   31.4    2.0
+def833_rect10_103             2    88   21.4  26.4   7.4  0.018 |  87.0  10.0   5.3 0.309 |  28   1.20 |   -5.7  -23.4
+def833_rect10_103             3   138   27.9  14.8   5.2  0.013 |  45.5 147.1  12.0 0.310 |  28  11.22 |  -12.5  -12.6
+def833_rect10_103            99   187   11.9   1.0   1.0 -0.164 | 118.1  28.8   6.3 0.237 |  40   4.49 |    2.9    1.2
+def833_rect10_104             1    38  -13.6 121.4  12.8 -0.130 |  60.1  88.9   9.2 0.500 |   0    NaN |   29.5 -119.2
+def833_rect10_104             2    88  116.0   8.6   1.1  0.108 |  86.9  61.5   7.6 0.286 |  16   7.52 |  -99.1   -6.4
+def833_rect10_104             3   137   32.5 -97.5   2.3  0.109 |  77.9 146.4  13.2 0.287 |  16  17.50 |  -15.7   99.7
+def833_rect10_104            99   187  -96.6   2.6  -2.8  0.007 | 116.3  14.2   5.2 0.251 |  26   1.79 |  113.2   -0.4
+def833_rect10_105             1    38  -47.4 111.8  10.1 -0.445 |  60.1  88.9   9.2 0.500 |   0    NaN |   63.4 -109.7
+def833_rect10_105             2    88   70.9  -4.7  -2.9 -0.108 |  84.7  12.5   4.7 0.288 |  27   0.87 |  -54.3   11.2
+def833_rect10_105             3   138  -21.3  32.9   5.5 -0.193 |  43.2  14.7   5.1 0.267 |  39   1.24 |   37.9  -30.7
+def833_rect10_105            99   187   16.2  -2.7   0.5 -0.145 |  41.0  65.7   8.0 0.214 |  47   7.39 |    0.6    5.0
+def833_rect10_106             1    38  -74.8  90.4   6.9 -0.719 |  60.1  88.9   9.2 0.500 |   0    NaN |   90.6  -88.2
+def833_rect10_106             2    88   28.6 178.1  11.5 -0.719 | 106.3 151.5  14.1 0.501 |   0    NaN |  -12.8 -175.9
+def833_rect10_106             3   137   57.9  16.8   5.8 -0.674 | 101.0  16.2   6.0 0.432 |  22   2.09 |  -42.1  -14.6
+def833_rect10_106            99   187  -46.8  -9.3  -2.6 -0.617 |  55.7  14.9   4.9 0.429 |  39   1.06 |   62.9   11.7
+def833_rect10_107             1    38  -80.9  63.2   8.7 -0.805 |  60.1  88.9   9.2 0.500 |   0    NaN |   96.8  -60.9
+def833_rect10_107             2    88  -21.3 -13.0  -3.5 -0.459 |  86.2  11.3   5.3 0.311 |  13   0.66 |   37.8    7.9
+def833_rect10_107             3   138  -88.1 -36.0 -22.2 -0.709 |  45.7  11.0   7.6 0.294 |  23   0.81 |  104.2   43.5
+def833_rect10_107            99   187  -69.8 -27.5  -4.8 -0.433 |  40.7  18.4   5.4 0.225 |  36   2.71 |   86.8   29.8
+def833_rect10_108             1    38    2.7 132.4  13.5 -0.016 |  60.1  88.9   9.2 0.500 |   0    NaN |   13.2 -130.3
+def833_rect10_108             2    88  117.6   8.2   3.8  0.249 |  84.6  12.4   5.3 0.296 |  12   0.90 | -101.2   -1.9
+def833_rect10_108             3   138   27.4   0.6   6.6  0.197 |  44.8  13.0   7.2 0.282 |  21   0.60 |  -11.0    3.4
+def833_rect10_108            99   187    0.3   2.2  -2.3  0.038 |  41.2  24.8   5.6 0.223 |  33   3.96 |   16.1   -0.1
+def833_rect10_109             1    38   12.5  71.4   8.6  0.047 |  60.1  88.9   9.2 0.500 |   0    NaN |    3.4  -69.1
+def833_rect10_109             2    88   22.1 -19.8  -2.2  0.001 |  88.2  20.5   5.6 0.317 |  12   2.08 |   -6.3   22.1
+def833_rect10_109             3   138  -25.9   3.8   0.4 -0.039 |  47.8  34.2   5.9 0.281 |  22   5.00 |   41.2   -1.5
+def833_rect10_109            99   187   12.2 -14.2  -2.6  0.100 |  49.9  15.8   5.3 0.222 |  44   1.53 |    4.0   16.1
+def833_rect10_110             1    38   43.4  10.7  -0.0  0.319 |  60.1  88.9   9.2 0.500 |   0    NaN |  -27.5   -8.5
+def833_rect10_110             2    88   31.0  17.1   1.8 -0.050 | 100.8 135.1  14.5 0.286 |   8   9.52 |  -16.3  -15.0
+def833_rect10_110             3   138   28.9  -4.8  -0.0 -0.079 |  89.2  19.9   5.6 0.265 |  21   3.04 |  -14.4    6.9
+def833_rect10_110            99   187  -10.3  15.9   0.4 -0.102 |  44.7   8.6   4.5 0.258 |  37   0.89 |   24.6  -18.2
+
+##### verify: Monte Carlo variants  [logs/mc_variants.txt]
+### literal spec scale-factor Q (mx_sf_mode = 0): per-run lines, seeds 101..110
+  MC run  1: finished 1, closure 0.036 m, wp est err [0.0801 0.0714 0.019], wp true err [0.0662 0.0563 0.00625], NEES in band 1.00, NIS 0.98, edges 24/0
+  MC run  2: finished 1, closure 0.037 m, wp est err [0.0764 0.019 0.0519], wp true err [0.0605 0.0331 0.0369], NEES in band 0.48, NIS 0.95, edges 31/0
+  MC run  3: finished 1, closure 0.123 m, wp est err [0.0156 0.115 0.145], wp true err [0.0315 0.0979 0.144], NEES in band 0.49, NIS 0.94, edges 38/0
+  MC run  4: finished 1, closure 0.052 m, wp est err [0.122 0.0876 0.0306], wp true err [0.123 0.0709 0.0486], NEES in band 0.83, NIS 0.99, edges 55/0
+  MC run  5: finished 1, closure 0.017 m, wp est err [0.121 0.0223 0.00849], wp true err [0.127 0.00466 0.0255], NEES in band 0.94, NIS 0.96, edges 41/0
+  MC run  6: finished 1, closure 0.053 m, wp est err [0.117 0.18 0.0455], wp true err [0.126 0.176 0.0295], NEES in band 1.00, NIS 0.98, edges 23/0
+  MC run  7: finished 1, closure 0.073 m, wp est err [0.103 0.0633 0.0396], wp true err [0.114 0.0803 0.0623], NEES in band 0.82, NIS 0.93, edges 35/0
+  MC run  8: finished 1, closure 0.026 m, wp est err [0.132 0.0552 0.00777], wp true err [0.131 0.0389 0.0134], NEES in band 0.83, NIS 0.98, edges 40/0
+  MC run  9: finished 1, closure 0.017 m, wp est err [0.0725 0.0382 0.0257], wp true err [0.0692 0.0541 0.0103], NEES in band 0.88, NIS 0.98, edges 34/0
+  MC run 10: finished 1, closure 0.062 m, wp est err [0.0447 0.0309 0.00646], wp true err [0.0288 0.0181 0.0195], NEES in band 0.47, NIS 0.99, edges 27/0
+
+### net-angle scale-factor Q (mx_sf_mode = 2): per-run lines, seeds 101..103
+  MC run  1: finished 1, closure 0.024 m, wp est err [0.0801 0.0732 0.0431], wp true err [0.0662 0.0582 0.0452], NEES in band 0.91, NIS 0.96, edges 50/0
+  MC run  2: finished 1, closure 0.007 m, wp est err [0.0764 0.00418 0.0442], wp true err [0.0605 0.0154 0.0324], NEES in band 0.93, NIS 0.96, edges 49/0
+  MC run  3: finished 1, closure 0.018 m, wp est err [0.0156 0.0601 0.00979], wp true err [0.0315 0.044 0.00633], NEES in band 0.82, NIS 0.94, edges 57/0
+
+### default parameters on rect10_all: per-run lines, seeds 101..103
+  MC run  1: finished 1, closure 0.011 m, wp est err [0.0769 0.0752 0.0297], wp true err [0.0612 0.0599 0.0312], NEES in band 0.92, NIS 0.97, edges 44/0
+  MC run  2: finished 1, closure 0.013 m, wp est err [0.0763 0.0386 0.0315], wp true err [0.0604 0.0241 0.0192], NEES in band 1.00, NIS 0.99, edges 61/0
+  MC run  3: finished 1, closure 0.003 m, wp est err [0.0156 0.034 0.0316], wp true err [0.0315 0.0241 0.0177], NEES in band 0.61, NIS 0.98, edges 40/0
+
+### literal spec scale-factor Q (mx_sf_mode = 0), N = 10, seeds 101..110
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 10
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   53.0   80.9   60.1   |   79.5  132.4   88.5   |  8 of 10  |  0.546  0.500     |     0.0   | 10
+2    |   59.9  113.9   80.3   |   57.4  178.1   55.6   |  6 of 10  |  0.354  0.324     |    12.3   | 1
+3    |   28.1   51.9   44.4   |   46.4  140.7   23.3   |  2 of 10  |  0.354  0.247     |    12.5   | 1
+99   |   48.0  106.8   40.5   |   11.0   18.8   11.8   |  3 of 10  |  0.421  0.216     |    10.0   | 0
+verify_monte_carlo: NIS 0.968, NEES 0.774, avg NEES 0.392, closure max 0.123 m, wp est max 0.180, wp true max 0.176
+MC rect10 N=10 all runs finished               1  10/10                                              all
+MC NIS in 95 % band (spec §1.4)               1  96.8 % (edge 97.1 %, ZUPT 96.7 %, n = 1225)        >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  77.4 % (<= upper: 79.1 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  39.1 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 12.3 cm, mean 5.0 cm                           < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 18.0 cm                                        < 5 cm
+true waypoint error (§14.2)                   0  max 17.6 cm                                        < 15 cm
+true waypoint error (§1.4 week 16)            1  max 17.6 cm                                        <= 20 cm
+### default model, seeds 101..103 only (for the N = 3 comparisons)
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   61.7   75.6   60.1   |   18.9   26.6   88.9   |  2 of 3   |  0.706  0.500     |     0.0   | 3
+2    |   36.9   54.4   85.3   |   18.0   26.4   17.1   |  1 of 3   |  0.355  0.296     |    18.3   | 0
+3    |   39.8   49.7   45.7   |   19.7   29.9   86.3   |  1 of 3   |  0.316  0.282     |    12.3   | 1
+99   |   19.9   31.9   76.4   |    7.6   13.0   20.4   |  0 of 3   |  0.224  0.223     |    18.7   | 0
+verify_monte_carlo: NIS 0.985, NEES 0.840, avg NEES 0.738, closure max 0.031 m, wp est max 0.080, wp true max 0.066
+MC rect10 N=3 all runs finished                1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  98.5 % (edge 99.3 %, ZUPT 98.1 %, n = 411)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  84.0 % (<= upper: 96.4 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  73.8 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 3.1 cm, mean 1.7 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 8.0 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 6.6 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 6.6 cm                                         <= 20 cm
+### net-angle scale-factor Q (mx_sf_mode = 2), N = 3, seeds 101..103
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   61.7   75.6   60.1   |   18.9   26.6   88.5   |  2 of 3   |  0.706  0.500     |     0.0   | 3
+2    |   53.6   71.0   84.5   |   10.8   17.5   53.5   |  2 of 3   |  0.371  0.299     |    11.0   | 0
+3    |   25.1   41.1   50.7   |   25.9   41.9   13.5   |  0 of 3   |  0.343  0.257     |    16.7   | 0
+99   |   11.3   19.4   41.2   |    6.8    9.5   32.1   |  0 of 3   |  0.300  0.226     |    24.3   | 0
+verify_monte_carlo: NIS 0.954, NEES 0.884, avg NEES 0.611, closure max 0.024 m, wp est max 0.080, wp true max 0.066
+MC rect10 N=3 all runs finished                1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  95.4 % (edge 96.8 %, ZUPT 94.6 %, n = 416)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  88.4 % (<= upper: 95.0 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  61.1 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 2.4 cm, mean 1.6 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 8.0 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 6.6 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 6.6 cm                                         <= 20 cm
+### default parameters, boundary also on leg 1 (rect10_all), N = 3
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   62.9   76.9   60.1   |    5.9   10.1   56.3   |  2 of 3   |  0.715  0.500     |     4.0   | 1
+2    |   48.9   73.0   66.6   |   19.3   26.4   56.6   |  1 of 3   |  0.375  0.305     |    18.7   | 0
+3    |   25.2   30.8   57.7   |   17.9   26.4   88.9   |  0 of 3   |  0.229  0.264     |     9.3   | 1
+99   |    7.8   11.9   78.7   |    4.3    7.2   21.3   |  0 of 3   |  0.209  0.219     |    16.3   | 0
+verify_monte_carlo: NIS 0.978, NEES 0.840, avg NEES 0.696, closure max 0.013 m, wp est max 0.077, wp true max 0.061
+MC rect10_all N=3 all runs finished            1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  97.8 % (edge 97.9 %, ZUPT 97.7 %, n = 407)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        0  84.0 % (<= upper: 96.4 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           0  69.6 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 1.3 cm, mean 0.9 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            0  max 7.7 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 6.1 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 6.1 cm                                         <= 20 cm
+
+##### verify: Monte Carlo rect10_all with tightened priors, N = 3  [logs/mc_tight_all_N3.txt]
+#####   ekf_p0_th = 0.0017 rad (0.1 deg), ekf_p0_s = 0.001, ekf_kd = 1e-5 m; the truth is drawn from the same priors
+  MC run  1: finished 1, closure 0.040 m, wp est err [0.0101 0.0327 0.03], wp true err [0.00738 0.0199 0.017], NEES in band 1.00, NIS 0.96, edges 51/0
+  MC run  2: finished 1, closure 0.017 m, wp est err [0.00362 0.0177 0.0333], wp true err [0.0135 0.0066 0.0179], NEES in band 0.90, NIS 0.97, edges 43/0
+  MC run  3: finished 1, closure 0.046 m, wp est err [0.0216 0.0092 0.0282], wp true err [0.0375 0.0373 0.0299], NEES in band 0.99, NIS 0.95, edges 66/0
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 3
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   13.2   20.9   17.4   |    4.5    5.5   18.9   |  0 of 3   |  0.142  0.102     |     6.0   | 1
+2    |   17.3   26.1   22.3   |   13.7   19.6   11.7   |  0 of 3   |  0.142  0.093     |    17.3   | 0
+3    |   24.8   30.8   18.0   |   17.8   26.8   19.5   |  0 of 3   |  0.139  0.092     |    16.0   | 0
+99   |   18.9   30.5   23.6   |   15.3   22.1   54.5   |  0 of 3   |  0.084  0.086     |    14.0   | 0
+verify_monte_carlo: NIS 0.960, NEES 0.963, avg NEES 0.979, closure max 0.046 m, wp est max 0.033, wp true max 0.038
+MC rect10_all N=3 all runs finished            1  3/3                                                all
+MC NIS in 95 % band (spec §1.4)               1  96.0 % (edge 97.5 %, ZUPT 95.1 %, n = 423)         >= 90 %
+MC NEES(x,y,th) per sample in 95 % band        1  96.3 % (<= upper: 98.9 %)                          >= 90 %
+MC averaged NEES in chi2_{3N}/N band           1  97.9 %                                             >= 90 %
+rectangle closure (§1.4)                      1  max 4.6 cm, mean 3.4 cm                            < 30 cm
+waypoint estimate vs truth (§14.2)            1  max 3.3 cm                                         < 5 cm
+true waypoint error (§14.2)                   1  max 3.8 cm                                         < 15 cm
+true waypoint error (§1.4 week 16)            1  max 3.8 cm                                         <= 20 cm
+
+##### figures
+can_plot() = 1 in headless Octave after the font set-up of can_plot.m (gnuplot toolkit).
+Written to results/ (git-ignored): allan_demo.png, line40_{path,errors,nees,nis}.png, rect10_{path,errors,nees,nis}.png

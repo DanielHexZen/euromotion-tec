@@ -4,35 +4,44 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 0: H1–H5 pass and the `D` regression ma
 Do the steps in order. Stop at the first failure and write it down; do not skip ahead.
 Mark each box and keep the console log of every step (`screen`/CubeIDE terminal capture).
 
-## Status (2026-11-09, end of session 1)
+## Status (2026-11-10; vehicle results are from session 1, 2026-11-09)
 
-**Phase 0 is NOT closed.** H3, H3b and the scope part of H2 are open. Everything else on the checklist below is ticked or annotated. Nothing is committed since `681af00`.
+**Phase 0 is NOT closed.** H3, H3b and the period/jitter part of H2 are open. Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been linked for the target or flashed**; a compile-only check with `arm-none-eabi-gcc` passed on 2026-11-12 (see below).
 
 | Gate | State |
 |---|---|
-| Host tests | passed, 54601 checks (`make -C test`) |
+| Host tests | passed, 54621 checks, 0 failed (`make -C test`, repeated 2026-11-12) |
 | H1 tick/clock | passed |
-| H2 slot timing | firmware numbers passed (`S_CTRL max` 15 µs, `S_FAST max` 6 µs, overruns 0, tick 1000.0 Hz, cpu 0.4 %); **scope part open** (no instrument) |
+| H2 slot timing | execution times passed on 2026-11-09 with the previous build (`S_CTRL max` 15 µs, `S_FAST max` 6 µs, overruns 0, tick 1000.0 Hz, cpu 0.4 %). **Period, jitter and tick-ISR time open:** firmware support added 2026-11-10 (self-measurement in `I`, decision D-32), **run on the vehicle pending**. The oscilloscope on PC8 is now an optional cross-check |
 | H4 signs, dead-man, runaway, stall | passed (user report); EN-0 V-at-boot and reversal test not explicitly confirmed |
 | H5 faults | `FAULTINJ`, FAULT-state answers, `CLEAR` passed; deliberate HardFault trigger not done; Release `FAULTINJ 4` waits for H3b |
-| Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed after the change below |
+| Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again |
 | **H3 `D` regression** | **open**: baseline invalid (old mechanics), `D1000`/`D5000` not run, `D300` has 7 runs |
 | **H3b Release build** | **open**: Release lacks the warning flags; not built or flashed |
 
 ### Next steps, in order
+0. **H2 self-measurement (new, 2026-11-10; bench, about 20 min).** Build Debug with the 2026-11-10 changes (first target build of this code: check for 0 warnings), flash, and run §3 below. The main loop sleep changed, so also re-read H1 (`tick 1000.0 Hz`, no `WARN tick rate`) on this build. Run the H3 series of step 1 on this build, not on the previous one.
 1. **H3 baseline on the same mechanics.** Check out tag `old_firmware`, build, flash, run `r` + `D300`, `D1000`, `D5000` × 10 on the NEW casters and record `L=… R=…`. (Alternative: run the new firmware on the old casters and compare with the existing baseline.) Then the same series with the current firmware. Compare mean and spread (≤ ~1 mm) and check "no reversal / no TIMEOUT".
 2. **Release configuration:** in CubeIDE set `-Wextra`, `-Wdouble-promotion`, `-Wshadow` for Release (the Debug-only entry is the only one in `.cproject`), optionally `-Wno-unused-parameter` for the `Drivers` folder; build Release (H3b), flash, 3 × `D1000`/`D5000`, `I`, `FAULTINJ 4` → `ERR state Release build`.
 3. **Leftovers:** boot-to-`ready` < 2 s, `?`/`k`/`S`/`L`, legacy-command/range/`P…` checks of §7, deliberate HardFault trigger (§5).
-4. **Close-out (§8):** delete the `#if 0` blocks in `main.c` (also remove the unused legacy `BTS7960`/`Wheel_*` code), rebuild, one `D1000`; enter the Drivers-warning exception (if used) and the H2 scope gap in spec §18.2; commit with REQ IDs; `git tag phase0`; save logs under `tools/data/<date>/`.
-5. **Phase 1** only after that. **Blocker for phase 1:** `calib.c`/`calib.h` are not in the repository (`main.c` includes `calib.h` only under `APP_CALIB`, spec D-27). The calibration firmware cannot be built until they are supplied. CLAUDE.md says leave `calib.c` unchanged, so do not rewrite it.
+4. **Close-out (§8):** delete the `#if 0` blocks in `main.c` (also remove the unused legacy `BTS7960`/`Wheel_*` code), rebuild, one `D1000`; enter the Drivers-warning exception (if used) in spec §18.2 (H2 by self-measurement is D-32); commit with REQ IDs; `git tag phase0`; save logs under `tools/data/<date>/`.
+5. **Phase 1 (vehicle track)** only after that. Phase 1 is not blocked by `calib.c` (spec D-31): follow `PHASE1_CALIBRATION.md` with the normal console and the host tools in `tools/`. The calibration firmware stays optional: `calib.c`/`calib.h` are still not in the repository (`main.c` includes `calib.h` only under `APP_CALIB`, spec D-27) and are still not to be rewritten. Host-track work (pure modules, host tests, SIL, MATLAB design) does not wait for this step (spec §15, D-29).
 
-### Changed this session (uncommitted)
+### Changed in session 1 (2026-11-09; committed since)
 - `Core/Inc/console.h`, `Core/Src/console.c`, `Core/Src/app_cmd.c`, `test/t_con.c`: `I` is now a chunked job (`CON_JOB_INFO`, `con_info_line()`), spec D-28, REQ-CON-01. Reason: `I` printed four lines at once and the 128-byte radio TX buffer dropped lines 3 and 4. Host test added; verified over the radio.
 - `Challenge_TestHC/.cproject`, `.settings/language.settings.xml`, `.settings/stm32cubeide.project.prefs`: CubeIDE rewrote them (pre-build step, warning flags, scanner attributes). Review before committing.
 - `FIRMWARE_SPEC.md` (D-28, REQ-CON-01 text), this file, `CLAUDE.md` (paths, pointer).
 
+### Changed 2026-11-10 (WIP checkpoint `dfde781`; not built for the target, not flashed)
+- `Core/Src/app.c`: race-free sleep in `app_loop()` (REQ-NFR-05). Before, a TIM6 tick that fired between `sys_sched_take()` and `__WFI()` left its slots pending until SysTick or a UART interrupt woke the core, up to 1 ms late. Now interrupts are masked, `sys_sched_pending()` is checked, and `__WFI()` runs only if nothing is pending (WFI wakes on a pending interrupt with PRIMASK set; the ISR runs at the restore). Found by review, never observed on the vehicle.
+- `Core/Inc/sys_sched.h`, `Core/Src/sys_sched.c`: H2 self-measurement (REQ-EXE-11, REQ-NFR-01, REQ-NFR-05), integer only. `S_CTRL` start-to-start period from TIM2 (1 µs): min, max, sum, count. Tick-ISR body time from `DWT->CYCCNT`: max. New `sys_sched_pending()`, `sys_sched_stats_peek()`, `sys_sched_stats_reset()`. The `SLOT_CTRL` phase comment is reworded (phase 1 kept, D-30); no behaviour change there.
+- `Core/Src/app_cmd.c`: `I` has a fifth line (the fourth in the output), `S_CTRL period min … max … mean … us n …; tick isr max … us`. `I` reads the statistics with `sys_sched_stats_peek()`; before, every `I` cleared the CPU-load sums of the running second, so `cpu` read low once. `r` (the `Counters reset` case) now also restarts the `I` maxima and the period statistics.
+- `test/t_sched.c` (new), `test/Makefile`, `test/test_main.c`, `test/t_con.c`: host test of the period arithmetic and the `I` timing line. `make -C test`: 54621 checks, 0 failed.
+- Target build: no `arm-none-eabi-gcc` on the machine that made the change. The four changed files pass a `clang --target=armv7em-none-eabi -fsyntax-only -Wall -Wextra -Wdouble-promotion -Wshadow` check at `-Og` and `-O2`; that is a syntax and warning check with host libc headers, not a build. **2026-11-12:** all 23 files of `Core/Src` compile with `arm-none-eabi-gcc` 13.2.1 (`-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -std=gnu11 -Wall -Wextra -Wdouble-promotion -DSTM32F446xx -DUSE_HAL_DRIVER -DDEBUG`, include paths of `.cproject`) at `-Og` and at `-O2` with 0 warnings and 0 errors. Compile only (`-c`): not linked, not the CubeIDE toolchain, without `build_info.h`, not flashed. Step 0 above (first CubeIDE build, 0 warnings) stays open.
+- `FIRMWARE_SPEC.md`: D-32 and the matching text changes are applied separately.
+
 ### Setup facts a new session needs
-- Console: USB VCP `/dev/cu.usbmodem11403` (number can change: `ls /dev/cu.usbmodem*`), `screen /dev/cu.usbmodem11403 115200`; radio terminal at 9600. The board is powered from E5V (JP5); USB can still be plugged in for the console. `I` maxima are since boot: run first, read `I` after; unplugging USB does not reset the board.
+- Console: USB VCP `/dev/cu.usbmodem11403` (number can change: `ls /dev/cu.usbmodem*`), `screen /dev/cu.usbmodem11403 115200`; radio terminal at 9600. The board is powered from E5V (JP5); USB can still be plugged in for the console. `I` maxima and the period statistics are since boot **or since the last `r`** that answered `Counters reset` (2026-11-10; before that: since boot only). `n` in the period line is the number of 20 ms intervals in the window. Run first, read `I` after; unplugging USB does not reset the board. Overrun counts are always since boot.
 - Launch with **Run → Debug Configurations → STM32 C/C++ Application → `Challenge_TestHC Debug`**. A generic "C/C++ Application" config (`… Debug (1)`) calls plain `gdb` and fails. `Challenge_TestHC Debug.launch` still holds an old absolute log path (`/Users/danielappel/Desktop/Microcontrollers/A2.4/…`), harmless.
 - Pre-build step `../../tools/gen_build_info.sh` works (`build_info.h` is git-ignored, hash shows `-dirty`).
 - `7 bat absent` is expected: ADC1 is generated but `main.c` does not pass `.adc1` in `app_hw_t`, and the 47k/10k divider is not wired to PA0. Not needed for the phase-0 gate.
@@ -86,12 +95,42 @@ Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 96
 - [x] Boot log showed `clock OK` (TIM2 µs over 100 ms SysTick = 100 000 ± 100).
 - [x] No `WARN tick rate` line appears during a 5-minute idle. *(per user report: H1 done)*
 
-## 3. H2 – slot timing (oscilloscope on PC8, Debug build)
+## 3. H2 – slot timing (firmware self-measurement through `I`, Debug build)
 
-- [ ] PC8 is a 50 Hz pulse train (period 20.000 ms mean, jitter < 100 µs) – REQ-NFR-05. **OPEN: no oscilloscope or logic analyser available (2026-11-09).** Period, jitter and pulse width are unmeasured. Known gap; do it when an instrument is at hand.
-- [x] Pulse width = `S_CTRL` execution ≤ 600 µs, also while a `D1000` runs and while `a` (auto print) is on – REQ-NFR-02. *(via `I` only: after 2 × `D1000` with `a` on, `S_CTRL max` 15 µs. Scope not measured)*
+Decision D-32 (2026-11-10): H2 is closed by the firmware measuring itself; the oscilloscope is an optional cross-check. **Not run yet.** The 2026-11-09 ticks below were taken with the previous build and cover execution times only.
+
+What `I` prints (line 4 is new):
+```
+S_CTRL max 15 us, overruns 0; S_FAST max 6 us
+S_CTRL period min 19996 max 20004 mean 20000.0 us n 45000; tick isr max 0.6 us
+```
+(example values, not a measurement). Period = time between two consecutive `S_CTRL` starts, from TIM2 (1 µs). `n` = intervals counted; 50 per second. The first interval after boot is not counted. `tick isr max` = body of `sys_sched_tick_isr()` from the DWT cycle counter, truncated to 0.1 µs.
+
+Steps:
+- [ ] Flash the Debug build that contains the 2026-11-10 changes; `I` shows the `S_CTRL period` line. Note the hash.
+- [ ] **Idle run, 15 min** (spec §1.4): type `r` (answers `Counters reset`, restarts the statistics), leave the vehicle idle for 15 min, type `I`. Record the two lines. `n` ≥ 45000.
+- [ ] **Loaded run** (wheels in the air or on the floor): `r`, `a` (auto print on), 3 × `D1000`, `a` off, `I`. Record the two lines. Do not type `r` between the moves and the `I`.
+- [ ] Repeat the loaded run once with the console on the radio port (5 lines of `I` arrive complete).
+
+Pass, for every run:
+- [ ] Period mean 20.000 ms ± 0.01 %: `mean` within 19998.0 … 20002.0 us – REQ-NFR-05.
+- [ ] Jitter < 100 µs: `max` − `min` < 100 us (this also bounds each of them within 100 µs of 20000) – REQ-NFR-05.
+- [ ] `tick isr max` ≤ 2.0 us – REQ-NFR-01.
+- [ ] `S_CTRL max` ≤ 600 us – REQ-NFR-02; `overruns 0`; `S_FAST max` well below 150 us.
+- [ ] `cpu` < 50 % – REQ-NFR-04 (line 2 of `I`).
+
+Limits of the self-measurement (write them next to the result):
+- TIM2, TIM6 and the CPU clock come from the same oscillator (HSE). `mean` therefore proves that no tick was lost or shifted and that the dividers are right; it cannot see an oscillator frequency error. Only an external instrument can. The boot `clock OK` check has the same limit.
+- `tick isr max` excludes exception entry/exit and the HAL dispatch (`TIM6_DAC_IRQHandler` → `HAL_TIM_IRQHandler` → callback) in front of the body. Estimate, not measured: 0.5–1.5 µs more.
+- A failure: note the three numbers and `n`, type `r`, repeat. A single outlier in `max` or `min` that does not come back is still a failure of the run; find the cause (which command or mode was active) before repeating.
+
+Earlier results (2026-11-09, previous build, `I` only):
+- [x] `S_CTRL` execution ≤ 600 µs, also while a `D1000` runs and while `a` (auto print) is on – REQ-NFR-02. *(after 2 × `D1000` with `a` on, `S_CTRL max` 15 µs)*
 - [x] `I` shows `S_CTRL max … us` ≤ 600, `overruns 0`, `S_FAST max` well below 150 µs. *(15 µs, overruns 0, `S_FAST max` 6 µs)*
-- [x] Tick-ISR ≤ 2 µs (REQ-NFR-01): not visible on PC8; accept if S_FAST/S_CTRL numbers are small and no overruns. Measure separately only if overruns appear. *(accepted: no overruns)*
+- Tick-ISR ≤ 2 µs (REQ-NFR-01) was accepted on 2026-11-09 without a measurement ("no overruns"). That acceptance is replaced by the `tick isr max` criterion above and is open until it is read.
+
+Optional cross-check with an instrument (not required for the gate):
+- [ ] Oscilloscope or logic analyser on PC8 (`PROBE`, Debug build): 50 Hz pulse train, period 20.000 ms mean, jitter < 100 µs, pulse width = `S_CTRL` execution. This is the only check of the absolute frequency.
 
 ## 4. H4 – truth of signs (wheels in the air, motor supply ON)
 
@@ -141,7 +180,7 @@ User observation: the vehicle physically drives slightly FARTHER than commanded 
 
 ### H3b – Release build
 
-- [ ] Build **Release** (`-O2`), flash, repeat 3 runs of `D1000` and `D5000` plus H1 (`I`). Behaviour identical to Debug (this catches missing `volatile`).
+- [ ] Build **Release** (`-O2`), flash, repeat 3 runs of `D1000` and `D5000` plus H1 and the H2 loaded run of §3 (`I`). Behaviour identical to Debug (this catches missing `volatile`).
 
 ## 7. Console and radio checks
 
@@ -154,8 +193,8 @@ User observation: the vehicle physically drives slightly FARTHER than commanded 
 
 ## 8. Sign-off
 
-- [ ] H1, H2, H3, H3b, H4, H5 all passed; logs and the filled table saved under `tools/data/<date>/` with the firmware hash (`I`) and a `L` dump.
+- [ ] H1, H2 (self-measurement, §3), H3, H3b, H4, H5 all passed; logs and the filled table saved under `tools/data/<date>/` with the firmware hash (`I`) and a `L` dump.
 - [ ] Open findings written down (backup-register record, any parameter changed during H3).
 - [ ] Commit: `Phase 0: restructure complete, H1–H5 passed (REQ-ARC-01..04, REQ-EXE-*, REQ-MOT-*, REQ-ENC-*, REQ-WHL-*, REQ-DRV-*, REQ-PAR-*, REQ-CON-*)`.
 - [ ] `git tag phase0`. Delete the `#if 0` blocks in `main.c` (spec §16.3 step 3), rebuild, repeat one `D1000`.
-- [ ] Only then start phase 1 (calibration).
+- [ ] Only then start phase 1 (calibration) on the vehicle (`PHASE1_CALIBRATION.md`); host-track work may run ahead (spec §15, D-29).

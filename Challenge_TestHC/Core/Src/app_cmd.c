@@ -105,11 +105,14 @@ int con_info_line(uint32_t i, char *buf, size_t n)
                         (unsigned long)(g_app.tick_hz_x10 / 10U), (unsigned long)(g_app.tick_hz_x10 % 10U),
                         (unsigned long)(g_app.cpu_permille / 10U), (unsigned long)(g_app.cpu_permille % 10U));
     case 2:
-        sys_sched_stats(&st);
+        sys_sched_stats_peek(&st);       /* not sys_sched_stats(): that would steal the CPU-load sums */
         return snprintf(buf, n, "S_CTRL max %lu us, overruns %lu; S_FAST max %lu us",
                         (unsigned long)(st.max_cycles[SLOT_CTRL] / us), (unsigned long)st.overrun[SLOT_CTRL],
                         (unsigned long)(st.max_cycles[SLOT_FAST] / us));
-    case 3:
+    case 3:                              /* H2 self-measurement, REQ-EXE-11 */
+        sys_sched_stats_peek(&st);
+        return sys_sched_format_timing(&st, SystemCoreClock, buf, n);
+    case 4:
         return snprintf(buf, n, "boot failures 0x%04lX, par generation %lu, m/cnt %ld nm", (unsigned long)g_app.boot_status,
                         (unsigned long)par_generation(), lroundf(par()->odo_m_per_cnt * 1.0e9f));
     default:
@@ -156,6 +159,7 @@ void app_cmd_exec(const con_cmd_t *c)
         } else {
             enc_zero();
             drv_reset_meas(d);
+            sys_sched_stats_reset();                         /* `I` maxima and period restart too */
             con_printf(p, "Counters reset\r\n");
         }
         break;

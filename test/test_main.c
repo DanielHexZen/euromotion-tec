@@ -11,12 +11,13 @@ void t_prof(void);
 void t_whl_law(void);
 void t_drv_move(void);
 void t_con(void);
+void t_sched(void);
 
 int main(void)
 {
     static const struct { const char *name; void (*fn)(void); } T[] = {
         { "t_crc", t_crc }, { "t_fmt", t_fmt }, { "t_par", t_par }, { "t_prof", t_prof },
-        { "t_whl_law", t_whl_law }, { "t_drv_move", t_drv_move }, { "t_con", t_con },
+        { "t_whl_law", t_whl_law }, { "t_drv_move", t_drv_move }, { "t_con", t_con }, { "t_sched", t_sched },
     };
     for (unsigned i = 0; i < sizeof T / sizeof T[0]; i++) {
         printf("%s\n", T[i].name);

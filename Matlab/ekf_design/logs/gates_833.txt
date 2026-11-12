@@ -1,0 +1,21 @@
+
+=== Gates ===
+false rejection: scalar gate 9.00 -> 0.270 %, 2-D gate 9.21 -> 1.000 %
+scalar outlier of k sigma (sigma = sqrt(S)) rejected with probability:
+   k =  2: 0.159
+   k =  3: 0.500
+   k =  4: 0.841
+   k =  5: 0.977
+   k =  6: 0.999
+   k =  8: 1.000
+   k = 10: 1.000
+note: the gate measures k in units of sqrt(S), not of ekf_sig_edge. After a long edge-free
+  stretch S is dominated by P, so a false event 0.2 m off is accepted when the cross-track
+  sigma exceeds ~0.2/3 = 7 cm; the first edge after such a stretch is the vulnerable one.
+t_ekf_line + 10 % false edges, gate1 = 9: ct max 27.0 mm rms 10.0 mm, rejected 10 of 79
+t_ekf_line + 10 % false edges, gate1 = 1e+09: ct max 162.2 mm rms 41.9 mm, rejected 0 of 79
+gate1 false-rejection probability | -1 | 0.270 % | design
+gate1 rejects a 5-sigma outlier with | -1 | 0.977 | design
+10 % false edges: ct max with / without gate | 1 | 27.0 / 162.2 mm | with gate < 30 mm
+Elapsed time is 141.617 seconds.
+JOB_DONE

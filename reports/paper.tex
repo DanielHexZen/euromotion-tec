@@ -232,7 +232,7 @@ Motors + Hall encoders & Traction, odometry & Implemented\\
 Wheel cascade (50~Hz) & Speed/position loop & Implemented\\
 HC-12 link, USB console & Commands, telemetry & Implemented\\
 LiPo, buck, 3.3~V LDO & Power & Implemented$^{*}$\\
-IMU (6-axis) & Heading rate & Pending (part undecided)\\
+IMU (6-axis) & Heading rate & Pending (LSM6DS3 chosen, not yet fitted)\\
 8$\times$ VL53L1X & Edge, obstacles & Proposed\\
 EKF & Pose estimate & Proposed\\
 Path follower, mission logic & Automatic mode & Proposed\\
@@ -274,7 +274,7 @@ The reference is a geometric path decoupled from time. With cross-track error $e
 with $\omega_n\approx1.5$--$2$~rad/s and $\zeta=0.7$, which respects the bandwidth separation from the 6.8~rad/s speed loop; pure pursuit is kept as a fallback. Corners are driven stop--turn--go on level ground, since turning on a slope corrupts the integrated heading. Obstacle evasion is treated as a one-dimensional lateral offset search inside the measured corridor; the inner ground sensors remain armed as an interlock during evasion.
 
 \subsection{Data Transmission and Telemetry}
-Telemetry and remote control use the HC-12 on USART1 at 9600~Bd, already running in parallel with the USB console. Because 9600~Bd limits throughput, the proposed protocol uses COBS framing with CRC-16, absolute (idempotent) commands, and the vehicle as timing master, which avoids half-duplex collisions: a 24-byte binary frame needs 25~ms, i.e.\ 25\,\% of the channel at 10~Hz, against 62.5\,\% for a 60-character text line. The regulatory status of the 433~MHz band in Mexico and the use of radio modules with their own firmware under the ``STM32 only'' criterion are open questions for the course instructor.
+Telemetry and remote control use the HC-12 on USART1, today at 9600~Bd and already running in parallel with the USB console; 19200~Bd is planned for the binary protocol, but only after a range test at that rate has passed, with 9600~Bd as the fallback. Because the rate limits throughput, the proposed protocol uses COBS framing with CRC-16, absolute (idempotent) commands, and the vehicle as timing master, which avoids half-duplex collisions: at 9600~Bd a 24-byte binary frame needs 25~ms, i.e.\ 25\,\% of the channel at 10~Hz, against 62.5\,\% for a 60-character text line. The regulatory status of the 433~MHz band in Mexico and the use of radio modules with their own firmware under the ``STM32 only'' criterion are open questions for the course instructor.
 
 \subsection{Preliminary Block Diagram}
 Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, actuators and communication. Solid green blocks are implemented; dashed blue blocks are proposed.
@@ -333,7 +333,7 @@ Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, a
 An analytical error budget for a 40~m reference-free segment gives 21~cm lateral error for a $0.3^\circ$ entry-heading error and 8~cm along-track error for a 0.2\,\% scale error after per-surface calibration~\cite{techref}. Heading fits to straight faces and a landmark fix before each waypoint are expected to bring the error into the 10--20~cm bracket. These estimates are model-based and must be confirmed experimentally.
 
 \section{Future Work}
-\textbf{Pending components.} Select and order the IMU (the originally planned ICM-42688-P is unavailable; the LSM6DSV is the leading candidate); fit and test the eight VL53L1X sensors; fit fuses, main switch, battery-voltage divider and a hardware emergency stop; choose casters and wheel size after measuring the ramp lip; procure spares (Nucleo board, driver, motor); finalize the chassis and cabling.
+\textbf{Pending components.} Order and fit the IMU (the originally planned ICM-42688-P is unavailable; the LSM6DS3 was chosen for availability, replacing the LSM6DSV, and runs at 833~Hz; the plain LSM6DS3 variant; the breakout board is still to be confirmed); fit and test the eight VL53L1X sensors; fit fuses, main switch, battery-voltage divider and a hardware emergency stop; choose casters and wheel size after measuring the ramp lip; procure spares (Nucleo board, driver, motor); finalize the chassis and cabling.
 
 \textbf{Programming and integration.} Move to a cyclic executive with a 1~MHz timestamp base; implement the EKF, path follower and mission state machine; add IMU (SPI with DMA) and two I$^2$C buses with per-sensor shutdown lines for address assignment; implement the framed telemetry protocol and the PC ground station; verify battery-only start-up (the clock currently derives from the ST-Link) and the thermal load of the 3.3~V regulator.
 

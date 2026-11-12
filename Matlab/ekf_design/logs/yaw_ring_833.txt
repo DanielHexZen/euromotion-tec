@@ -1,0 +1,2 @@
+yaw ring: 32 samples at 833 Hz span 37.22 ms; query 20 ms back st=0, 37 ms back st=0, 38 ms back st=2
+maneuver 30 s at 50 Hz: imu_ok in 1499 of 1499 steps

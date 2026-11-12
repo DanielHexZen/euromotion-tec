@@ -48,3 +48,29 @@ messages:
       - {name: x_mm,      type: i32}
       - {name: y_mm,      type: i32}
       - {name: yaw_mrad,  type: i16}
+  # FIRMWARE_SPEC.md §8.4 `TELEM_SLOW`: 35 bytes, 1 Hz. Field order, types and units are the
+  # spec's; `ev_drop` (u8 at offset 34) is D-34. The id follows this file's numbering
+  # (vehicle -> PC from 0x80); §8.4 assigns type 0x03, which is DRIVE here.
+  TELEM_SLOW:
+    id: 0x83
+    dir: veh2pc
+    fields:
+      - {name: t_ms,        type: u32}   # offset 0, ms since boot
+      - {name: bat,         type: u16}   # 4, mV
+      - {name: sig_x,       type: u16}   # 6, mm (sqrt P)
+      - {name: sig_y,       type: u16}   # 8, mm
+      - {name: sig_th,      type: u16}   # 10, 0.01 deg
+      - {name: bg,          type: i16}   # 12, 0.001 deg/s
+      - {name: scale,       type: i16}   # 14, ppm, (s - 1)*1e6
+      - {name: imu_t,       type: i16}   # 16, 0.01 degC
+      - {name: fault_first, type: u16}   # 18, fault code
+      - {name: n_faults,    type: u8}    # 20, active faults
+      - {name: cpu,         type: u8}    # 21, % load
+      - {name: ovr_ctrl,    type: u16}   # 22, S_CTRL overruns since boot
+      - {name: rx_err,      type: u16}   # 24, radio frame errors since boot
+      - {name: ekf_acc,     type: u16}   # 26, accepted aiding updates since boot
+      - {name: ekf_rej,     type: u16}   # 28, rejected aiding updates since boot
+      - {name: stack_free,  type: u16}   # 30, bytes, high-water mark
+      - {name: vl_alive,    type: u8}    # 32, bit i = sensor i fresh
+      - {name: sens,        type: u8}    # 33, bit 0 IMU alive, 1 battery present, 2 course valid
+      - {name: ev_drop,     type: u8}    # 34, events dropped since boot, saturating at 255
