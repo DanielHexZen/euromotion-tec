@@ -66,7 +66,7 @@ p.ekf_p0_s        = 0.005;       % 520  - (sigma)
 % constants from the text of §7.17 (no parameter ID)
 p.ekf_hist_n      = 256;         % §7.17.1 pose-history ring length (1.28 s at 200 Hz, 5.12 s at 50 Hz)
 p.ekf_meas_max_age = 1.0;        % §7.17.1 measurements older than this are discarded, s
-p.ekf_slip_n      = 3;           % §7.17.2 consecutive steps over threshold
+p.ekf_slip_n      = 2;           % §7.17.2, D-43: ekf_slip_T = 0.04 s = 2 steps at the 50 Hz step (was 3 up to spec 1.3)
 p.ekf_face_g_min  = 0.3;         % REQ-EKF-06
 p.ekf_zupt_min_T  = 0.5;         % §7.17.4 shortest partial ZUPT window that is still applied, s
 p.ekf_pxy_max     = 25;          % REQ-EKF-05 step 5, m^2
