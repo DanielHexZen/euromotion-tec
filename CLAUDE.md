@@ -5,10 +5,10 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 **Always use the `/ponytail` skill** for work in this repository.
 
 ## Current state
-Phase 0 is in commissioning and not closed (H3, H3b and the H2 period measurement are open). Read the **Status** section of `PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Work runs on two tracks (spec §15, D-29): host-track work may run ahead of the gates, the vehicle track stays gated. Phase 1 is not blocked: it follows `PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31); `calib.c`/`calib.h` are not in the repository and are optional.
+Phase 0 is in commissioning and not closed (H3, H3b and the H2 period measurement are open). Read the **Status** section of `docs/PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Work runs on two tracks (spec §15, D-29): host-track work may run ahead of the gates, the vehicle track stays gated. Phase 1 is not blocked: it follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31); `calib.c`/`calib.h` are not in the repository and are optional.
 
 ## Sources of truth
-- `FIRMWARE_SPEC.md` (repository root): normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.
+- `docs/FIRMWARE_SPEC.md`: normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.
 - `MR2006B_Vehicle_Technical_Reference_source/MR2006B_Vehicle_Technical_Reference.pdf`: explains why (models, physics, rationale). Read it when a requirement is unclear; do not code from it.
 - Never invent a value tagged `[MEASURE]`, `[VERIFY]` or `[DECIDE]`. Make it a parameter in `par_table.h` and flag it.
 
