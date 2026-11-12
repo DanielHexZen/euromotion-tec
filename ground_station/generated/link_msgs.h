@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define LINK_PROTOCOL_HASH 0x0E03D615u
+#define LINK_PROTOCOL_HASH 0xDB6DD6A7u
 
 typedef enum {
     LINK_MODE_IDLE = 0,
@@ -24,6 +24,7 @@ typedef enum {
     LINK_MSG_HELLO = 0x80,
     LINK_MSG_ACK = 0x81,
     LINK_MSG_TELEM_FAST = 0x82,
+    LINK_MSG_TELEM_SLOW = 0x83,
 } link_msg_id_t;
 
 #define LINK_ESTOP_SIZE 0u
@@ -78,6 +79,31 @@ typedef struct {
 } link_TELEM_FAST_t;
 size_t link_TELEM_FAST_pack(const link_TELEM_FAST_t *m, uint8_t *b);
 bool link_TELEM_FAST_unpack(link_TELEM_FAST_t *m, const uint8_t *b, size_t len);
+
+#define LINK_TELEM_SLOW_SIZE 35u
+typedef struct {
+    uint32_t t_ms;
+    uint16_t bat;
+    uint16_t sig_x;
+    uint16_t sig_y;
+    uint16_t sig_th;
+    int16_t bg;
+    int16_t scale;
+    int16_t imu_t;
+    uint16_t fault_first;
+    uint8_t n_faults;
+    uint8_t cpu;
+    uint16_t ovr_ctrl;
+    uint16_t rx_err;
+    uint16_t ekf_acc;
+    uint16_t ekf_rej;
+    uint16_t stack_free;
+    uint8_t vl_alive;
+    uint8_t sens;
+    uint8_t ev_drop;
+} link_TELEM_SLOW_t;
+size_t link_TELEM_SLOW_pack(const link_TELEM_SLOW_t *m, uint8_t *b);
+bool link_TELEM_SLOW_unpack(link_TELEM_SLOW_t *m, const uint8_t *b, size_t len);
 
 
 #endif

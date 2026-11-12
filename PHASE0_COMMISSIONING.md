@@ -6,11 +6,11 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 
 ## Status (2026-11-10; vehicle results are from session 1, 2026-11-09)
 
-**Phase 0 is NOT closed.** H3, H3b and the period/jitter part of H2 are open. Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); the update of this file is uncommitted. They **have not been built for the target or flashed**.
+**Phase 0 is NOT closed.** H3, H3b and the period/jitter part of H2 are open. Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been linked for the target or flashed**; a compile-only check with `arm-none-eabi-gcc` passed on 2026-11-12 (see below).
 
 | Gate | State |
 |---|---|
-| Host tests | passed, 54601 checks (`make -C test`) |
+| Host tests | passed, 54621 checks, 0 failed (`make -C test`, repeated 2026-11-12) |
 | H1 tick/clock | passed |
 | H2 slot timing | execution times passed on 2026-11-09 with the previous build (`S_CTRL max` 15 µs, `S_FAST max` 6 µs, overruns 0, tick 1000.0 Hz, cpu 0.4 %). **Period, jitter and tick-ISR time open:** firmware support added 2026-11-10 (self-measurement in `I`, decision D-32), **run on the vehicle pending**. The oscilloscope on PC8 is now an optional cross-check |
 | H4 signs, dead-man, runaway, stall | passed (user report); EN-0 V-at-boot and reversal test not explicitly confirmed |
@@ -27,7 +27,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 4. **Close-out (§8):** delete the `#if 0` blocks in `main.c` (also remove the unused legacy `BTS7960`/`Wheel_*` code), rebuild, one `D1000`; enter the Drivers-warning exception (if used) in spec §18.2 (H2 by self-measurement is D-32); commit with REQ IDs; `git tag phase0`; save logs under `tools/data/<date>/`.
 5. **Phase 1 (vehicle track)** only after that. Phase 1 is not blocked by `calib.c` (spec D-31): follow `PHASE1_CALIBRATION.md` with the normal console and the host tools in `tools/`. The calibration firmware stays optional: `calib.c`/`calib.h` are still not in the repository (`main.c` includes `calib.h` only under `APP_CALIB`, spec D-27) and are still not to be rewritten. Host-track work (pure modules, host tests, SIL, MATLAB design) does not wait for this step (spec §15, D-29).
 
-### Changed this session (uncommitted)
+### Changed in session 1 (2026-11-09; committed since)
 - `Core/Inc/console.h`, `Core/Src/console.c`, `Core/Src/app_cmd.c`, `test/t_con.c`: `I` is now a chunked job (`CON_JOB_INFO`, `con_info_line()`), spec D-28, REQ-CON-01. Reason: `I` printed four lines at once and the 128-byte radio TX buffer dropped lines 3 and 4. Host test added; verified over the radio.
 - `Challenge_TestHC/.cproject`, `.settings/language.settings.xml`, `.settings/stm32cubeide.project.prefs`: CubeIDE rewrote them (pre-build step, warning flags, scanner attributes). Review before committing.
 - `FIRMWARE_SPEC.md` (D-28, REQ-CON-01 text), this file, `CLAUDE.md` (paths, pointer).
@@ -37,7 +37,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 - `Core/Inc/sys_sched.h`, `Core/Src/sys_sched.c`: H2 self-measurement (REQ-EXE-11, REQ-NFR-01, REQ-NFR-05), integer only. `S_CTRL` start-to-start period from TIM2 (1 µs): min, max, sum, count. Tick-ISR body time from `DWT->CYCCNT`: max. New `sys_sched_pending()`, `sys_sched_stats_peek()`, `sys_sched_stats_reset()`. The `SLOT_CTRL` phase comment is reworded (phase 1 kept, D-30); no behaviour change there.
 - `Core/Src/app_cmd.c`: `I` has a fifth line (the fourth in the output), `S_CTRL period min … max … mean … us n …; tick isr max … us`. `I` reads the statistics with `sys_sched_stats_peek()`; before, every `I` cleared the CPU-load sums of the running second, so `cpu` read low once. `r` (the `Counters reset` case) now also restarts the `I` maxima and the period statistics.
 - `test/t_sched.c` (new), `test/Makefile`, `test/test_main.c`, `test/t_con.c`: host test of the period arithmetic and the `I` timing line. `make -C test`: 54621 checks, 0 failed.
-- Target build: no `arm-none-eabi-gcc` on the machine that made the change. The four changed files pass a `clang --target=armv7em-none-eabi -fsyntax-only -Wall -Wextra -Wdouble-promotion -Wshadow` check at `-Og` and `-O2`; that is a syntax and warning check with host libc headers, not a build.
+- Target build: no `arm-none-eabi-gcc` on the machine that made the change. The four changed files pass a `clang --target=armv7em-none-eabi -fsyntax-only -Wall -Wextra -Wdouble-promotion -Wshadow` check at `-Og` and `-O2`; that is a syntax and warning check with host libc headers, not a build. **2026-11-12:** all 23 files of `Core/Src` compile with `arm-none-eabi-gcc` 13.2.1 (`-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -std=gnu11 -Wall -Wextra -Wdouble-promotion -DSTM32F446xx -DUSE_HAL_DRIVER -DDEBUG`, include paths of `.cproject`) at `-Og` and at `-O2` with 0 warnings and 0 errors. Compile only (`-c`): not linked, not the CubeIDE toolchain, without `build_info.h`, not flashed. Step 0 above (first CubeIDE build, 0 warnings) stays open.
 - `FIRMWARE_SPEC.md`: D-32 and the matching text changes are applied separately.
 
 ### Setup facts a new session needs

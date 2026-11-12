@@ -1,8 +1,8 @@
 # MR2006B Vehicle Firmware — Implementation Specification
 
 > **Status:** Draft for review
-> **Version:** 1.5
-> **Last Updated:** 2026-11-11 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
+> **Version:** 1.6
+> **Last Updated:** 2026-11-12 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
 > **Companion documents:** `MR2006B_Vehicle_Technical_Reference.tex/.pdf` (physics, models, rationale — *why*), `PHASE0_COMMISSIONING.md` (phase-0 gate and status), `PHASE1_CALIBRATION.md` (phase-1 procedure, D-31), `Matlab/ekf_design/` (EKF reference model, D-30), `BENCH_README.md` (bench firmware), `MR2006B_CubeMX_Konfiguration.xlsx` (current `.ioc` state, in `Challenge_TestHC/`), `CONCEPT_REV_F_CHANGES.md`. Not in the repository (checked with `git ls-files`, 2026-11-10): `CALIB_README.md` (calibration firmware, optional since D-31), `CONCEPT.md` Rev. E, `TOOLCHAIN.md`, `MR2006B_Pinout.xlsx`
@@ -1986,10 +1986,14 @@ Pure modules compile with the host compiler using `-std=gnu11 -Wall -Wextra -Wdo
 | `t_drv_vel` | REQ-DRV-03/04/05 | limits respected; curvature preserved under wheel saturation; reference anti-windup; bumpless mode switches |
 | `t_enc_est` | REQ-ENC-05 | synthetic edge trains 5–500 mm/s: DIFF error ≤ one count/period; MT error ≤ 10 % at ≥ 10 mm/s |
 | `t_att` | REQ-ATT-01 | synthetic IMU at 6° static pitch converges within 0.5° in 3 s; rejects 0.3 g lateral acceleration |
-| `t_ekf_static` | REQ-EKF-01/05/09 | stepped at 50 Hz like `S_CTRL`: 60 s stationary with bias 0.5 °/s + noise: σ_bg < 0.02 °/s after 3 s; heading drift < 0.01°; P symmetric, positive definite after 10⁶ steps |
+| `t_ekf_static` | REQ-EKF-01/05/09 | stepped at 50 Hz like `S_CTRL`: 60 s stationary with bias 0.5 °/s + noise: σ_bg < 0.02 °/s after 3 s; heading drift < 0.01° (fails with `F(3,4)` = −dt while `still`: 0.45°, D-36); `still` is set in the first step after `ekf_init` and, with steps of 20 000 µs, the first ZUPT is applied in step 50 (step 51 with a float sum of `dt`, D-41; step 59 with the standstill time started at 0, D-37); P symmetric, positive definite after 10⁶ steps |
 | `t_ekf_line` | §7.17 | stepped at 50 Hz: simulated 40 m straight with scale error 0.5 %, gyro bias drift, edge events every 0.5 m: cross-track error < 3 cm; NIS within the 95 % band ≥ 90 % |
 | `t_ekf_gate` | REQ-EKF-05 | a 10σ edge outlier is rejected; a 2σ one is accepted |
-| `t_ekf_jacobians` | §7.17.3 | every analytic H and F matches central finite differences to 1e-3 relative |
+| `t_ekf_jacobians` | §7.17.2, §7.17.3 | every analytic H and F matches central finite differences to 1e-3 relative; F is checked in IMU mode moving, in IMU mode while `still` (`F(3,4)` = 0, D-36) and in encoder mode |
+| `t_ekf_sf_q` | REQ-EKF-03 | one 90° in-place turn at 0.8 rad/s, stepped at 50 Hz and at 200 Hz: `P_θθ` after the turn is equal at both rates within 1 %, and its increase over the same run with `ekf_gyro_sf` = 0 is `ekf_gyro_sf²·ekf_sf_corr·π/2` within 1 % (per radian, independent of the step rate, D-38) |
+| `t_ekf_backshift` | REQ-EKF-02 | history entries 20 ms apart on an arc (0.3 m/s, 1 rad/s): the back-shift for a time between two entries is within 2 mm of the true motion; an edge correction of 20 mm applied after the measurement time changes the back-shift by < 0.1 mm (the ring stores `pose − corr`, D-39); a measurement older than 1.0 s is discarded |
+| `t_ekf_slip` | REQ-EKF-04 | residual above `ekf_slip_thr` for one 20 ms step: no flag; for two: `slip` set in the second step, one episode counted; the same residual at 5 ms steps: set in the 8th step (n = ceil(`ekf_slip_T`/dt), D-43). In-place turn with `slip` set (`ds_l` = −`ds_r` = d, s = 1): the position variance along the heading grows by `ekf_kd·d·ekf_slip_infl` per step, and by 0 without `slip`; straight with `slip` (`ds_l` = `ds_r`): equal to `ekf_kd·\|Δs_e\|·ekf_slip_infl` (D-45) |
+| `t_imu_yaw` | REQ-IMU-05 | yaw-ring arithmetic of §7.11.3 built on the host without the SPI backend, fed with 833 Hz samples: a query 37 ms back is answered, 38 ms back and more than `imu_extrap_max` ahead give `ST_RANGE`; when `\|Ψ\|` passes 8 rad the ring is re-based and the re-base counter increments; the difference of two Ψ read after the same drain equals rate × Δt within 1·10⁻⁵ rad, also after 1000 rad of total turning (D-40) |
 | `t_map` | REQ-MAP-01..03 | frame quantities for LINE/ARC; boundary lines; validation catches each rule violation (one test course per rule) |
 | `t_nav_line` | REQ-NAV-01 | closed loop with unicycle + first-order wheels: 0.2 m initial offset converges with overshoot < 10 % (ζ = 0.7); steady cross-track error < 2 mm on an ARC (curvature feedforward) |
 | `t_nav_final` | REQ-NAV-02 | final stop in the encoder frame is unaffected by an EKF jump of 5 cm injected at 0.2 m before the end |
@@ -2001,7 +2005,7 @@ Pure modules compile with the host compiler using `-std=gnu11 -Wall -Wextra -Wdo
 | `t_msn` | §7.21 | every row of the transition tables of §7.21.2–3 is exercised by a scripted input sequence |
 | `t_par` | REQ-PAR-01..05 | every default is inside its range; IDs unique; set/get round trip; flags enforced |
 
-The EKF is designed and verified first in MATLAB/Simulink under `Matlab/ekf_design/`, the reference model for `ekf.c`. The script part has run in GNU Octave; the Simulink model builder has not been executed yet. D-30 (50 Hz against 200 Hz) is confirmed in simulation (0.25 mm RMS difference); the study also produced the corrections D-36 to D-41.
+The EKF is designed and verified first in MATLAB/Simulink under `Matlab/ekf_design/`, the reference model for `ekf.c`. The script part has run in GNU Octave; the Simulink model builder has not been executed yet. D-30 (50 Hz against 200 Hz) is confirmed in simulation (0.35 mm RMS difference at the 833 Hz sample rate); the study also produced the corrections D-36 to D-41, D-43 and D-45, each of which has a regression test in the table above.
 
 ### 14.2 Software-in-the-loop
 
@@ -2317,3 +2321,4 @@ If the calibration firmware is used (D-31), its results map as follows; with `PH
 | 1.3 | 2026-11-11 | Dani / Claude | D-42: IMU changed from the LSM6DSV to the LSM6DS3 (availability); ODR 833 Hz instead of 960 Hz, backend `imu_lsm6ds3`, register table of §7.11.1 rewritten, yaw ring 37.2 ms; OQ-1 decided, D-10 updated; variant plain LSM6DS3 (confirmed), breakout board `[VERIFY]` |
 | 1.4 | 2026-11-11 | Dani / Claude | Results of the completed MATLAB study at 833 Hz: D-30 confirmed (0.35 mm), D-43 time-based slip detector (parameter 522 `ekf_slip_T`), D-44 the 5 cm SIL waypoint limit is `[VERIFY]`; `ekf_sf_corr` validity stated; IMU variant plain LSM6DS3 confirmed, yaw ring span 37.2 ms |
 | 1.5 | 2026-11-11 | Dani / Claude | D-45: slip inflation uses the mean absolute wheel travel `(\|ds_l\| + \|ds_r\|)/2` while `slip` is set (finding F-11 adopted; §7.17.2 Q table and slip detector paragraph) |
+| 1.6 | 2026-11-12 | Dani / Claude | §14.1: regression tests for the corrections D-36 to D-41, D-43 and D-45: `t_ekf_static` and `t_ekf_jacobians` extended, new rows `t_ekf_sf_q` (REQ-EKF-03), `t_ekf_backshift` (REQ-EKF-02), `t_ekf_slip` (REQ-EKF-04), `t_imu_yaw` (REQ-IMU-05). No requirement changed |

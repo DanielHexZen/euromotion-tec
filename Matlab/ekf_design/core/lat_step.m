@@ -94,7 +94,7 @@ nb = min(l.nbg(m), 10);
 if nb >= 3
     rbg = median(l.bg(1:nb, m));
 else
-    rbg = 1e9;
+    rbg = -1e9;     % no background yet: the sample counts as background, not as a notch
 end
 if l.in(m) == 0
     if r < rbg - double(p.lat_notch_depth)

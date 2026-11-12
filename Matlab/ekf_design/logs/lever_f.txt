@@ -1,0 +1,26 @@
+=== waypoint lever study, variant f, course rect10, runs [1 2 3 4 5] ===
+  MC run  1: finished 1, closure 0.014 m, wp est err [0.0197 0.0265 0.0261], wp true err [0.0211 0.0127 0.01], NEES in band 0.91, NIS 0.95, edges 33/0
+  MC run  2: finished 1, closure 0.007 m, wp est err [0.00875 0.0272 0.00863], wp true err [0.0147 0.0295 0.0223], NEES in band 0.89, NIS 0.98, edges 65/0
+  MC run  3: finished 1, closure 0.021 m, wp est err [0.0216 0.0187 0.0203], wp true err [0.0375 0.0199 0.0049], NEES in band 0.97, NIS 0.95, edges 62/0
+  MC run  4: finished 1, closure 0.029 m, wp est err [0.0254 0.0168 0.0153], wp true err [0.0303 0.0256 0.0316], NEES in band 0.99, NIS 0.97, edges 55/0
+  MC run  5: finished 1, closure 0.021 m, wp est err [0.0287 0.0296 0.0296], wp true err [0.037 0.0194 0.0419], NEES in band 1.00, NIS 0.96, edges 28/0
+
+Waypoint estimate error by direction (along/cross = w.r.t. the leg that ends at the waypoint), N = 5
+wp   | along: rms max sig mm  | cross: rms max sig mm  | |e|>5 cm  | scale: rms sig %  | edges/leg | legs with 0 edges
+1    |   11.7   20.9   34.7   |   18.5   26.0   24.8   |  0 of 5   |  0.117  0.102     |     0.0   | 5
+2    |   18.4   26.0   40.3   |   15.9   21.9   20.0   |  0 of 5   |  0.110  0.102     |    15.4   | 0
+3    |   18.3   25.7   38.1   |   11.0   19.4   43.8   |  0 of 5   |  0.102  0.101     |    16.4   | 0
+99   |   10.0   13.8   47.7   |   13.3   23.2   51.5   |  0 of 5   |  0.101  0.100     |    16.8   | 0
+verify_monte_carlo: NIS 0.962, NEES 0.951, avg NEES 0.848, closure max 0.029 m, wp est max 0.030, wp true max 0.042
+MC rect10 N=5 all runs finished | 1 | 5/5 | all |  | 
+MC NIS in 95 % band (spec §1.4) | 1 | 96.2 % (edge 96.3 %, ZUPT 96.1 %, n = 680) | >= 90 % |  | 
+MC NEES(x,y,th) per sample in 95 % band | 1 | 95.1 % (<= upper: 98.9 %) | >= 90 % |  | 
+MC averaged NEES in chi2_{3N}/N band | 0 | 84.8 % | >= 90 % |  | 
+rectangle closure (§1.4) | 1 | max 2.9 cm, mean 1.9 cm | < 30 cm |  | 
+waypoint estimate vs truth (§14.2) | 1 | max 3.0 cm | < 5 cm |  | 
+true waypoint error (§14.2) | 1 | max 4.2 cm | < 15 cm |  | 
+true waypoint error (§1.4 week 16) | 1 | max 4.2 cm | <= 20 cm |  | 
+LEVER f: N = 5, wp est max 3.0 cm rms 2.3 cm, wp true max 4.2 cm, NEES 95.1 %, NIS 96.2 %
+LEVER f: WP1 along rms 11.7 max 20.9 mm, cross rms 18.5 max 26.0 mm
+LEVER f: worst waypoint: seed 105 wp 2, along 26.0 mm, cross -14.2 mm (sigma 40.3 / 35.5 mm)
+JOB_DONE

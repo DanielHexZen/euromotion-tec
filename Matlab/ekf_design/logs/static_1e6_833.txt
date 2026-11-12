@@ -1,0 +1,12 @@
+verify_static [design, single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.00000 deg, bias err -2.03e-03 deg/s
+verify_static [spec start (F-2), single]: sigma_bg(3 s) 0.0043 deg/s, drift 0.00028 deg, bias err -2.39e-03 deg/s
+verify_static [spec F still (F-1), single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.45815 deg, bias err -2.03e-03 deg/s
+verify_static long run (single, 1e+06 steps): asym 0, min eig 1.01e-09, Pbb 1.01e-09, faults 0
+t_ekf_static sigma_bg after 3 s | 1 | 0.0035 deg/s | < 0.02 deg/s
+t_ekf_static heading drift 60 s | 1 | 0.00000 deg | < 0.01 deg
+t_ekf_static bias error after 60 s | 1 | -2.03e-03 deg/s (-1.1 sigma) | < 3 sigma
+heading drift, spec start (F-2) | -1 | 0.00028 deg | informational (literal spec text)
+heading drift, spec F still (F-1) | -1 | 0.45815 deg | informational (literal spec text)
+t_ekf_static P sym+PD after 1e+06 steps (single) | 1 | asym 0, min eig 1.01e-09 | symmetric, chol OK
+Elapsed time is 551.388 seconds.
+JOB_DONE

@@ -3,7 +3,7 @@ function cfg = sim_config(scenario, seed, varargin)
 %
 %   cfg = sim_config(scenario, seed, 'name', value, ...)
 %
-%   scenario  'rect10' | 'rect10_lm' | 'rect10_all' | 'line40' | 'maneuver' | 'static'
+%   scenario  'rect10' | 'rect10_lm' | 'rect10_all' | 'rect10_post' | 'line40' | 'maneuver' | 'static'
 %   seed      integer; every random quantity of the run derives from it
 %
 %   Options (name/value):
@@ -100,7 +100,7 @@ switch scenario
     case 'static',    T = 60;
     otherwise,        T = 240;
 end
-if strcmp(scenario, 'rect10_lm'), tr.lat_on = 1; end
+if strcmp(scenario, 'rect10_lm') || strcmp(scenario, 'rect10_post'), tr.lat_on = 1; end
 if strcmp(scenario, 'maneuver') || strcmp(scenario, 'static'), tr.gnd_mode = 0; end
 if opt.T_end > 0, T = opt.T_end; end
 cfg.T_end = T;

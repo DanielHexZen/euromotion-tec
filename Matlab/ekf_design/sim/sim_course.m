@@ -10,6 +10,12 @@ function c = sim_course(name)
 %     'rect10_lm'  as rect10 plus the face and post landmarks of the YAML
 %                  example on leg 2 (face 0.8 m left, post 0.6 m right).
 %     'rect10_all' as rect10 with the right boundary also on leg 1.
+%     'rect10_post' as rect10 plus one post 0.6 m to the right of every leg,
+%                  1.5 m before its end (an along-track reference near each
+%                  waypoint; survey sigma 0.03 m as in the YAML example, r = 0.10 m:
+%                  sim_lat casts a ray without spot width, so the r = 0.05 m
+%                  post of the example is seen 0.10 m wide and fails the
+%                  width check of lat_step, 0.5*(2 r + spot)).
 %     'line40'     t_ekf_line: 40 m straight with the right boundary, then a
 %                  waypoint and finish.
 %     'maneuver'   open-loop command schedule for the 50/200 Hz comparison:
@@ -37,7 +43,7 @@ c.ol_t = zeros(1, NO); c.ol_v = zeros(1, NO); c.ol_w = zeros(1, NO);
 
 V = 0.30;  W = 0.60;  WB = 0.20;  H = 10.5;
 switch name
-    case {'rect10', 'rect10_lm', 'rect10_all'}
+    case {'rect10', 'rect10_lm', 'rect10_all', 'rect10_post'}
         b1 = 0;  w1 = W;
         if strcmp(name, 'rect10_all'), b1 = 1; w1 = WB; end
         c = add_line(c, [0 0],   [10 0],  V, W, w1, 0, b1, -1*(b1>0));
@@ -55,6 +61,13 @@ switch name
             % YAML example of §7.18.5, leg 4 = the second LINE (segment 4 here)
             c = add_lm(c, 1, 4, +1, 2.0, 5.0, 9.2, 3.0, 0, 1, 0, 0.02);
             c = add_lm(c, 2, 4, -1, 6.0, 8.0, 10.6, 7.1, 0, 1, 0.05, 0.03);
+        end
+        if strcmp(name, 'rect10_post')
+            % LINE segments 1, 4, 7, 10; post at s = 8.5 m, window 7.5..9.5 m
+            c = add_lm(c, 2,  1, -1, 7.5, 9.5,  8.5, -0.6, 1, 0, 0.10, 0.03);
+            c = add_lm(c, 2,  4, -1, 7.5, 9.5, 10.6,  8.5, 0, 1, 0.10, 0.03);
+            c = add_lm(c, 2,  7, -1, 7.5, 9.5,  1.5, 10.6, -1, 0, 0.10, 0.03);
+            c = add_lm(c, 2, 10, -1, 7.5, 9.5, -0.6,  1.5, 0, -1, 0.10, 0.03);
         end
     case 'line40'
         c = add_line(c, [0 0], [40 0], V, W, WB, 0, 1, -1);

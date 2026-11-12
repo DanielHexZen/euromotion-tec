@@ -160,3 +160,90 @@ bool link_TELEM_FAST_unpack(link_TELEM_FAST_t *m, const uint8_t *b, size_t len)
     return true;
 }
 
+size_t link_TELEM_SLOW_pack(const link_TELEM_SLOW_t *m, uint8_t *b)
+{
+    size_t i = 0u;
+    b[i++] = (uint8_t)(((uint32_t)m->t_ms) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->t_ms) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->t_ms) >> 16u);
+    b[i++] = (uint8_t)(((uint32_t)m->t_ms) >> 24u);
+    b[i++] = (uint8_t)(((uint32_t)m->bat) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->bat) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->sig_x) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->sig_x) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->sig_y) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->sig_y) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->sig_th) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->sig_th) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->bg) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->bg) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->scale) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->scale) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->imu_t) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->imu_t) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->fault_first) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->fault_first) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->n_faults) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->cpu) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->ovr_ctrl) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->ovr_ctrl) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->rx_err) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->rx_err) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->ekf_acc) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->ekf_acc) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->ekf_rej) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->ekf_rej) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->stack_free) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->stack_free) >> 8u);
+    b[i++] = (uint8_t)(((uint32_t)m->vl_alive) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->sens) >> 0u);
+    b[i++] = (uint8_t)(((uint32_t)m->ev_drop) >> 0u);
+    return i;
+}
+
+bool link_TELEM_SLOW_unpack(link_TELEM_SLOW_t *m, const uint8_t *b, size_t len)
+{
+    size_t i = 0u;
+    if (len != LINK_TELEM_SLOW_SIZE) { return false; }
+    m->t_ms = (uint32_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u) | ((uint32_t)b[i + 2u] << 16u) | ((uint32_t)b[i + 3u] << 24u));
+    i += 4u;
+    m->bat = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->sig_x = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->sig_y = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->sig_th = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->bg = (int16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->scale = (int16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->imu_t = (int16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->fault_first = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->n_faults = (uint8_t)(((uint32_t)b[i + 0u] << 0u));
+    i += 1u;
+    m->cpu = (uint8_t)(((uint32_t)b[i + 0u] << 0u));
+    i += 1u;
+    m->ovr_ctrl = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->rx_err = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->ekf_acc = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->ekf_rej = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->stack_free = (uint16_t)(((uint32_t)b[i + 0u] << 0u) | ((uint32_t)b[i + 1u] << 8u));
+    i += 2u;
+    m->vl_alive = (uint8_t)(((uint32_t)b[i + 0u] << 0u));
+    i += 1u;
+    m->sens = (uint8_t)(((uint32_t)b[i + 0u] << 0u));
+    i += 1u;
+    m->ev_drop = (uint8_t)(((uint32_t)b[i + 0u] << 0u));
+    i += 1u;
+    (void)i;
+    return true;
+}
+
