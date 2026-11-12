@@ -1,0 +1,17 @@
+
+50 Hz vs 200 Hz, maneuver scenario, seeds 1 (identical sensor data)
+phase            | 50 Hz: pos rms/max mm, th rms/max mdeg, NEES<=hi | 200 Hz                            
+straight         | 44.92/79.26  1500.0/2391.6  1.00 | 44.93/79.50  1498.0/2387.6  1.00
+arc 1.0 rad/s    | 78.13/87.15  1157.4/2302.7  1.00 | 78.21/87.23  1153.8/2299.0  1.00
+in-place turn    | 49.48/51.30  4953.1/8026.7  0.82 | 49.13/50.89  4941.6/8018.2  0.82
+back-shift error of 10..100 ms old queries (pos rms/max mm, th rms/max mrad):
+  standing         50 Hz  0.018/ 0.257   0.023/ 0.199   200 Hz  0.021/ 0.356   0.033/ 0.380
+  straight         50 Hz  0.497/ 1.251   0.026/ 0.277   200 Hz  0.473/ 1.251   0.028/ 0.298
+  arc 1.0 rad/s    50 Hz  0.377/ 1.184   0.251/ 0.476   200 Hz  0.371/ 1.138   0.250/ 0.489
+  in-place turn    50 Hz  0.024/ 0.083   0.268/ 0.664   200 Hz  0.024/ 0.085   0.267/ 0.671
+final position error (m): 50 Hz 0.0475, 200 Hz 0.0467
+final P_tt (rad^2):       50 Hz 0.00219, 200 Hz 0.00219
+rect10 closure (m): 50 Hz 0.16, 200 Hz 0.175
+rect10 max waypoint estimate error (m): 50 Hz 0.237, 200 Hz 0.243
+rect10 NEES in band: 50 Hz 0.982, 200 Hz 0.969
+Elapsed time is 445.975 seconds.

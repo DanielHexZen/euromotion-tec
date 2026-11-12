@@ -1,0 +1,16 @@
+verify_jacobians: worst relative errors
+  F IMU moving   4.385e-10
+  F IMU still    1.398e-10
+  F encoder      4.227e-10
+  H edge         1.229e-09
+  H face         8.790e-10
+  H heading      1.398e-10
+  H point        4.486e-10
+  H ZUPT         7.346e-13
+  literal spec F while still vs FD: max abs diff 0.02 (= dt)
+verify_line: ct max 24.7 mm, NIS 97.1 %, NEES 94.6 %, edges 79 acc / 0 rej
+verify_static [design, single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.00000 deg, bias err -2.03e-03 deg/s
+verify_static [spec start (F-2), single]: sigma_bg(3 s) 0.0043 deg/s, drift 0.00028 deg, bias err -2.39e-03 deg/s
+verify_static [spec F still (F-1), single]: sigma_bg(3 s) 0.0035 deg/s, drift 0.45815 deg, bias err -2.03e-03 deg/s
+verify_static long run (single, 100000 steps): asym 0, min eig 1.01e-09, Pbb 1.01e-09, faults 0
+Elapsed time is 177.501 seconds.

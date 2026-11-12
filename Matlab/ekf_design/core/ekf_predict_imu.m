@@ -41,8 +41,9 @@ if e.slip > 0
 end
 d_abs = abs(dse);
 if e.slip > 0 && p.mx_slip_abs > 0
-    % finding F-11: in an in-place turn dse ~ 0, so the literal form adds nothing
-    % although a slipping wheel makes the vehicle pivot about it (translate)
+    % spec D-45 (finding F-11): in an in-place turn dse ~ 0, so kd*|dse|*infl adds
+    % nothing although a slipping wheel makes the vehicle pivot about the other
+    % wheel (translate). While slip is set, use the mean absolute wheel travel.
     d_abs = cast(0.5, c)*(abs(ds_l) + abs(ds_r));
 end
 sig2_ds = p.ekf_kd*d_abs*infl;                    % distance noise

@@ -138,8 +138,9 @@ p.mx_sf_mode      = 1;   % 1: per-radian model Q_tt += sf^2*mx_sf_corr*|dth| (ra
                          %    number of turns in one direction, see verify_turn_nees)
 p.mx_sf_corr      = 2*pi;% correlation angle of the per-radian model, rad [DECIDE]: one full
                          %    circuit of turning, so (sf*Theta)^2 is matched for Theta = 2 pi
-p.mx_slip_abs     = 0;   % 0: literal spec, slip inflates kd*|ds_e| (nothing in an in-place turn,
-                         %    where ds_e ~ 0); 1: while slip, use (|ds_l| + |ds_r|)/2 instead
-                         %    (finding F-11, see verify_slip)
+p.mx_slip_abs     = 1;   % 1: adopted form (spec D-45, version 1.5): while slip is set the distance
+                         %    noise uses (|ds_l| + |ds_r|)/2 instead of |ds_e|; without slip unchanged;
+                         % 0: spec version <= 1.4, slip inflates kd*|ds_e| (nothing in an in-place
+                         %    turn, where ds_e ~ 0), kept for comparison (finding F-11, verify_slip)
 p.mx_freeze_s     = 0;   % 1: odometry scale state frozen (no Q_ss, P_ss = 0) for the observability study
 end

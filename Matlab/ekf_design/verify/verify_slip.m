@@ -15,9 +15,11 @@ function [R, out] = verify_slip(seed, do_rect)
 %     arc           v = 0.30 m/s, w = 1.0 rad/s          (outer = right wheel slips)
 %     in-place turn w = 0.8 rad/s                        (right wheel slips)
 %   The SAME sensor data go through five estimators (sim_est_step, prediction
-%   only): 50 Hz with ekf_slip_n = 3, 2, 1, 200 Hz with ekf_slip_n = 3, and
-%   50 Hz with ekf_slip_n = 2 and mx_slip_abs = 1 ("abs": the inflated distance
-%   noise uses (|ds_l| + |ds_r|)/2 instead of |ds_e|, finding F-11).
+%   only): 50 Hz with ekf_slip_n = 3, 2, 1 and 200 Hz with ekf_slip_n = 3, all
+%   with the adopted slip inflation (mx_slip_abs = 1, spec D-45: while slip is
+%   set the distance noise uses (|ds_l| + |ds_r|)/2 instead of |ds_e|), and for
+%   comparison 50 Hz with ekf_slip_n = 2 and mx_slip_abs = 0 ("lit": the literal
+%   form of spec version <= 1.4, kd*|ds_e|*ekf_slip_infl, finding F-11).
 %   At 50 Hz a time threshold "|r_slip| > thr for >= T_slip" is the count
 %   ceil(T_slip/20 ms), so n = 1, 2, 3 are the time thresholds <= 20, 40, 60 ms.
 %   Reported per case and estimator:
@@ -31,6 +33,10 @@ function [R, out] = verify_slip(seed, do_rect)
 %     sig_add  sqrt of the position variance the slip flag added, mm
 %     ratio    e_end/sig_add (> 3: the event is not covered by the inflation;
 %              Inf: never flagged, nothing added)
+%   For the detected in-place events the error is also split along the principal
+%   axes of the added position covariance dP (2x2): the distance noise is mapped
+%   along the heading only (g = [s*c, s*n, 0, 0, 0]), so this shows whether the
+%   error is covered in both directions.
 %
 %   Part 2, false detections (no slip): |r_slip| statistics of the whole
 %   'maneuver' course (straights, arcs, in-place turns, all transients) at 50
@@ -41,8 +47,8 @@ if nargin < 1 || isempty(seed), seed = 1; end
 if nargin < 2, do_rect = true; end
 p0 = ekf_params();
 % estimators: [rate, ekf_slip_n, mx_slip_abs]
-EST = [50 3 0; 50 2 0; 50 1 0; 200 3 0; 50 2 1];
-enames = {'50Hz n=3', '50Hz n=2', '50Hz n=1', '200Hz n=3', '50Hz n=2 abs'};
+EST = [50 3 1; 50 2 1; 50 1 1; 200 3 1; 50 2 0];
+enames = {'50Hz n=3', '50Hz n=2', '50Hz n=1', '200Hz n=3', '50Hz n=2 lit'};
 man   = {'straight', 'arc', 'in-place'};
 mv    = [0.30 0.30 0.0];
 mw    = [0.0  1.0  0.8];
@@ -54,7 +60,7 @@ t_slip = 5.5;  T_end = 6.4;
 fprintf('\n=== Slip detector: events (thr %.2f rad/s; one wheel loses fraction f of its ground motion for T) ===\n', p0.ekf_slip_thr);
 fprintf('%-9s %4s %5s %6s | %-12s %3s %6s %6s %6s %7s %7s %6s\n', 'manoeuvre', 'f', 'T ms', 'r nom', ...
     'estimator', 'det', 'delay', 'e@det', 'e_end', 'th_end', 'sig_add', 'ratio');
-rows = zeros(0, 12);
+rows = zeros(0, 17);
 for im = 1:3
     % reference without slip: same seed, so identical noise; the differences
     % below are the effect of the slip event alone
@@ -85,15 +91,16 @@ for im = 1:3
                 end
                 e_end = norm(de(i1, :));
                 sig_add = sqrt(max(E.trP(i1) - E0.trP(i1), 0));
+                dP = E.P(i1, :) - E0.P(i1, :);                       % added [Pxx Pyy Pxy]
                 fprintf('%-9s %4.2f %5.0f %6.2f | %-12s %3d %6.0f %6.2f %6.2f %7.1f %7.2f %6.2f\n', man{im}, f, 1e3*T, ...
                     r_nom, enames{ie}, det, 1e3*delay, 1e3*e_det, 1e3*e_end, 1e3*dth(i1)*180/pi, 1e3*sig_add, e_end/sig_add);
-                rows(end+1, :) = [im, f, T, r_nom, ie, det, delay, e_det, e_end, dth(i1), sig_add, e_end/sig_add]; %#ok<AGROW>
+                rows(end+1, :) = [im, f, T, r_nom, ie, det, delay, e_det, e_end, dth(i1), sig_add, e_end/sig_add, de(i1, :), dP]; %#ok<AGROW>
             end
         end
     end
 end
 out.rows = rows;
-out.cols = 'manoeuvre f T r_nom estimator det delay e_det e_end th_end sig_add ratio';
+out.cols = 'manoeuvre f T r_nom estimator det delay e_det e_end th_end sig_add ratio de_x de_y dPxx dPyy dPxy';
 
 % ---- summary of part 1
 fprintf('\nSummary over the %d events (r nom = f*v_wheel/b is the residual the slip produces):\n', size(rows, 1)/size(EST, 1));
@@ -115,12 +122,37 @@ for ie = 1:size(EST, 1)
 end
 fprintf('shortest detected full slip on the straight (of %s ms): %s ms\n', mat2str(1e3*durs), mat2str(1e3*out.T_min_detected));
 
-% coverage of the detected in-place events (literal inflation adds nothing there)
-m1 = rows(:, 1) == 3 & rows(:, 6) > 0 & rows(:, 5) == 2;
-m2 = rows(:, 1) == 3 & rows(:, 6) > 0 & rows(:, 5) == 5;
-out.inplace = [max([rows(m1, 9); 0]), max([rows(m1, 11); 0]), max([rows(m2, 11); 0]), max([rows(m2, 12); 0])];
-fprintf('in-place turn, detected events, 50 Hz n=2: error up to %.1f mm; variance added: literal sigma %.2f mm, with mx_slip_abs %.2f mm (worst ratio %.2f)\n', ...
+% coverage of the detected in-place events (the literal inflation adds nothing there)
+m1 = rows(:, 1) == 3 & rows(:, 6) > 0 & rows(:, 5) == 5;             % literal form
+m2 = rows(:, 1) == 3 & rows(:, 6) > 0 & rows(:, 5) == 2;             % adopted form (D-45)
+out.inplace = [max([rows(m2, 9); 0]), max([rows(m1, 11); 0]), max([rows(m2, 11); 0]), max([rows(m2, 12); 0])];
+fprintf('in-place turn, detected events, 50 Hz n=2: error up to %.1f mm; variance added: literal (mx_slip_abs = 0) sigma %.2f mm, adopted (D-45) %.2f mm (worst ratio %.2f)\n', ...
     1e3*out.inplace(1), 1e3*out.inplace(2), 1e3*out.inplace(3), out.inplace(4));
+% direction: error and added sigma along the principal axes of the added
+% position covariance (major = mean heading direction while the flag was set)
+fprintf('same events by direction (principal axes of the added covariance), mm:\n');
+fprintf('%5s %6s | %8s %8s %6s | %8s %8s %6s | %6s\n', 'f', 'T ms', 'e major', 'sigma', 'ratio', 'e minor', 'sigma', 'ratio', 'd_M');
+out.inplace_dir = zeros(0, 9);
+for i = find(m2)'
+    dP = [rows(i, 15), rows(i, 17); rows(i, 17), rows(i, 16)];
+    [V, D] = eig(dP);
+    [dd, k] = sort(diag(D), 'descend');  V = V(:, k);
+    dd = max(dd, 0);
+    ea = abs(V'*rows(i, 13:14)');
+    sg = sqrt(dd);
+    if sg(2) > 1e-5
+        r2 = ea(2)/sg(2);
+        dM = sqrt(sum(ea.^2./dd));                                    % Mahalanobis distance of the error
+    else
+        % flag set for one step only: the added covariance has rank 1 (minor
+        % sigma below 0.01 mm); no ratio, d_M from the major axis alone
+        r2 = NaN;
+        dM = ea(1)/sg(1);
+    end
+    out.inplace_dir(end+1, :) = [rows(i, 2), rows(i, 3), ea(1), sg(1), ea(1)/sg(1), ea(2), sg(2), r2, dM];
+    fprintf('%5.2f %6.0f | %8.3f %8.3f %6.2f | %8.3f %8.3f %6.2f | %6.2f\n', rows(i, 2), 1e3*rows(i, 3), 1e3*ea(1), 1e3*sg(1), ...
+        ea(1)/sg(1), 1e3*ea(2), 1e3*sg(2), r2, dM);
+end
 
 % ---- part 2: false detections without slip
 fprintf('\n=== Slip detector: residual without slip (maneuver course, seed %d) ===\n', seed);
@@ -164,7 +196,7 @@ if do_rect
             sprintf('%d', ne), 'none (any single step over thr counts)')]; %#ok<AGROW>
     end
 end
-R = [R, vres('slip: in-place turn, sigma added by the slip flag, literal / mx_slip_abs', -1, ...
+R = [R, vres('slip: in-place turn, sigma added by the slip flag, literal / adopted (D-45)', -1, ...
     sprintf('%.2f / %.2f mm for up to %.1f mm error', 1e3*out.inplace(2), 1e3*out.inplace(3), 1e3*out.inplace(1)), 'informational (F-11)')];
 R = [R, vres('slip: detected events above thr, 50 Hz n=3 / n=2 / 200 Hz n=3', -1, ...
     sprintf('%.0f %% / %.0f %% / %.0f %%', 100*S(1,1), 100*S(2,1), 100*S(4,1)), 'informational')];
@@ -213,7 +245,7 @@ for i = 1:ne
     ph(i) = double(EST(i, 1) == 50);                 % as sim_run: 50 Hz at phase 1, 200 Hz at phase 0
     nmax = ceil(K/div(i)) + 2;
     o.est{i} = struct('t', zeros(nmax, 1), 'e', zeros(nmax, 3), 'slip', zeros(nmax, 1), 'r', zeros(nmax, 1), ...
-        'still', zeros(nmax, 1), 'trP', zeros(nmax, 1), 'n', 0);
+        'still', zeros(nmax, 1), 'trP', zeros(nmax, 1), 'P', zeros(nmax, 3), 'n', 0);
 end
 plant = sim_plant_init(tr, c);
 imu   = sim_imu_init(tr);
@@ -245,6 +277,7 @@ for k = 0:K
             E.r(j) = double(es{i}.ekf.r_slip);
             E.still(j) = y_est(12);
             E.trP(j) = y_est(6) + y_est(7);
+            E.P(j, :) = [y_est(6), y_est(7), y_est(11)];
             o.est{i} = E;
         end
     end
@@ -256,7 +289,7 @@ for k = 0:K
 end
 for i = 1:ne
     E = o.est{i};  j = E.n;
-    E.t = E.t(1:j);  E.e = E.e(1:j, :);  E.slip = E.slip(1:j);  E.r = E.r(1:j);  E.still = E.still(1:j);  E.trP = E.trP(1:j);
+    E.t = E.t(1:j);  E.e = E.e(1:j, :);  E.slip = E.slip(1:j);  E.r = E.r(1:j);  E.still = E.still(1:j);  E.trP = E.trP(1:j);  E.P = E.P(1:j, :);
     o.est{i} = E;
 end
 end
