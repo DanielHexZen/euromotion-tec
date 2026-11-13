@@ -69,7 +69,7 @@ static bool s_dump_on;
 
 static const char WHEEL[2] = { 'L', 'R' };
 
-/* ---- output: one ring, one read index per UART (the 9600 Bd radio is the slow one) ----------- */
+/* ---- output: one ring, one read index per UART (the radio is the slow one) ----------- */
 static uint32_t tx_free(void)
 {
     const uint32_t a = s_head - U[0].tail, b = s_head - U[1].tail;

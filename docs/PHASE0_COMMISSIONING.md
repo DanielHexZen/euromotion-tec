@@ -15,7 +15,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 | H2 slot timing | execution times passed on 2026-11-09 with the previous build (`S_CTRL max` 15 µs, `S_FAST max` 6 µs, overruns 0, tick 1000.0 Hz, cpu 0.4 %). **Period, jitter and tick-ISR time open:** firmware support added 2026-11-10 (self-measurement in `I`, decision D-32), **run on the vehicle pending**. The oscilloscope on PC8 is now an optional cross-check |
 | H4 signs, dead-man, runaway, stall | passed (user report); EN-0 V-at-boot and reversal test not explicitly confirmed |
 | H5 faults | `FAULTINJ`, FAULT-state answers, `CLEAR` passed; deliberate HardFault trigger not done; Release `FAULTINJ 4` waits for H3b |
-| Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again |
+| Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again. **Since `f126577` the radio runs at 19200 (D-51): set both HC-12 to `AT+B19200`, repeat HELLO/`p`, `I`, `s` over radio and replug at 19200** |
 | **H3 `D` regression** | **open**: baseline invalid (old mechanics), `D1000`/`D5000` not run, `D300` has 7 runs |
 | **H3b Release build** | **open**: Release lacks the warning flags; not built or flashed |
 
@@ -28,7 +28,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 5. **Phase 1 (vehicle track)** only after that. Phase 1 is not blocked by `calib.c` (spec D-31): follow `PHASE1_CALIBRATION.md` with the normal console and the host tools in `tools/`. The calibration firmware (`calib.c`/`calib.h`, `APP_CALIB=1`, `CALIB_README.md`, spec D-47) is an optional second route; `main.c` includes `calib.h` only under `APP_CALIB` (spec D-27). It has not run on the vehicle. Host-track work (pure modules, host tests, SIL, MATLAB design) does not wait for this step (spec §15, D-29).
 
 ### Changed 2026-11-12 (commit `f126577`; not built in CubeIDE, not flashed)
-- `Challenge_TestHC/Challenge_TestHC.ioc`, generated code: complete spec §4 target state (spec §4, D-48 to D-50). SPI1 mode 3 /16, I2C1/I2C2 400 kHz (PC12 as I2C2_SDA accepted), XSHUT_* outputs low, VL_S1_INT/VL_S2_INT EXTI, DMA for SPI1 and USART1 (USART1 still by interrupt, DMA unused until phase 4), IWDG (init call not generated: `app_init()` starts it last in phase 2), NVIC priorities (TIM2 IRQ 0 → 2), `HSE_STARTUP_TIMEOUT` 1000 ms. Labels kept (`LD2`, `HC12_Set`, `hadc1`). **CSS is not set** (headless CubeMX drops it): tick it in the CubeMX GUI in phase 2 together with `HAL_RCC_CSSCallback`. Verified: PLLM 4, TIM2 PSC 89, TIM6 89/999, TIM1 ARR 8999, USER CODE hooks intact. `.cproject`: trailing space only.
+- `Challenge_TestHC/Challenge_TestHC.ioc`, generated code: complete spec §4 target state (spec §4, D-48 to D-50). SPI1 mode 3 /16, I2C1/I2C2 400 kHz (PC12 as I2C2_SDA accepted), XSHUT_* outputs low, VL_S1_INT/VL_S2_INT EXTI, DMA for SPI1 and USART1 (USART1 still by interrupt, DMA unused until phase 4), IWDG (init call not generated: `app_init()` starts it last in phase 2), NVIC priorities (TIM2 IRQ 0 → 2), `HSE_STARTUP_TIMEOUT` 1000 ms. Labels kept (`LD2`, `HC12_Set`, `hadc1`). **Set in the CubeMX GUI by the team before the commit:** CSS on (`HAL_RCC_CSSCallback` still missing, D-48) and **USART1 19200 Bd** (D-51): both HC-12 modules need `AT+B19200`, and the radio checks are repeated at 19200. Verified: PLLM 4, TIM2 PSC 89, TIM6 89/999, TIM1 ARR 8999, USER CODE hooks intact. `.cproject`: trailing space only.
 - `Core/Src/calib.c`, `Core/Inc/calib.h` (new, by request): calibration firmware, spec D-47; commands and procedure in `CALIB_README.md`. Not part of the phase-0 gate.
 - Build check: `Core/Src` compiled and linked with `arm-none-eabi-gcc` 14.3 at `-Og` and `-O2`, `APP_CALIB` 0 and 1, 0 warnings; `make -C test` 54621 checks, 0 failed. Not the CubeIDE build (step 0).
 
@@ -46,13 +46,13 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 - `FIRMWARE_SPEC.md`: D-32 and the matching text changes are applied separately.
 
 ### Setup facts a new session needs
-- Console: USB VCP `/dev/cu.usbmodem11403` (number can change: `ls /dev/cu.usbmodem*`), `screen /dev/cu.usbmodem11403 115200`; radio terminal at 9600. The board is powered from E5V (JP5); USB can still be plugged in for the console. `I` maxima and the period statistics are since boot **or since the last `r`** that answered `Counters reset` (2026-11-10; before that: since boot only). `n` in the period line is the number of 20 ms intervals in the window. Run first, read `I` after; unplugging USB does not reset the board. Overrun counts are always since boot.
+- Console: USB VCP `/dev/cu.usbmodem11403` (number can change: `ls /dev/cu.usbmodem*`), `screen /dev/cu.usbmodem11403 115200`; radio terminal at 19200 since `f126577` (D-51; 9600 before). The board is powered from E5V (JP5); USB can still be plugged in for the console. `I` maxima and the period statistics are since boot **or since the last `r`** that answered `Counters reset` (2026-11-10; before that: since boot only). `n` in the period line is the number of 20 ms intervals in the window. Run first, read `I` after; unplugging USB does not reset the board. Overrun counts are always since boot.
 - Launch with **Run → Debug Configurations → STM32 C/C++ Application → `Challenge_TestHC Debug`**. A generic "C/C++ Application" config (`… Debug (1)`) calls plain `gdb` and fails. `Challenge_TestHC Debug.launch` still holds an old absolute log path (`/Users/danielappel/Desktop/Microcontrollers/A2.4/…`), harmless.
 - Pre-build step `../../tools/gen_build_info.sh` works (`build_info.h` is git-ignored, hash shows `-dirty`).
 - `7 bat absent` is expected: ADC1 is generated but `main.c` does not pass `.adc1` in `app_hw_t`, and the 47k/10k divider is not wired to PA0. Not needed for the phase-0 gate.
 - Spec and this file live in the repository root (CLAUDE.md formerly said `docs/`).
 
-Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 9600) mirrors it.
+Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 19200 since `f126577`, D-51) mirrors it.
 
 ## 0. Preparation (no vehicle power)
 
