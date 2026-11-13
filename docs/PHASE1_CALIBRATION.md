@@ -4,7 +4,7 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 1 and test H6 (§14.3): the odometry and 
 
 Do the steps in order. Stop at the first failure and write it down. Mark each box, keep the console log of every part (`screen`/CubeIDE terminal capture) and the tool output.
 
-**How this differs from the spec text.** Version 1.0 of the spec (§15 and H6) assumed the separate calibration firmware (`calib.c`, `calib.h`, `CALIB_README.md`, `tools/calib_host.py`). None of them is in the repository, and CLAUDE.md forbids rewriting `calib.c`. Decision D-31 (§18.2, spec version 1.1 follows this procedure in §14.3 H6 and §15): phase 1 is done with the **normal vehicle firmware and its text console**, plus the host tools in `tools/` (standard-library Python 3). The calibration firmware stays optional. Everything below is based on what `console.c`, `app_cmd.c`, `app.c` and `drv.c` do today, read on 2026-11-10; nothing here is promised from a later phase.
+**How this differs from the spec text.** Version 1.0 of the spec (§15 and H6) assumed the separate calibration firmware (`calib.c`, `calib.h`, `CALIB_README.md`, `tools/calib_host.py`). They exist in the repository since D-47 (`calib.c`/`calib.h` in `Challenge_TestHC/Core`, `docs/CALIB_README.md`, `tools/calib_host.py`), but this procedure does not depend on them. Decision D-31 (§18.2, spec version 1.1 follows this procedure in §14.3 H6 and §15): phase 1 is done with the **normal vehicle firmware and its text console**, plus the host tools in `tools/` (standard-library Python 3). The calibration firmware stays optional. Everything below is based on what `console.c`, `app_cmd.c`, `app.c` and `drv.c` do today, read on 2026-11-10; nothing here is promised from a later phase.
 
 ## Status
 
@@ -19,8 +19,8 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 | `odo_wheelbase` (203) | UMBmark, `tools/umbmark.py` | 5 | covered |
 | `whl_ks_l/r`, `whl_kv_l/r` (116–119) | open-loop duty steps, steady speed from the `a` print, `tools/ffit.py steady` | 6 | covered, see limits in 6 |
 | `whl_ksb_l/r` (120, 121) | open-loop duty steps from rest, `tools/ffit.py breakaway` | 6 | covered, 1 % resolution |
-| `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **deferred**: the console prints every 300 ms and there is no capture (`CAP`, spec §7.25) before phase 2. Needs the calibration firmware (`K`/`G`, §19.2) or phase 2. Default 0.050 s stays `[MEASURE]`. |
-| `odo_backlash_l/r` (204, 205) | reversal test | – | **deferred**: the parameters do not exist in `par_table.h` yet and are used only in phase 5 (§7.6.3). Needs the calibration firmware (`L`, §19.2) or phase 5. |
+| `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **deferred**: the console prints every 300 ms and there is no capture (`CAP`, spec §7.25) before phase 2. Needs the calibration firmware (`K`, 50 Hz step, §19.2) or phase 2. Default 0.050 s stays `[MEASURE]`. |
+| `odo_backlash_l/r` (204, 205) | reversal test | – | **deferred**: the parameters do not exist in `par_table.h` yet and are used only in phase 5 (§7.6.3). Needs phase 5: calibration `L` reports motor-side counts and latency only, real gear backlash is not observable with motor-side encoders. |
 | `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the battery divider is not wired (`7 bat absent`), so there is no voltage to normalise with. Keep `whl_ff_norm_en = 0`. Read the pack with a multimeter and record it (section 3). |
 
 ## 2. What the console really gives (checked in the code)
@@ -293,11 +293,11 @@ The `P` values are RAM only. The gate is passed only when they are the **compile
 
 | Item | Why it is not done here | What it needs |
 |---|---|---|
-| `whl_tau_m` | no 50 Hz data on the console, 300 ms print period | calibration firmware `K`/`G`, or `CAP` (phase 2) |
-| `odo_backlash_l/r` | IDs 204/205 not in `par_table.h`; consumed only in phase 5 | calibration firmware `L`, or a reversal test with `CAP` once the parameters exist |
+| `whl_tau_m` | no 50 Hz data on the console, 300 ms print period | calibration firmware `K` (50 Hz step), or `CAP` (phase 2) |
+| `odo_backlash_l/r` | IDs 204/205 not in `par_table.h`; consumed only in phase 5 | `L` shows motor-side counts and latency only (no gear backlash); reversal test with `CAP` once the parameters exist |
 | `whl_ff_u_ref`, `whl_ff_norm_en = 1` | no battery divider, no voltage reading | divider wired and `bat` OK, then the same fit at two known voltages |
-| Spec 1.0 H6 `A`, `L`, `G` | named calibration-firmware commands; `CALIB_README.md` is not in the repository and `A` cannot be verified | covered here: `G` (feedforward) by 5 and the odometry sequence by 3–4; `L` deferred as above; `A` unknown |
-| Calibration firmware (`APP_CALIB=1`) | `calib.c`/`calib.h` are not in the repository; CLAUDE.md: do not rewrite | optional, if the teammate supplies it; its results map onto the same parameters (§19.2) |
+| Spec 1.0 H6 `A`, `L`, `G` | named calibration-firmware commands; `CALIB_README.md` exists (D-47); `A` and `U` answer `ERR not available` (battery divider not wired) | covered here: `G` (feedforward) by 5 and the odometry sequence by 3–4; `L` deferred as above; `A` not available |
+| Calibration firmware (`APP_CALIB=1`) | `calib.c`/`calib.h` exist (D-47), unchanged-by-review rule as for any file | optional second route (`CALIB_README.md`, `tools/calib_host.py`); its results map onto the same parameters (§19.2) |
 | Closed-loop feedforward validation | the console shows no tracking error | `CAP` (phase 2) |
 
 ## 10. Problems seen on the floor
