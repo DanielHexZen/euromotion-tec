@@ -4,23 +4,23 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 0: H1–H5 pass and the `D` regression ma
 Do the steps in order. Stop at the first failure and write it down; do not skip ahead.
 Mark each box and keep the console log of every step (`screen`/CubeIDE terminal capture).
 
-## Status (2026-11-12; vehicle results are from session 1, 2026-11-09)
+## Status (2026-11-17; H2 and the new-firmware H3 series measured on `a17bfac`)
 
-**Phase 0 is NOT closed.** H3, H3b and the period/jitter part of H2 are open. Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been flashed**. Commit `f126577` (2026-11-12) adds the complete spec §4 `.ioc` target state (CubeMX 6.18.1) and the calibration firmware `calib.c`/`calib.h` (spec D-47, `CALIB_README.md`); all of `Core/Src` compiles and links with the CubeIDE `arm-none-eabi-gcc` 14.3 at `-Og`/`-O2`, `APP_CALIB` 0 and 1, 0 warnings (see below). Not yet built in CubeIDE.
+**Phase 0 is NOT closed.** H3 and H3b are open; H2 passed on 2026-11-17 (`a17bfac`). Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been flashed**. Commit `f126577` (2026-11-12) adds the complete spec §4 `.ioc` target state (CubeMX 6.18.1) and the calibration firmware `calib.c`/`calib.h` (spec D-47, `CALIB_README.md`); all of `Core/Src` compiles and links with the CubeIDE `arm-none-eabi-gcc` 14.3 at `-Og`/`-O2`, `APP_CALIB` 0 and 1, 0 warnings (see below). Not yet built in CubeIDE.
 
 | Gate | State |
 |---|---|
 | Host tests | passed, 54621 checks, 0 failed (`make -C test`, repeated 2026-11-12) |
 | H1 tick/clock | passed |
-| H2 slot timing | execution times passed on 2026-11-09 with the previous build (`S_CTRL max` 15 µs, `S_FAST max` 6 µs, overruns 0, tick 1000.0 Hz, cpu 0.4 %). **Period, jitter and tick-ISR time open:** firmware support added 2026-11-10 (self-measurement in `I`, decision D-32), **run on the vehicle pending**. The oscilloscope on PC8 is now an optional cross-check |
+| H2 slot timing | **passed 2026-11-17** on `a17bfac` (Debug `-Og`), all three runs of §3: idle 15 min (n 67811, period 20000/20000 µs, tick isr max 1.3 µs, `S_CTRL max` 9 µs), loaded USB (`S_CTRL max` 159 µs) and loaded radio at 19200 (`S_CTRL max` 158 µs, `I` complete); jitter 0 µs, overruns 0, cpu ≤ 0.3 %. H1 re-read on the same build: tick 1000.0 Hz. Builds before `a17bfac` were Debug `-O0` (CubeIDE had no optimisation level set; tick isr 2.6 µs failed REQ-NFR-01), so the 2026-11-09 numbers are void. Limit of the self-measurement: no absolute oscillator check (§3) |
 | H4 signs, dead-man, runaway, stall | passed (user report); EN-0 V-at-boot and reversal test not explicitly confirmed |
 | H5 faults | `FAULTINJ`, FAULT-state answers, `CLEAR` passed; deliberate HardFault trigger not done; Release `FAULTINJ 4` waits for H3b |
-| Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again. **Since `f126577` the radio runs at 19200 (D-51): set both HC-12 to `AT+B19200`, repeat HELLO/`p`, `I`, `s` over radio and replug at 19200** |
-| **H3 `D` regression** | **open**: baseline invalid (old mechanics), `D1000`/`D5000` not run, `D300` has 7 runs |
+| Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again. **Since `f126577` the radio runs at 19200 (D-51). Both HC-12 modules were reconfigured to 19200 (`AT+B19200`) and the radio link at 19200 was tested (team report 2026-11-17). `I` (5 lines) read over the radio in the H2 loaded run 2026-11-17: complete** |
+| **H3 `D` regression** | **open**: new firmware `a17bfac` series complete 2026-11-17 (§6: `D300`/`D1000`/`D5000` × 10 inside 2 mm except one `D300` R = 297.9; `D-500` and `W90` exceed `sync_max` 3 mm; `D2000` + `s` passed). Baseline with `old_firmware` on the same mechanics pending (planned 2026-11-18) |
 | **H3b Release build** | **open**: Release lacks the warning flags; not built or flashed |
 
 ### Next steps, in order
-0. **H2 self-measurement (new, 2026-11-10; bench, about 20 min).** Build Debug in CubeIDE from commit `f126577` or later (first CubeIDE build of the regenerated `.ioc` and the 2026-11-10 code: must show 0 warnings), flash; the boot log must show `clock OK` and `12 sched OK`. Run §3 below. The main loop sleep changed, so also re-read H1 (`tick 1000.0 Hz`, no `WARN tick rate`) on this build. H2 and H3 are run on this build, not on the previous one.
+0. **Done 2026-11-17** (`a17bfac`, H1 and H2 passed). **H2 self-measurement (new, 2026-11-10; bench, about 20 min).** Build Debug in CubeIDE from commit `f126577` or later (first CubeIDE build of the regenerated `.ioc` and the 2026-11-10 code: must show 0 warnings), flash; the boot log must show `clock OK` and `12 sched OK`. Run §3 below. The main loop sleep changed, so also re-read H1 (`tick 1000.0 Hz`, no `WARN tick rate`) on this build. H2 and H3 are run on this build, not on the previous one.
 1. **H3 baseline on the same mechanics.** Check out tag `old_firmware`, build, flash, run `r` + `D300`, `D1000`, `D5000` × 10 on the NEW casters and record `L=… R=…`. (Alternative: run the new firmware on the old casters and compare with the existing baseline.) Then the same series with the current firmware. Compare mean and spread (≤ ~1 mm) and check "no reversal / no TIMEOUT".
 2. **Release configuration:** in CubeIDE set `-Wextra`, `-Wdouble-promotion`, `-Wshadow` for Release (the Debug-only entry is the only one in `.cproject`), optionally `-Wno-unused-parameter` for the `Drivers` folder; build Release (H3b), flash, 3 × `D1000`/`D5000`, `I`, `FAULTINJ 4` → `ERR state Release build`.
 3. **Leftovers:** boot-to-`ready` < 2 s, `?`/`k`/`S`/`L`, legacy-command/range/`P…` checks of §7, deliberate HardFault trigger (§5).
@@ -28,7 +28,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 5. **Phase 1 (vehicle track)** only after that. Phase 1 is not blocked by `calib.c` (spec D-31): follow `PHASE1_CALIBRATION.md` with the normal console and the host tools in `tools/`. The calibration firmware (`calib.c`/`calib.h`, `APP_CALIB=1`, `CALIB_README.md`, spec D-47) is an optional second route; `main.c` includes `calib.h` only under `APP_CALIB` (spec D-27). It has not run on the vehicle. Host-track work (pure modules, host tests, SIL, MATLAB design) does not wait for this step (spec §15, D-29).
 
 ### Changed 2026-11-12 (commit `f126577`; not built in CubeIDE, not flashed)
-- `Challenge_TestHC/Challenge_TestHC.ioc`, generated code: complete spec §4 target state (spec §4, D-48 to D-50). SPI1 mode 3 /16, I2C1/I2C2 400 kHz (PC12 as I2C2_SDA accepted), XSHUT_* outputs low, VL_S1_INT/VL_S2_INT EXTI, DMA for SPI1 and USART1 (USART1 still by interrupt, DMA unused until phase 4), IWDG (init call not generated: `app_init()` starts it last in phase 2), NVIC priorities (TIM2 IRQ 0 → 2), `HSE_STARTUP_TIMEOUT` 1000 ms. Labels kept (`LD2`, `HC12_Set`, `hadc1`). **Set in the CubeMX GUI by the team before the commit:** CSS on (`HAL_RCC_CSSCallback` still missing, D-48) and **USART1 19200 Bd** (D-51): both HC-12 modules need `AT+B19200`, and the radio checks are repeated at 19200. Verified: PLLM 4, TIM2 PSC 89, TIM6 89/999, TIM1 ARR 8999, USER CODE hooks intact. `.cproject`: trailing space only.
+- `Challenge_TestHC/Challenge_TestHC.ioc`, generated code: complete spec §4 target state (spec §4, D-48 to D-50). SPI1 mode 3 /16, I2C1/I2C2 400 kHz (PC12 as I2C2_SDA accepted), XSHUT_* outputs low, VL_S1_INT/VL_S2_INT EXTI, DMA for SPI1 and USART1 (USART1 still by interrupt, DMA unused until phase 4), IWDG (init call not generated: `app_init()` starts it last in phase 2), NVIC priorities (TIM2 IRQ 0 → 2), `HSE_STARTUP_TIMEOUT` 1000 ms. Labels kept (`LD2`, `HC12_Set`, `hadc1`). **Set in the CubeMX GUI by the team before the commit:** CSS on (`HAL_RCC_CSSCallback` still missing, D-48) and **USART1 19200 Bd** (D-51): both HC-12 modules need `AT+B19200`. (Status 2026-11-17: both modules reconfigured to 19200, radio link at 19200 tested, team report.) Verified: PLLM 4, TIM2 PSC 89, TIM6 89/999, TIM1 ARR 8999, USER CODE hooks intact. `.cproject`: trailing space only.
 - `Core/Src/calib.c`, `Core/Inc/calib.h` (new, by request): calibration firmware, spec D-47; commands and procedure in `CALIB_README.md`. Not part of the phase-0 gate.
 - Build check: `Core/Src` compiled and linked with `arm-none-eabi-gcc` 14.3 at `-Og` and `-O2`, `APP_CALIB` 0 and 1, 0 warnings; `make -C test` 54621 checks, 0 failed. Not the CubeIDE build (step 0).
 
@@ -112,10 +112,13 @@ S_CTRL period min 19996 max 20004 mean 20000.0 us n 45000; tick isr max 0.6 us
 (example values, not a measurement). Period = time between two consecutive `S_CTRL` starts, from TIM2 (1 µs). `n` = intervals counted; 50 per second. The first interval after boot is not counted. `tick isr max` = body of `sys_sched_tick_isr()` from the DWT cycle counter, truncated to 0.1 µs.
 
 Steps:
-- [ ] Flash the Debug build that contains the 2026-11-10 changes; `I` shows the `S_CTRL period` line. Note the hash.
-- [ ] **Idle run, 15 min** (spec §1.4): type `r` (answers `Counters reset`, restarts the statistics), leave the vehicle idle for 15 min, type `I`. Record the two lines. `n` ≥ 45000.
-- [ ] **Loaded run** (wheels in the air or on the floor): `r`, `a` (auto print on), 3 × `D1000`, `a` off, `I`. Record the two lines. Do not type `r` between the moves and the `I`.
-- [ ] Repeat the loaded run once with the console on the radio port (5 lines of `I` arrive complete).
+- [x] Flash the Debug build that contains the 2026-11-10 changes; `I` shows the `S_CTRL period` line. Note the hash. *(`a17bfac`, Debug `-Og`, 2026-11-17)*
+- [x] **Idle run, 15 min** (spec §1.4): type `r` (answers `Counters reset`, restarts the statistics), leave the vehicle idle for 15 min, type `I`. Record the two lines. `n` ≥ 45000.
+  *(2026-11-17, `a17bfac`: `S_CTRL max 9 us, overruns 0; S_FAST max 3 us` / `S_CTRL period min 20000 max 20000 mean 20000.0 us n 67811; tick isr max 1.3 us`, cpu 0.2 %: passed)*
+- [x] **Loaded run** (wheels in the air or on the floor): `r`, `a` (auto print on), 3 × `D1000`, `a` off, `I`. Record the two lines. Do not type `r` between the moves and the `I`.
+  *(2026-11-17, `a17bfac`, USB, wheels in the air, 4 × `D1000` with auto print left on during `I`: `S_CTRL max 159 us, overruns 0; S_FAST max 3 us` / `S_CTRL period min 20000 max 20000 mean 20000.0 us n 1236; tick isr max 1.3 us`, cpu 0.3 %: passed)*
+- [x] Repeat the loaded run once with the console on the radio port (5 lines of `I` arrive complete).
+  *(2026-11-17, `a17bfac`, radio at 19200, wheels in the air: all 5 lines of `I` complete; `S_CTRL max 158 us, overruns 0; S_FAST max 3 us` / `S_CTRL period min 20000 max 20000 mean 20000.0 us n 1202; tick isr max 1.3 us`, cpu 0.2 %; last `D1000`: `DONE L=998.0 R=998.5 sync_max=2.9`: passed)*
 
 Pass, for every run:
 - [ ] Period mean 20.000 ms ± 0.01 %: `mean` within 19998.0 … 20002.0 us – REQ-NFR-05.
@@ -178,6 +181,17 @@ Same surface and battery state as the baseline. `r` before each series. Speed an
 **Partial data (new firmware, NEW damped casters, 2026-11-09, console `DONE` lines, target 300 mm):**
 L/R = 298.0/298.0, 298.2/298.6, 298.1/298.1, 298.0/298.3, 298.1/298.3, 298.0/298.0, 298.3/298.2; `sync_max` 2.4–3.4 mm; `t` 2500–2600 ms. Every run ends 1.4–2.0 mm SHORT, at the gate edge: `SETTLE` brakes a wheel as soon as the rest is under `drv_pos_tol` (2 mm) and never drives backwards, so this is the design, not a controller fault. Only seven `D300` runs; no `D1000` or `D5000` yet; no reversal/TIMEOUT observations recorded.
 User observation: the vehicle physically drives slightly FARTHER than commanded while the encoder frame ends at 298 mm, i.e. more ground distance per count than `odo_m_per_cnt` assumes (effective wheel diameter larger, not smaller; or slip). Unmeasured; belongs to phase 1 calibration, not to H3.
+
+**Series 2026-11-17 (new firmware `a17bfac`, Debug `-Og`, NEW casters, floor, USB console, `DONE` lines; no log file, values copied from the terminal):**
+- `D300` × 10: L 298.0–298.5, R 297.9–298.6; `sync_max` 2.3–3.2 mm; `t` 2500–2740 ms. One run ends R = 297.9 (2.1 mm short, 1–2 counts outside the 2 mm gate): borderline, judge against the baseline.
+- `D1000` × 10: L 998.0–998.3, R 998.5–999.7; `sync_max` 2.5–3.8 mm; `t` 4900–5140 ms. All inside 2 mm.
+- `D5000`: 10 complete runs, L 4998.0–4998.4, R 4998.1–5000.0; `sync_max` 2.6–3.3 mm; `t` 18140–18340 ms. All inside 2 mm. One run printed no `DONE` line (the next `D5000` was accepted, so the move had ended; cause unknown, not reproduced), one run stopped with `s` on purpose; both not counted.
+- Pattern: L always ends 1.6–2.0 mm short, R 0.0–1.5 mm short.
+- Tape (ground distance of the vehicle, not a gate value; phase 1 pre-data): `D300` mean 297.8 mm (295–300), `D1000` 998.8 mm (997–1000), `D5000` 5000.7 mm (4999–5002.4, 13 runs). Ground/encoder within about 0.1 %: no sign of the 2026-11-09 "drives farther" observation. On 5 m the vehicle drifts to the RIGHT by up to 250 mm (≈ 5.7° heading at the end, ≈ 0.45 % more ground distance per count on the left wheel if systematic): UMBmark type B, phase 1 (`odo_scale_l/r`), not an H3 criterion.
+- `D-500` × 3 (only the first run's `DONE` line and tape value were recorded): L −498.3, R −498.4 (inside 2 mm), **`sync_max` 6.1 mm (limit 3 mm: fail)**, `t` 3180 ms. Tape: about 480 mm instead of 500 (−4 %, against ≈ 0.1 % forward). Suspected caster swivel on reversal (wheel slip at the start of the move); unconfirmed.
+- `W90` × 5 (target arc per wheel π/2 · `odo_wheelbase`/2 = 175.3 mm): L −173.2…−173.5 (1.8–2.1 mm short, 3 of 5 runs 0.04–0.14 mm outside 2 mm), R 173.5–174.8; **`sync_max` 4.3, 2.9, 2.9, 2.9, 3.1 mm (2 of 5 above 3 mm)**; `t` 2180–2280 ms. The vehicle ends visibly skewed after every turn: the encoder frame alone explains < 1° (both wheels stop short); the rest is `odo_wheelbase` (UMBmark type A) and slip, phase 1.
+- `D2000` + `s` at ~1 s: smooth ramp to rest, no jerk (user report): passed.
+- Still open for H3: baseline with `old_firmware` on the same mechanics (planned 2026-11-18); it decides whether the `D-500`/`W90` `sync_max` excess and the borderline L ends are a regression or the pre-spec behaviour. Record every `DONE` line of the baseline in a log (`screen -L`).
 
 | Run | D300 L / R | D1000 L / R | D5000 L / R | baseline (old) |
 |---|---|---|---|---|
