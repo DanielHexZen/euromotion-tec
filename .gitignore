@@ -59,7 +59,7 @@ dkms.conf
 .DS_Store
 *.launch
 .CLAUDE.md
-/Release
+Release/
 .metadata/
 
 
