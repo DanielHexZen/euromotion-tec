@@ -253,7 +253,7 @@ The reference is a geometric path decoupled from time. With cross-track error $e
 with $\omega_n\approx1.5$--$2$~rad/s and $\zeta=0.7$, which respects the bandwidth separation from the 6.8~rad/s speed loop; pure pursuit is kept as a fallback. Corners are driven stop--turn--go on level ground, since turning on a slope corrupts the integrated heading. Obstacle evasion is treated as a one-dimensional lateral offset search inside the measured corridor; the inner ground sensors remain armed as an interlock during evasion.
 
 \subsection{Data Transmission and Telemetry}
-Telemetry and remote control use the HC-12 on USART1 at 9600~Bd, already running in parallel with the USB console. Because 9600~Bd limits throughput, the proposed protocol uses COBS framing with CRC-16, absolute (idempotent) commands, and the vehicle as timing master, which avoids half-duplex collisions: a 24-byte binary frame needs 25~ms, i.e.\ 25\,\% of the channel at 10~Hz, against 62.5\,\% for a 60-character text line. The regulatory status of the 433~MHz band in Mexico and the use of radio modules with their own firmware under the ``STM32 only'' criterion are open questions for the course instructor.
+Telemetry and remote control use the HC-12 on USART1 at 19200~Bd (9600~Bd as the fallback), already running in parallel with the USB console. Because the rate limits throughput, the proposed protocol uses COBS framing with CRC-16, absolute (idempotent) commands, and the vehicle as timing master, which avoids half-duplex collisions: at 19200~Bd a 24-byte binary frame needs 12.5~ms, i.e.\ 12.5\,\% of the channel at 10~Hz, against 31.25\,\% for a 60-character text line. The regulatory status of the 433~MHz band in Mexico and the use of radio modules with their own firmware under the ``STM32 only'' criterion are open questions for the course instructor.
 
 \subsection{Preliminary Block Diagram}
 Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, actuators and communication. Solid green blocks are implemented; dashed blue blocks are proposed.
@@ -269,7 +269,7 @@ Fig.~\ref{fig:blocks} shows the relation between sensors, controller, drivers, a
  \node[font=\scriptsize\bfseries,anchor=north west] at (5.5,7.0) {STM32F446RE (no RTOS)};
  % left side
  \node[blk,minimum width=2.8cm] (ops) at (1.5,6.0) {Operator / ground\\station (PC, Python)};
- \node[blk,minimum width=1.7cm] (radio) at (4.3,6.0) {HC-12\\9600 Bd};
+ \node[blk,minimum width=1.7cm] (radio) at (4.3,6.0) {HC-12\\19200 Bd};
  \node[prp,minimum width=2.8cm] (vl) at (1.5,3.95) {8$\times$ VL53L1X\\ground, lateral, forward};
  \node[prp,minimum width=2.8cm] (imu) at (1.5,2.95) {IMU\\gyro, accelerometer};
  \node[blk,minimum width=2.8cm] (enc) at (1.5,1.85) {Hall encoders\\(motor shafts)};
