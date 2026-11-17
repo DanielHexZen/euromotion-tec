@@ -16,7 +16,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 | H4 signs, dead-man, runaway, stall | passed (user report); EN-0 V-at-boot and reversal test not explicitly confirmed |
 | H5 faults | `FAULTINJ`, FAULT-state answers, `CLEAR` passed; deliberate HardFault trigger not done; Release `FAULTINJ 4` waits for H3b |
 | Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again. **Since `f126577` the radio runs at 19200 (D-51). Both HC-12 modules were reconfigured to 19200 (`AT+B19200`) and the radio link at 19200 was tested (team report 2026-11-17). `I` (5 lines) read over the radio in the H2 loaded run 2026-11-17: complete** |
-| **H3 `D` regression** | **open**: new firmware `a17bfac` series complete 2026-11-17 (§6: `D300`/`D1000`/`D5000` × 10 inside 2 mm except one `D300` R = 297.9; `D-500` and `W90` exceed `sync_max` 3 mm; `D2000` + `s` passed). Baseline with `old_firmware` on the same mechanics pending (planned 2026-11-18) |
+| **H3 `D` regression** | **regression comparison passed 2026-11-17** against `old_firmware` (`D300`, `D1000`, `D-500`; §6): the new firmware ends as close or closer to the target, the old one itself misses 2 mm (`D1000` R −5.1 mm). `D5000` without baseline (no room), `W90` without baseline (no such command). **Open:** `sync_max` > 3 mm on `D-500`/`W90` and `W90` L ends 0.04–0.14 mm outside 2 mm: accept via spec §18.2 or fix |
 | **H3b Release build** | **open**: Release lacks the warning flags; not built or flashed |
 
 ### Next steps, in order
@@ -191,7 +191,22 @@ User observation: the vehicle physically drives slightly FARTHER than commanded 
 - `D-500` × 3 (only the first run's `DONE` line and tape value were recorded): L −498.3, R −498.4 (inside 2 mm), **`sync_max` 6.1 mm (limit 3 mm: fail)**, `t` 3180 ms. Tape: about 480 mm instead of 500 (−4 %, against ≈ 0.1 % forward). Suspected caster swivel on reversal (wheel slip at the start of the move); unconfirmed.
 - `W90` × 5 (target arc per wheel π/2 · `odo_wheelbase`/2 = 175.3 mm): L −173.2…−173.5 (1.8–2.1 mm short, 3 of 5 runs 0.04–0.14 mm outside 2 mm), R 173.5–174.8; **`sync_max` 4.3, 2.9, 2.9, 2.9, 3.1 mm (2 of 5 above 3 mm)**; `t` 2180–2280 ms. The vehicle ends visibly skewed after every turn: the encoder frame alone explains < 1° (both wheels stop short); the rest is `odo_wheelbase` (UMBmark type A) and slip, phase 1.
 - `D2000` + `s` at ~1 s: smooth ramp to rest, no jerk (user report): passed.
-- Still open for H3: baseline with `old_firmware` on the same mechanics (planned 2026-11-18); it decides whether the `D-500`/`W90` `sync_max` excess and the borderline L ends are a regression or the pre-spec behaviour. Record every `DONE` line of the baseline in a log (`screen -L`).
+**Baseline 2026-11-17, tag `old_firmware` (`9ca684d`, its own Debug build at `-O0`, unchanged), same floor and mechanics, USB console.** Same scale as the new firmware (π · 72.6 mm / 3584 = 0.063638 mm per count = `odo_m_per_cnt`). The old firmware prints `DONE: target …, L=…, R=…` without `sync_max`.
+
+| Series | old L | old R | new L | new R | tape old / new (mean) |
+|---|---|---|---|---|---|
+| `D300` × 10 | 299.4–300.1 (mean 299.5) | 297.4–298.7 (298.1) | 298.0–298.5 (298.2) | 297.9–298.6 (298.2) | 298.1 / 297.8 mm |
+| `D1000` × 10 | 997.4–997.9 (997.8) | 994.6–995.2 (994.9) | 998.0–998.3 (998.1) | 998.5–999.7 (998.9) | 998.5 / 998.8 mm |
+| `D-500` × 3 | −498.9…−499.6 | −495.4…−495.7 | −498.3 (1 run recorded) | −498.4 | 480, 490, 480 / 480 mm |
+| `D5000` | not run (no room, team decision 2026-11-17) | | 10 runs inside 2 mm | | – / 5000.7 mm |
+| `W90` | command does not exist in the old firmware | | see above | | – |
+
+Result of the comparison:
+- The old firmware does **not** meet the 2 mm gate itself: `D1000` L −2.2 / R −5.1 mm on average, `D300` R once 297.4, `D-500` R −4.3 to −4.6 mm. The new firmware ends as close or closer on every compared series; the one new `D300` R = 297.9 is inside the old firmware's own spread. No regression.
+- Only difference against the old firmware: on `D300` the new L stops about 1.3 mm earlier (298.2 vs 299.5; `SETTLE` stops once the rest is under `drv_pos_tol`), with 0.5 mm spread against the old 0.0–0.7 mm.
+- Ground distance (tape) is equal within the tape resolution (≤ 0.3 mm in the mean). The −4 % on `D-500` (480–490 mm for 500) appears with BOTH firmwares: mechanical (suspected caster swivel and wheel slip on reversal), not a firmware regression; phase 1.
+- Deviation from the H3 procedure: `D5000` has no baseline (room), `W90` has none (no such command in the old firmware).
+- Still open in H3, no baseline possible: `sync_max` above 3 mm on `D-500` (6.1 mm) and `W90` (4.3 and 3.1 mm in 2 of 5 runs), and `W90` L ends 0.04–0.14 mm outside 2 mm. Team decision needed: accept with a rationale in spec §18.2, or fix the code before `git tag phase0`.
 
 | Run | D300 L / R | D1000 L / R | D5000 L / R | baseline (old) |
 |---|---|---|---|---|
