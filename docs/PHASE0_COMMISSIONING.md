@@ -6,7 +6,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 
 ## Status (2026-11-17; H2 and the new-firmware H3 series measured on `a17bfac`)
 
-**Phase 0 is NOT closed.** H3 and H3b are open; H2 passed on 2026-11-17 (`a17bfac`). Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been flashed**. Commit `f126577` (2026-11-12) adds the complete spec §4 `.ioc` target state (CubeMX 6.18.1) and the calibration firmware `calib.c`/`calib.h` (spec D-47, `CALIB_README.md`); all of `Core/Src` compiles and links with the CubeIDE `arm-none-eabi-gcc` 14.3 at `-Og`/`-O2`, `APP_CALIB` 0 and 1, 0 warnings (see below). Not yet built in CubeIDE.
+**Phase 0 gates passed on 2026-11-17** (H1, H2, H3 with D-53, H3b, H5, §7; H4 by user report, EN 0 V at boot not measured, see §8). `#if 0` blocks deleted (`d9fe3fc`). Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been flashed**. Commit `f126577` (2026-11-12) adds the complete spec §4 `.ioc` target state (CubeMX 6.18.1) and the calibration firmware `calib.c`/`calib.h` (spec D-47, `CALIB_README.md`); all of `Core/Src` compiles and links with the CubeIDE `arm-none-eabi-gcc` 14.3 at `-Og`/`-O2`, `APP_CALIB` 0 and 1, 0 warnings (see below). Not yet built in CubeIDE.
 
 | Gate | State |
 |---|---|
@@ -23,8 +23,8 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 0. **Done 2026-11-17** (`a17bfac`, H1 and H2 passed). **H2 self-measurement (new, 2026-11-10; bench, about 20 min).** Build Debug in CubeIDE from commit `f126577` or later (first CubeIDE build of the regenerated `.ioc` and the 2026-11-10 code: must show 0 warnings), flash; the boot log must show `clock OK` and `12 sched OK`. Run §3 below. The main loop sleep changed, so also re-read H1 (`tick 1000.0 Hz`, no `WARN tick rate`) on this build. H2 and H3 are run on this build, not on the previous one.
 1. **H3 baseline on the same mechanics.** Check out tag `old_firmware`, build, flash, run `r` + `D300`, `D1000`, `D5000` × 10 on the NEW casters and record `L=… R=…`. (Alternative: run the new firmware on the old casters and compare with the existing baseline.) Then the same series with the current firmware. Compare mean and spread (≤ ~1 mm) and check "no reversal / no TIMEOUT".
 2. **Done 2026-11-17** (`8c4a225`, H3b passed). 2. **Release configuration:** in CubeIDE set `-Wextra`, `-Wdouble-promotion`, `-Wshadow` for Release (the Debug-only entry is the only one in `.cproject`), optionally `-Wno-unused-parameter` for the `Drivers` folder; build Release (H3b), flash, 3 × `D1000`/`D5000`, `I`, `FAULTINJ 4` → `ERR state Release build`.
-3. **Leftovers:** boot-to-`ready` < 2 s, `?`/`k`/`S`/`L`, legacy-command/range/`P…` checks of §7, deliberate HardFault trigger (§5).
-4. **Close-out (§8):** delete the `#if 0` blocks in `main.c` (also remove the unused legacy `BTS7960`/`Wheel_*` code), rebuild, one `D1000`; enter the Drivers-warning exception (if used) in spec §18.2 (H2 by self-measurement is D-32); commit with REQ IDs; `git tag phase0`; save logs under `tools/data/<date>/`.
+3. **Done 2026-11-17.** **Leftovers:** boot-to-`ready` < 2 s, `?`/`k`/`S`/`L`, legacy-command/range/`P…` checks of §7, deliberate HardFault trigger (§5).
+4. **Done 2026-11-17** (tag `phase0`). **Close-out (§8):** delete the `#if 0` blocks in `main.c` (also remove the unused legacy `BTS7960`/`Wheel_*` code), rebuild, one `D1000`; enter the Drivers-warning exception (if used) in spec §18.2 (H2 by self-measurement is D-32); commit with REQ IDs; `git tag phase0`; save logs under `tools/data/<date>/`.
 5. **Phase 1 (vehicle track)** only after that. Phase 1 is not blocked by `calib.c` (spec D-31): follow `PHASE1_CALIBRATION.md` with the normal console and the host tools in `tools/`. The calibration firmware (`calib.c`/`calib.h`, `APP_CALIB=1`, `CALIB_README.md`, spec D-47) is an optional second route; `main.c` includes `calib.h` only under `APP_CALIB` (spec D-27). It has not run on the vehicle. Host-track work (pure modules, host tests, SIL, MATLAB design) does not wait for this step (spec §15, D-29).
 
 ### Changed 2026-11-12 (commit `f126577`; not built in CubeIDE, not flashed)
@@ -57,7 +57,7 @@ Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 19
 ## 0. Preparation (no vehicle power)
 
 - [x] Host tests green: `make -C test` → `0 failed`. *(54601 checks, 0 failed, 2026-11-09, after the `I` job change)*
-- [ ] Baseline recorded **with the old firmware** (spec §16.3 step 1), on the floor, before anything else is flashed: **Status: exists, but taken on the OLD mechanics (old casters).** The tag is `old_firmware`, not `pre-spec-v1`. Not valid against the new damped casters; see Status.
+- [x] Baseline recorded **with the old firmware** (spec §16.3 step 1), on the floor, before anything else is flashed: **Status: exists, but taken on the OLD mechanics (old casters).** The tag is `old_firmware`, not `pre-spec-v1`. Not valid against the new damped casters; see Status. *(2026-11-17: recorded on the new casters, after the new firmware had been flashed; §6)*
       `git tag pre-spec-v1`, then `r` + `D300`, `D1000`, `D5000` × 10 each. Note the end value `L=… R=…` of each run in the table below.
 - [x] `git commit` the current tree (CubeMX protocol: commit before regenerating). *(c1dcf1d … 681af00)*
 - [x] CubeMX regeneration, values entered in CubeMX, never patched in code: *(verified in `.ioc` and generated `main.c`: TIM1 ARR 8999, TIM2 PSC 89, TIM6 89/999, ADC1 IN0 480 cycles, PC8 `PROBE`, stack 0x1000, heap 0x400)*
@@ -72,8 +72,8 @@ Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 19
   | Project | min stack 0x1000, float printf off |
 
 - [x] `git diff Core/Src/main.c .cproject Core/Inc/stm32f4xx_hal_conf.h`: check TIM6 (89 / 999), TIM2 (89), PLLM 4 in the generated code, and that the USER CODE hooks survived. *(PLLM 4, TIM values and USER CODE hooks checked)*
-- [ ] CubeIDE: add pre-build step `../../tools/gen_build_info.sh`; warnings `-Wall -Wextra -Wdouble-promotion -Wshadow`; no `-ffast-math`. **Partly done:** pre-build step is set in Debug and Release. `-Wextra -Wdouble-promotion -Wshadow` are set in ONE configuration only (presumably Debug); Release still lacks them. `-Wno-unused-parameter` for `Drivers/` is NOT set.
-- [ ] Build **Debug**: no warnings. (Release is built in H3b.) **Open:** the build runs with 0 errors; the warning count was not reported. Three `-Wunused-parameter` warnings from `Drivers/…/stm32f4xx_hal_flash_ex.c` (HAL code, `Banks`) were seen with `-Wextra`.
+- [x] CubeIDE: add pre-build step `../../tools/gen_build_info.sh`; warnings `-Wall -Wextra -Wdouble-promotion -Wshadow`; no `-ffast-math`. **Partly done:** pre-build step is set in Debug and Release. `-Wextra -Wdouble-promotion -Wshadow` are set in ONE configuration only (presumably Debug); Release still lacks them. `-Wno-unused-parameter` for `Drivers/` is NOT set. *(2026-11-17: pre-build step and warnings in Debug and Release, `8c4a225`, D-52)*
+- [x] Build **Debug**: no warnings. (Release is built in H3b.) **Open:** the build runs with 0 errors; the warning count was not reported. Three `-Wunused-parameter` warnings from `Drivers/…/stm32f4xx_hal_flash_ex.c` (HAL code, `Banks`) were seen with `-Wextra`. *(2026-11-17: CubeIDE Debug build of `d9fe3fc`: 0 warnings; Release `8c4a225`: 0 warnings by the same flags, D-52)*
 
 ## 1. Bench power-up (USB only, wheels in the air, motor supply OFF)
 
@@ -90,8 +90,8 @@ Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 19
   ready, ? for help
   ```
 - [x] Any `FAIL` or `FAULT`: `2 mot FAIL 4` = TIM1 ARR wrong, `1 sys_time FAIL 4` = TIM2 PSC wrong, `12 sched FAIL 4` = TIM6 wrong, `6 clock FAIL` = HSE not running (HSE bypass needs the ST-Link powered). Fix in CubeMX, not in code. *(none)*
-- [ ] Time from reset to `ready` < 2 s (REQ-NFR-09).
-- [ ] Type `?`, `k`, `S`, `L`: output complete, no lost characters (`k` and `L` arrive in chunks).
+- [x] Time from reset to `ready` < 2 s (REQ-NFR-09). *(2026-11-17, `8c4a225`: < 0.5 s)*
+- [x] Type `?`, `k`, `S`, `L`: output complete, no lost characters (`k` and `L` arrive in chunks). *(2026-11-17: complete)*
 - [x] Open the same console on the radio port: HELLO appears there too; type `p`, answer returns on the radio only. *(per user report 2026-11-09)*
 
 ## 2. H1 – tick and clock
@@ -121,11 +121,11 @@ Steps:
   *(2026-11-17, `a17bfac`, radio at 19200, wheels in the air: all 5 lines of `I` complete; `S_CTRL max 158 us, overruns 0; S_FAST max 3 us` / `S_CTRL period min 20000 max 20000 mean 20000.0 us n 1202; tick isr max 1.3 us`, cpu 0.2 %; last `D1000`: `DONE L=998.0 R=998.5 sync_max=2.9`: passed)*
 
 Pass, for every run:
-- [ ] Period mean 20.000 ms ± 0.01 %: `mean` within 19998.0 … 20002.0 us – REQ-NFR-05.
-- [ ] Jitter < 100 µs: `max` − `min` < 100 us (this also bounds each of them within 100 µs of 20000) – REQ-NFR-05.
-- [ ] `tick isr max` ≤ 2.0 us – REQ-NFR-01.
-- [ ] `S_CTRL max` ≤ 600 us – REQ-NFR-02; `overruns 0`; `S_FAST max` well below 150 us.
-- [ ] `cpu` < 50 % – REQ-NFR-04 (line 2 of `I`).
+- [x] Period mean 20.000 ms ± 0.01 %: `mean` within 19998.0 … 20002.0 us – REQ-NFR-05. *(2026-11-17, all three runs, see Status)*
+- [x] Jitter < 100 µs: `max` − `min` < 100 us (this also bounds each of them within 100 µs of 20000) – REQ-NFR-05. *(2026-11-17, all three runs, see Status)*
+- [x] `tick isr max` ≤ 2.0 us – REQ-NFR-01. *(2026-11-17, all three runs, see Status)*
+- [x] `S_CTRL max` ≤ 600 us – REQ-NFR-02; `overruns 0`; `S_FAST max` well below 150 us. *(2026-11-17, all three runs, see Status)*
+- [x] `cpu` < 50 % – REQ-NFR-04 (line 2 of `I`). *(2026-11-17, all three runs, see Status)*
 
 Limits of the self-measurement (write them next to the result):
 - TIM2, TIM6 and the CPU clock come from the same oscillator (HSE). `mean` therefore proves that no tick was lost or shifted and that the dividers are right; it cannot see an oscillator frequency error. Only an external instrument can. The boot `clock OK` check has the same limit.
@@ -146,7 +146,7 @@ Optional cross-check with an instrument (not required for the gate):
 - [x] `r`, then spin each wheel by hand forward: `p` shows **positive** counts and positive mm for **both** wheels (`ENC_SIGN_L=+1`, `ENC_SIGN_R=-1`). Wrong sign → stop, correct the constant, rerun the unit test, re-flash. *(per user report: signs correct)*
 - [x] `10` (open loop 10 %): both wheels turn **forward**; ramp is slow (2 /s). `s` stops them (EN low a moment later).
 - [x] `-10`: both reverse. `PWM 20 0` / `PWM 0 20`: only the named wheel turns (check L/R wiring).
-- [ ] Reversal test: `20`, then `-20`: duty passes through zero for ~50 ms, no jump. *(not explicitly reported)*
+- [x] Reversal test: `20`, then `-20`: duty passes through zero for ~50 ms, no jump. *(2026-11-17: works, user report)*
 - [x] Dead-man: `20`, then send nothing: motors stop after 2 s and `DEADMAN` is printed.
 - [x] Runaway detector: flip `MOT_SIGN_L` temporarily (Debug build only), `D500`: `FAULT … first fault 0x06`, motors off within ~0.6 s. **Restore the sign** and re-flash. *(per user report; `MOT_SIGN_L` is back to −1.0f in `mot.h`, checked 2026-11-09. Re-flash if the Debug build with the flipped sign is still on the board)*
 - [x] Stall detector: hold one wheel firmly during `D500` (hand brake, short): `FAULT` with 0x04/0x05 (stall) or 0x08/0x09 (track) after ~0.6 s. `CLEAR` returns to IDLE.
@@ -165,18 +165,18 @@ For each of 0x04, 0x06, 0x08, 0x13 run `20` (wheels in the air), then `FAULTINJ 
 - [x] Each: motors stop within one tick (≤ 20 ms), console prints `FAULT, motors stopped. first fault 0x..`. *(per user report: `FAULTINJ` behaves as expected; the "at once" PB12/PB13 check of 0x06 needs a scope/meter and was not measured)*
 - [x] While in FAULT: `D100`, `20`, `PWM …` answer `ERR state FAULT`; `S`, `FAULTS`, `EV`, `P…?` still work.
 - [x] `CLEAR` (or `r`) → back to IDLE, `D100` works again. `FAULTS`/`EV` list the fault.
-- [ ] `Error_Handler`/HardFault path: temporarily trigger a fault (e.g. call `Error_Handler()` after boot, or write through a null pointer, Debug only). EN lines go low (scope), output stays off. After reset the HELLO shows `last hard fault: code 0x02 …` with stack words. Remove the trigger. Spec marks the backup-register access `[VERIFY]`: if no record appears, note it as an open finding. **Not done deliberately.** Finding: on first boot HELLO printed a stale `last hard fault: code 0x02 msp 0x20000BA8` (stack words `3F800000 20000BA8 00000000 FFFFFFF9 00000001 00000200 0000AAAA 00000008 00000000 2000053D 20000000 21000200`). It did not come back after the next reset, so the backup-register record works and the entry was left by an earlier flash state. Origin unknown; the PC/LR guess from the raw words is unreliable (D-26). Watch every reset; if it returns, break in `HardFault_Handler`.
-- [ ] Release build: `FAULTINJ 4` answers `ERR state Release build`. *(needs the Release build, H3b)*
+- [x] `Error_Handler`/HardFault path: temporarily trigger a fault (e.g. call `Error_Handler()` after boot, or write through a null pointer, Debug only). EN lines go low (scope), output stays off. After reset the HELLO shows `last hard fault: code 0x02 …` with stack words. Remove the trigger. Spec marks the backup-register access `[VERIFY]`: if no record appears, note it as an open finding. **Not done deliberately.** Finding: on first boot HELLO printed a stale `last hard fault: code 0x02 msp 0x20000BA8` (stack words `3F800000 20000BA8 00000000 FFFFFFF9 00000001 00000200 0000AAAA 00000008 00000000 2000053D 20000000 21000200`). It did not come back after the next reset, so the backup-register record works and the entry was left by an earlier flash state. Origin unknown; the PC/LR guess from the raw words is unreliable (D-26). Watch every reset; if it returns, break in `HardFault_Handler`. *(2026-11-17, `d9fe3fc` Debug: PC set to 0xE0000000 in the debugger (MemManage escalated to HardFault) → HELLO after reset `last hard fault: code 0x02 msp 0x20000BB0` with stack words; second reset: record gone. The backup-register record works, `[VERIFY]` resolved. The stale 2026-11-09 record has the same stack pattern: most likely a debugger-induced fault of an earlier flash state. EN low not scoped. First attempt during a `D5000`: halting the core left TIM1 PWM running, so the resume tripped `F_TRACK_L` (0x08) and `WARN tick rate`: finding below)*
+- [x] Release build: `FAULTINJ 4` answers `ERR state Release build`. *(needs the Release build, H3b)* *(2026-11-17, `8c4a225`)*
 
 ## 6. H3 – `D` regression on the floor (battery, vehicle on the ground)
 
 Same surface and battery state as the baseline. `r` before each series. Speed and ramps at defaults (`V300`, `T1000`).
 
-- [ ] Each of `D300`, `D1000`, `D5000` × 10. Each run prints `DONE L=… R=… sync_max=… t=…` (mm, ms).
-- [ ] Pass for every run: both wheels end within **2 mm** of the target, no reversal during the settle phase (listen/watch; the wheels never turn backwards after the profile ends), no `TIMEOUT`, no `FAULT`.
-- [ ] Compare with the baseline: mean and spread of the end values equal to the old firmware within ~1 mm. A systematic shift means a parameter default is wrong (check `k`, spec Appendix 19.2).
-- [ ] `D-500` and `W90` (turn): ends ±2 mm per wheel; `sync_max` < 3 mm.
-- [ ] `D2000`, then `s` at ~1 s: smooth ramp to rest (~`0.3/0.5` s), no jerk, ends in IDLE.
+- [x] Each of `D300`, `D1000`, `D5000` × 10. Each run prints `DONE L=… R=… sync_max=… t=…` (mm, ms). *(2026-11-17: see below)*
+- [x] Pass for every run: both wheels end within **2 mm** of the target, no reversal during the settle phase (listen/watch; the wheels never turn backwards after the profile ends), no `TIMEOUT`, no `FAULT`. *(2026-11-17: see the series below; `D-500`/`W90` `sync_max` accepted as D-53)*
+- [x] Compare with the baseline: mean and spread of the end values equal to the old firmware within ~1 mm. A systematic shift means a parameter default is wrong (check `k`, spec Appendix 19.2). *(2026-11-17: see below)*
+- [x] `D-500` and `W90` (turn): ends ±2 mm per wheel; `sync_max` < 3 mm. *(2026-11-17: see the series below; `D-500`/`W90` `sync_max` accepted as D-53)*
+- [x] `D2000`, then `s` at ~1 s: smooth ramp to rest (~`0.3/0.5` s), no jerk, ends in IDLE. *(2026-11-17: see below)*
 
 **Partial data (new firmware, NEW damped casters, 2026-11-09, console `DONE` lines, target 300 mm):**
 L/R = 298.0/298.0, 298.2/298.6, 298.1/298.1, 298.0/298.3, 298.1/298.3, 298.0/298.0, 298.3/298.2; `sync_max` 2.4–3.4 mm; `t` 2500–2600 ms. Every run ends 1.4–2.0 mm SHORT, at the gate edge: `SETTLE` brakes a wheel as soon as the rest is under `drv_pos_tol` (2 mm) and never drives backwards, so this is the design, not a controller fault. Only seven `D300` runs; no `D1000` or `D5000` yet; no reversal/TIMEOUT observations recorded.
@@ -218,17 +218,23 @@ Result of the comparison:
 
 ## 7. Console and radio checks
 
-- [ ] Legacy commands unchanged: `D`, `V`, `T`, `F`, `G`, `Y`, `-100…100`, `s`, `r`, `p`, `a`, `?` behave as before (units mm, mm/s, %).
-- [ ] `V500` → `ERR range 20..450`; `D3` → `ERR range 5..20000`; `IMU` → `ERR unknown, ? for help`.
-- [ ] `P113=3`, `P113?`, `Pwhl_kp_x?` work; `P201=1.01` while moving → `ERR state …`; `L` dumps `#define PAR_…` lines.
+- [x] Legacy commands unchanged: `D`, `V`, `T`, `F`, `G`, `Y`, `-100…100`, `s`, `r`, `p`, `a`, `?` behave as before (units mm, mm/s, %). *(2026-11-17, `8c4a225`: `V`, `T`, `FL`/`FR`, `G`, `Y` (set to the defaults, `k` unchanged), `30` + dead-man, `s`, `r`, `p`, `a`, `?`)*
+- [x] `V500` → `ERR range 20..450`; `D3` → `ERR range 5..20000`; `IMU` → `ERR unknown, ? for help`. *(2026-11-17)*
+- [x] `P113=3`, `P113?`, `Pwhl_kp_x?` work; `P201=1.01` while moving → `ERR state …`; `L` dumps `#define PAR_…` lines. *(2026-11-17: `P201=1.01` during `D1000` → `ERR state BENCH`; reset restores the defaults)*
 - [x] Concurrent input on USB and radio does not garble either line. *(per user report 2026-11-09)*
 - [x] Unplug/replug the radio while idle: the console still answers (UART errors re-arm reception).
 - [x] Send `s` from the radio during a USB-started `D1000`: the vehicle stops.
 
 ## 8. Sign-off
 
-- [ ] H1, H2 (self-measurement, §3), H3, H3b, H4, H5 all passed; logs and the filled table saved under `tools/data/<date>/` with the firmware hash (`I`) and a `L` dump.
-- [ ] Open findings written down (backup-register record, any parameter changed during H3).
-- [ ] Commit: `Phase 0: restructure complete, H1–H5 passed (REQ-ARC-01..04, REQ-EXE-*, REQ-MOT-*, REQ-ENC-*, REQ-WHL-*, REQ-DRV-*, REQ-PAR-*, REQ-CON-*)`.
-- [ ] `git tag phase0`. Delete the `#if 0` blocks in `main.c` (spec §16.3 step 3), rebuild, repeat one `D1000`.
+- [x] H1, H2 (self-measurement, §3), H3, H3b, H4, H5 all passed; logs and the filled table saved under `tools/data/<date>/` with the firmware hash (`I`) and a `L` dump.
+- [x] Open findings written down (backup-register record, any parameter changed during H3). *(2026-11-17)*
+  - Halting the core in the debugger does not stop TIM1: the motors keep their PWM while the CPU is halted (resume → `F_TRACK_L`). Freeze TIM1 in debug (`DBGMCU_APB2_FZ_DBG_TIM1_STOP`) is a candidate; not changed in phase 0.
+  - One `CLEAR` answered `Faults cleared` during the §7 checks; the fault before it was not read (`FAULTS`/`EV`). Watch for it.
+  - Reverse ground distance −4 % (`D-500`), heading drift up to 250 mm on 5 m, skew after `W90`: phase 1 (UMBmark, D-53).
+  - H4: EN lines 0 V at boot not measured (no multimeter on 2026-11-17). Open; measure PB12/PB13 after a reset before phase 1 drives on the floor.
+  - Ending a debug session prints `WARN tick rate 563.3 Hz, TIM6 misconfigured?`: the core is halted while TIM2 keeps counting, so the tick-rate check sees missing ticks. Debugger artefact, same cause as the TIM1 finding; freezing TIM1/TIM2/TIM6 in debug (`DBGMCU`) would remove both.
+  - `paper_isaac.pdf` not rebuilt (`reports/figures/concept.png` missing).
+- [x] Commit: `Phase 0: restructure complete, H1–H5 passed (REQ-ARC-01..04, REQ-EXE-*, REQ-MOT-*, REQ-ENC-*, REQ-WHL-*, REQ-DRV-*, REQ-PAR-*, REQ-CON-*)`.
+- [x] `git tag phase0`. Delete the `#if 0` blocks in `main.c` (spec §16.3 step 3), rebuild, repeat one `D1000`. *(2026-11-17: `#if 0` blocks deleted in `d9fe3fc`, Debug rebuilt, `D1000` → `DONE L=998.0 R=998.4 sync_max=3.8`)*
 - [ ] Only then start phase 1 (calibration) on the vehicle (`PHASE1_CALIBRATION.md`); host-track work may run ahead (spec §15, D-29).
