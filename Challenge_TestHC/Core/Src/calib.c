@@ -451,7 +451,7 @@ void Calib_Loop(void)
         s_seen = t;
         tick();
     }
-    if (s_dump_on && tx_free() >= 48U) {            /* paced: the radio drains 96 bytes per 100 ms */
+    if (s_dump_on && tx_free() >= 48U) {            /* paced: the radio (19200 Bd 8N1, 1920 B/s) drains 192 bytes per 100 ms */
         if (s_dump < K_N) {
             const uint16_t k = (uint16_t)s_dump++;
             out("K,%ld,%d,%d,%d\r\n", (long)(((int32_t)k + 1) * 1000 / (int32_t)HZ), s_rec[k].u_milli, s_rec[k].d[0], s_rec[k].d[1]);

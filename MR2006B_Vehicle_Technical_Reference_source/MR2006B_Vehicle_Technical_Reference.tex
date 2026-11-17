@@ -245,7 +245,7 @@ Wheel control & Per-wheel cascade (trapezoid profile $\to$ P position $\to$ FF +
 \code{D1000} ends at 999.5/1000.3\,mm (firmware) \\
 Odometry & Effective rolling diameter calibrated (72.6\,mm with a common 3584 counts/rev);
 per-wheel scale and wheelbase still to be calibrated (UMBmark)\\
-Communication & HC-12 at 9600\,Bd running in parallel to the USB console\\
+Communication & HC-12 at 19200\,Bd running in parallel to the USB console\\
 IMU & ICM-42688-P unobtainable; \textbf{LSM6DS3} selected (availability; replaces the ISM330DHCX and the LSM6DSV), not yet integrated\\
 Ground / boundary sensing & 5\,$\times$\,VL53L1X ordered: 4 planned on I2C1 (ground), 1 spare; not yet installed \OPEN\\
 EKF, path follower, mission & designed, not implemented \OPEN\\
@@ -577,7 +577,7 @@ VL53L1X ToF breakout & 5 & 4 fitted downward (ground/edge, I2C1), 1 spare; the 2
 IMU (6-axis) & 1 & ICM-42688-P planned but unobtainable (0 stock, 16-week lead time); \textbf{LSM6DS3} selected (breakout board \VERIFY); SPI + DMA, DRDY on input capture & \tw{to order/fit}\\
 \midrule
 \multicolumn{4}{@{}l}{\textbf{\textsf{Communication}}}\\
-HC-12 radio (SI4463 based) & 2 & \qty{433}{MHz} band, transparent UART at \qty{9600}{Bd}, FU3, CH001; vehicle on USART1, ground station on FT232RL; SET on PC9 & \tg{running}\\
+HC-12 radio (SI4463 based) & 2 & \qty{433}{MHz} band, transparent UART at \qty{19200}{Bd} (9600 fallback), FU3, CH001; vehicle on USART1, ground station on FT232RL; SET on PC9 & \tg{running}\\
 FT232RL USB--UART adapter & 1 & ground station side (Mac) & \tg{on hand}\\
 \midrule
 \multicolumn{4}{@{}l}{\textbf{\textsf{Development}}}\\
@@ -2370,7 +2370,7 @@ check reject phantom readings.
 \textbf{Link} & \textbf{MCU side} & \textbf{PC side} & \textbf{Rate} & \textbf{Use}\\
 \midrule
 USB console & USART2 (PA2/PA3) via ST-Link VCP & \code{/dev/cu.usbmodem\ldots} & 115200\,Bd 8N1 & development, calibration, high-rate logging over cable\\
-Radio & USART1 (PB6/PB7) $\to$ HC-12 & HC-12 $\to$ FT232RL, \code{/dev/cu.usbserial-AQ1MF0GG} & 9600\,Bd 8N1 & telemetry (week 10), remote control (week 14)\\
+Radio & USART1 (PB6/PB7) $\to$ HC-12 & HC-12 $\to$ FT232RL, \code{/dev/cu.usbserial-AQ1MF0GG} & 19200\,Bd 8N1 & telemetry (week 10), remote control (week 14)\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -2384,7 +2384,7 @@ script).
 \begin{itemize}[leftmargin=6mm]
 \item \textbf{Module.} SI4463 transceiver with an STM8 controller running vendor
 firmware; transparent UART; half-duplex. Channel $n$ at
-$f=433.4+(n-1)\cdot0.4$\,MHz; both modules on CH001, FU3, 9600\,Bd. Transmit
+$f=433.4+(n-1)\cdot0.4$\,MHz; both modules on CH001, FU3, 19200\,Bd (\code{AT+B19200}; 9600\,Bd is the fallback if the range test fails). Transmit
 power P4 (+8\,dBm) for bench tests, AT+P8 (+20\,dBm) for the course.
 \item \textbf{Configuration.} SET low (PC9 on the vehicle), wait
 $\approx\qty{40}{ms}$, send the AT command in one piece (script, not
@@ -2428,11 +2428,11 @@ duty, \code{s} stop, \code{r} reset counters, \code{p}/\code{a} print once/auto
 records \code{SWP}, \code{GND}, \code{BRK}, \code{BLS}, \code{ODO}, \code{FIT},
 \code{SUM}.
 
-\paragraph{Air-time.} At 9600\,Bd one byte takes \qty{1.04}{ms}. A 60-character
-CSV line is \qty{62.5}{ms}; at \qty{10}{Hz} that occupies \qty{62.5}{\percent} of the
+\paragraph{Air-time.} At 19200\,Bd one byte takes \qty{0.52}{ms}. A 60-character
+CSV line is \qty{31.25}{ms}; at \qty{10}{Hz} that occupies \qty{31.25}{\percent} of the
 channel --- and the HC-12 is half-duplex, so uplink commands collide with
-telemetry. A 24-byte binary frame needs \qty{25}{ms} (\qty{25}{\percent} at
-\qty{10}{Hz}).
+telemetry. A 24-byte binary frame needs \qty{12.5}{ms} (\qty{12.5}{\percent} at
+\qty{10}{Hz}). At the 9600\,Bd fallback all times double.
 
 \subsection{Planned protocol}\label{sec:protocol}
 
@@ -2472,7 +2472,7 @@ reception is not an external aid to the sensors, but this should be confirmed).
 returns \code{gState} to READY when the last byte has been written to the data
 register, not when it has left the shift register. A single buffer reused at that
 moment is overwritten during the last character time (\qty{87}{\micro s} at
-115200\,Bd, \qty{1.04}{ms} at 9600\,Bd) --- seen on the bench as characters
+115200\,Bd, \qty{0.52}{ms} at 19200\,Bd) --- seen on the bench as characters
 missing at random positions, which looks like a baud-rate or noise problem and is
 neither. Console output is formatted with \code{vsnprintf} into a ring buffer
 (drop on full, never block); \code{printf} with floats is not used (+10--15\,KB

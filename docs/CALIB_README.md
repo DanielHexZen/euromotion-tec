@@ -21,7 +21,7 @@ Optional second route to the feedforward numbers (`FIRMWARE_SPEC.md` §7.27, REQ
 
 ## 3. Commands
 
-Console: USB (USART2, 115200 8N1), mirrored on the HC-12 (USART1). Prefer USB: the radio drains 96 bytes per 100 ms and drops lines when the capture is long. `?` prints help.
+Console: USB (USART2, 115200 8N1), mirrored on the HC-12 (USART1). Prefer USB: the radio (19200 Bd) drains 192 bytes per 100 ms and drops lines when the capture is long. `?` prints help.
 
 | Cmd | Test | Duration | Output (SI/legacy units on the wire: counts, mm, mm/s, duty %) |
 |---|---|---|---|
