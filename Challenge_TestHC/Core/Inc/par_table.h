@@ -50,7 +50,41 @@
     X(301, bat_tau,          0.2f,      "s",       0.05f,   5.0f,   PAR_L) \
     X(302, bat_warn_v,       10.5f,     "V",       9.5f,    12.0f,  PAR_L) \
     X(303, bat_cut_v,        10.0f,     "V",       9.5f,    11.5f,  PAR_L) \
+    /* 10.2 imu */ \
+    X(400, imu_tc1,          0.0f,      "rad/s/K", -1.0e-3f, 1.0e-3f, PAR_S) \
+    X(401, imu_tc2,          0.0f,      "rad/s/K2",-1.0e-4f, 1.0e-4f, PAR_S) \
+    X(402, imu_gz_scale,     1.0f,      "-",       0.95f,   1.05f,  PAR_S) \
+    X(403, imu_timeout,      0.020f,    "s",       0.005f,  0.2f,   PAR_L) \
+    X(404, imu_extrap_max,   0.002f,    "s",       0.0f,    0.005f, PAR_L) \
+    /* 10.2 attitude filter */ \
+    X(410, att_tau,          1.0f,      "s",       0.1f,    10.0f,  PAR_L) \
+    X(411, att_acc_gate,     0.1f,      "g",       0.02f,   0.5f,   PAR_L) \
+    /* 10.3 estimator */ \
+    X(500, ekf_kd,           1.0e-4f,   "m",       1.0e-6f, 1.0e-2f,PAR_L) \
+    X(501, ekf_slip_infl,    100.0f,    "-",       1.0f,    1.0e4f, PAR_L) \
+    X(502, ekf_slip_thr,     0.15f,     "rad/s",   0.02f,   1.0f,   PAR_L) \
+    X(503, ekf_gyro_nd,      1.0e-4f,   "rad/s/rtHz", 1.0e-6f, 1.0e-2f, PAR_L) \
+    X(504, ekf_gyro_sf,      0.003f,    "-",       0.0f,    0.05f,  PAR_L) \
+    X(505, ekf_q_bg,         1.0e-10f,  "(rad/s)2/s", 1.0e-14f, 1.0e-6f, PAR_L) \
+    X(506, ekf_q_s,          1.0e-9f,   "1/s",     0.0f,    1.0e-5f,PAR_L) \
+    X(507, ekf_q_th_enc,     1.0e-4f,   "rad2/m",  1.0e-6f, 1.0e-2f,PAR_L) \
+    X(508, ekf_zupt_floor,   3.5e-5f,   "rad/s",   0.0f,    1.0e-3f,PAR_L) \
+    X(509, ekf_zupt_T,       1.0f,      "s",       0.2f,    5.0f,   PAR_L) \
+    X(510, ekf_still_s,      0.2f,      "s",       0.05f,   2.0f,   PAR_L) \
+    X(511, ekf_gate1,        9.0f,      "-",       1.0f,    100.0f, PAR_L) \
+    X(512, ekf_gate2,        9.21f,     "-",       1.0f,    100.0f, PAR_L) \
+    X(513, ekf_sig_edge,     0.02f,     "m",       0.005f,  0.2f,   PAR_L) \
+    X(514, ekf_sig_post,     0.03f,     "m",       0.005f,  0.3f,   PAR_L) \
+    X(515, ekf_edge_skip,    0.25f,     "m",       0.0f,    1.0f,   PAR_L) \
+    X(516, ekf_bg_conv,      3.5e-4f,   "rad/s",   1.0e-5f, 1.0e-2f,PAR_L) \
+    X(517, ekf_p0_xy,        0.01f,     "m",       1.0e-3f, 1.0f,   PAR_S) \
+    X(518, ekf_p0_th,        0.0087f,   "rad",     1.0e-3f, 0.5f,   PAR_S) \
+    X(519, ekf_p0_bg,        0.0087f,   "rad/s",   1.0e-4f, 0.1f,   PAR_S) \
+    X(520, ekf_p0_s,         0.005f,    "-",       1.0e-4f, 0.1f,   PAR_S) \
+    X(521, ekf_sf_corr,      6.2832f,   "rad",     0.1f,    100.0f, PAR_L) \
+    X(522, ekf_slip_T,       0.04f,     "s",       0.02f,   0.5f,   PAR_L) \
     /* 10.5 communication */ \
-    X(904, con_deadman_s,    2.0f,      "s",       0.5f,    10.0f,  PAR_L)
+    X(904, con_deadman_s,    2.0f,      "s",       0.5f,    10.0f,  PAR_L) \
+    X(905, wdg_enable,       1.0f,      "bool",    0.0f,    1.0f,   PAR_S)
 
 #endif

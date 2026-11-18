@@ -6,6 +6,10 @@
 #define APP_CALIB 0          /* 1 = calibration firmware (calib.c), 0 = vehicle firmware */
 #endif
 
+#ifndef FEAT_IMU
+#define FEAT_IMU 0           /* 1 = IMU on SPI1 (phase 2, after gate H6); 0 = EKF in encoder-heading mode (§7.17.7) */
+#endif
+
 #define TICK_HZ     1000U    /* TIM6, PSC 89 / ARR 999 */
 #define CTRL_DIV    20U      /* S_CTRL divider -> 50 Hz */
 #define CTRL_DT_S   0.02f    /* = CTRL_DIV / TICK_HZ; whl/drv nominal period */

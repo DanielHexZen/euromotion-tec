@@ -144,7 +144,8 @@ int main(void)
   for (;;) { Calib_Loop(); }
 #else
   app_init(&(app_hw_t){ .tim1 = &htim1, .tim2 = &htim2, .tim3 = &htim3, .tim6 = &htim6,
-                        .tim8 = &htim8, .uart1 = &huart1, .uart2 = &huart2 });
+                        .tim8 = &htim8, .uart1 = &huart1, .uart2 = &huart2,
+                        .spi1 = &hspi1, .iwdg = &hiwdg });
 #endif
   /* USER CODE END 2 */
 

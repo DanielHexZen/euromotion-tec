@@ -8,6 +8,9 @@
 #include "app_priv.h"
 #include "bat.h"
 #include "enc.h"
+#if FEAT_IMU
+#include "imu.h"
+#endif
 #include "mot.h"
 #include "par.h"
 #include "sys_fault.h"
@@ -31,6 +34,8 @@
 #define TICK_HZ_TOL_X10    10U       /* 0.1 % of 1000.0 Hz, REQ-SCH-02 */
 #define LED_FAULT_DIV      1U
 #define LED_IDLE_DIV       5U
+#define TURN_TOL_RAD       (0.5f * DEG2RAD_F)   /* W: residual that is not corrected any more [DECIDE] */
+#define TURN_FIX_MAX       2U                   /* W: correction turns after the encoder turn  [DECIDE] */
 
 app_state_t g_app;
 
@@ -69,12 +74,14 @@ void app_enter_fault(reaction_t r)
 bool app_clear_faults(void)
 {
     if (bat_low()) { return false; }                     /* cause still present */
+    const bool ekf_lost = sys_fault_active(F_EKF);
     sys_fault_clear();
     if (sys_fault_reaction() >= R2) { return false; }    /* F_CLOCK / F_PARAM stay */
     if (g_app.mode == APP_FAULT) {
         g_app.mode = APP_IDLE;
         drv_disable(&g_app.drv);
     }
+    if (ekf_lost) { ekf_init(&g_app.ekf); g_app.ekf_primed = false; }   /* §11 F_EKF: re-initialised in IDLE */
     return true;
 }
 
@@ -134,6 +141,7 @@ static st_t clock_check(void)
 void app_init(const app_hw_t *hw)
 {
     drv_init(&g_app.drv);
+    att_init(&g_app.att);
     g_app.mode = APP_IDLE;
 
     /* Steps 1-4 run before the console exists (step 5); their results are printed afterwards. */
@@ -149,6 +157,11 @@ void app_init(const app_hw_t *hw)
     step(4, "par", r4, F_PARAM);
     step(6, "clock", clock_check(), F_CLOCK);
     step(7, "bat", bat_init(hw->adc1), F_NONE);
+#if FEAT_IMU
+    step(8, "imu", imu_init(hw->spi1, hw->tim2), F_NONE);
+#endif
+    ekf_init(&g_app.ekf);
+    step(11, "ekf", ST_OK, F_ASSERT);
     sys_event(EV_BOOT, (int32_t)g_app.boot_status);
 
     g_app.sched_ok = (sys_sched_start(hw->tim6) == ST_OK);
@@ -157,6 +170,7 @@ void app_init(const app_hw_t *hw)
     if (sys_fault_reaction() >= R2) { app_enter_fault(sys_fault_reaction()); }
     else { con_printf(COM_USB, "ready, ? for help\r\n"); }
     com_flush(200U);
+    if (g_app.sched_ok) { sys_wdg_start(hw->iwdg); }       /* step 14, last: no blocking call after this (D-49) */
 }
 
 /* ---- slots ---------------------------------------------------------------------------- */
@@ -164,6 +178,9 @@ static void app_fast(void)
 {
     enc_update();
     com_uart_poll();
+#if FEAT_IMU
+    imu_drain(&g_app.att);
+#endif
     bat_service();
 }
 
@@ -176,9 +193,60 @@ static void report_event(drv_event_t ev)
     }
 }
 
+/* EKF step, first work of S_CTRL (D-30, REQ-EXE-03): encoder count differences over the period and
+ * the yaw integral between the two encoder timestamps, both read after this tick's imu_drain.
+ * NAN yaw (no IMU, dead IMU, or a timestamp outside the ring) runs this step in encoder mode. */
+static void ekf_step(const enc_reading_t *r)
+{
+    static int32_t c0[2];
+    static uint32_t t0;
+    const par_t *q = par();
+    if (g_app.ekf_primed && r->t_us != t0) {
+        const drv_mode_t dm = drv_status(&g_app.drv).mode;
+        ekf_odo_t u = { .ds_l = (float)(r->cnt[0] - c0[0]) * q->odo_m_per_cnt * q->odo_scale_l,
+                        .ds_r = (float)(r->cnt[1] - c0[1]) * q->odo_m_per_cnt * q->odo_scale_r,
+                        .dpsi = NAN, .dt = (float)(uint32_t)(r->t_us - t0) * 1.0e-6f, .t_us = r->t_us,
+                        .still = (dm == DRV_HOLD || dm == DRV_DISABLED) };
+#if FEAT_IMU
+        float p0, p1;
+        if (imu_alive() && imu_yaw_integral_at(t0, &p0) == ST_OK && imu_yaw_integral_at(r->t_us, &p1) == ST_OK) {
+            u.dpsi = p1 - p0;
+            g_app.turn_acc_rad += u.dpsi;
+        }
+#endif
+        const uint32_t c = sys_cycles();
+        ekf_predict(&g_app.ekf, &u);
+        const uint32_t used = sys_cycles() - c;
+        if (used > g_app.ekf_cyc_max) { g_app.ekf_cyc_max = used; }
+        if (g_app.ekf.degraded && !sys_fault_active(F_EKF)) { sys_fault_raise(F_EKF, 0); }
+    }
+    c0[0] = r->cnt[0];
+    c0[1] = r->cnt[1];
+    t0 = r->t_us;
+    g_app.ekf_primed = true;
+}
+
+/* W with an IMU: the encoder turn ends first, then the yaw integral decides whether the residual
+ * is turned again. True if a correction turn was started (the DONE is then not reported). */
+static bool turn_correct(drv_event_t ev, drv_mode_t mode)
+{
+    if (!g_app.turn_gyro || mode != DRV_TURN_ENC || ev != DRV_EV_DONE) { return false; }
+    const float res = g_app.turn_target_rad - g_app.turn_acc_rad;
+    if (fabsf(res) >= TURN_TOL_RAD && g_app.turn_fix < TURN_FIX_MAX) {
+        const par_t *q = par();
+        if (drv_turn_enc(&g_app.drv, res, app_turn_w(q), q->drv_t_acc) == ST_OK) { g_app.turn_fix++; return true; }
+    }
+    g_app.turn_gyro = false;
+    for (uint32_t i = 0U; i < (uint32_t)COM_N; i++) {
+        con_print_turn((com_port_t)i, g_app.turn_acc_rad, g_app.turn_target_rad);
+    }
+    return false;
+}
+
 static void app_ctrl(void)
 {
     const enc_reading_t r = enc_read();
+    ekf_step(&r);
     const drv_meas_t m = { .cnt = { r.cnt[0], r.cnt[1] }, .t_us = r.t_us, .u_bat_v = bat_v() };
 
     const reaction_t fr = sys_fault_reaction();                    /* REQ-FLT-03 */
@@ -207,7 +275,7 @@ static void app_ctrl(void)
     drv_out_t out;
     drv_step(&g_app.drv, &m, &out);
     if (out.fault != F_NONE) { sys_fault_raise(out.fault, 0); }    /* R4 stops the bridge inside */
-    if (out.event != DRV_EV_NONE) {
+    if (out.event != DRV_EV_NONE && !turn_correct(out.event, before.mode)) {
         report_event(out.event);
         if (g_app.mode == APP_BENCH) { g_app.stopping = true; }
     }
@@ -216,6 +284,7 @@ static void app_ctrl(void)
     mot_set(WHL_R, out.duty_d[WHL_R]);
     if (out.enable) { mot_apply(); mot_enable(true); }             /* duty first, then EN */
     else { mot_enable(false); mot_apply(); }
+    sys_wdg_ctrl_done();
 }
 
 static void app_tlm(void)
@@ -269,6 +338,7 @@ void app_loop(void)
 
     con_cmd_t c;
     if (con_poll(&c)) { app_cmd_exec(&c); }
+    sys_wdg_service();
 
     /* Race-free sleep (REQ-NFR-05). A tick that fired after sys_sched_take() has set a pending
      * bit: do not sleep on it. With interrupts masked the check and the WFI cannot be separated

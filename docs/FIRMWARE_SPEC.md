@@ -1,11 +1,11 @@
 # MR2006B Vehicle Firmware — Implementation Specification
 
 > **Status:** Draft for review
-> **Version:** 1.8
-> **Last Updated:** 2026-11-12 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
+> **Version:** 1.9 (phase-2 code written, D-54 to D-62; 2026-11-18)
+> **Last Updated:** 2026-11-18 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
-> **Companion documents:** `MR2006B_Vehicle_Technical_Reference.tex/.pdf` (physics, models, rationale — *why*), `PHASE0_COMMISSIONING.md` (phase-0 gate and status), `PHASE1_CALIBRATION.md` (phase-1 procedure, D-31), `Matlab/ekf_design/` (EKF reference model, D-30), `BENCH_README.md` (bench firmware), `MR2006B_CubeMX_Konfiguration.xlsx` (current `.ioc` state, in `Challenge_TestHC/`), `CALIB_README.md` (calibration firmware, optional route, D-47), `CONCEPT_REV_F_CHANGES.md`. Not in the repository (checked with `git ls-files`, 2026-11-10): `CONCEPT.md` Rev. E, `TOOLCHAIN.md`, `MR2006B_Pinout.xlsx`
+> **Companion documents:** `MR2006B_Vehicle_Technical_Reference.tex/.pdf` (physics, models, rationale — *why*), `PHASE0_COMMISSIONING.md` (phase-0 gate and status), `PHASE1_CALIBRATION.md` (phase-1 procedure, D-31), `PHASE2_IMU_EKF.md` (IMU wiring, phase-2 status and bench checklist), `Matlab/ekf_design/` (EKF reference model, D-30), `BENCH_README.md` (bench firmware), `MR2006B_CubeMX_Konfiguration.xlsx` (current `.ioc` state, in `Challenge_TestHC/`), `CALIB_README.md` (calibration firmware, optional route, D-47), `CONCEPT_REV_F_CHANGES.md`. Not in the repository (checked with `git ls-files`, 2026-11-10): `CONCEPT.md` Rev. E, `TOOLCHAIN.md`, `MR2006B_Pinout.xlsx`
 
 ---
 
@@ -911,8 +911,8 @@ and accumulates `Ψᵢ = Ψᵢ₋₁ + ψ̇ᵢ · (tᵢ − tᵢ₋₁)`. A ring
 
 `imu_yaw_integral_at(t)` returns Ψ at an arbitrary time t inside the ring by linear interpolation. Beyond the newest sample, it extrapolates by at most `imu_extrap_max` (2 ms) with the newest rate. Older or newer t → `ST_RANGE` (REQ-IMU-05).
 
-- REQ-IMU-06 No sample for `imu_timeout` (20 ms) → `F_IMU_TIMEOUT`.
-- REQ-IMU-07 Saturated samples (|raw| = 32767/−32768 on any gyro axis) are counted and flagged; three in a row → `F_IMU_SAT` (warning). The EKF inflates `q_θ` × 100 for that step.
+- REQ-IMU-06 No sample for `imu_timeout` (20 ms) → `F_IMU_TIMEOUT` (measured from the last DRDY capture; R1 override until AUTO exists, D-56).
+- REQ-IMU-07 Saturated samples (|raw| = 32767/−32768 on any gyro axis) are counted and flagged; three in a row → `F_IMU_SAT` (warning). The EKF inflates `q_θ` × 100 for that step. *(Not wired in the phase-2 code: `ekf_odo_t` has no saturation flag, OQ-11.)*
 
 ### 7.12 `att` — roll and pitch (pure) `[PHASE 2]`
 
@@ -1141,7 +1141,7 @@ void ekf_get(const ekf_t *e, ekf_out_t *out);   /* state, P, stats, flags       
 st_t ekf_pose_at(const ekf_t *e, uint32_t t_us, float *x, float *y, float *th);
 ```
 
-`ekf_odo_t` holds `ds_l, ds_r` (m, after backlash), `dpsi` (rad, from `imu_yaw_integral_at`, or NAN without IMU), `dt` (s, from encoder timestamps, one step per `S_CTRL` period, nominally 20 ms, D-30), `t_us`, and `still` (standstill flag, §7.17.4).
+`ekf_odo_t` holds `ds_l, ds_r` (m, after backlash), `dpsi` (rad, from `imu_yaw_integral_at`, or NAN without IMU), `dt` (s, from encoder timestamps, one step per `S_CTRL` period, nominally 20 ms, D-30), `t_us`, and `still` (standstill flag, §7.17.4; set by the drive layer only for HOLD/DISABLED, the encoder-stillness part is derived in `ekf_predict`, which also applies the ZUPT, D-58). `ekf_back_at()` returns the back-shift for a time up to 1.0 s back, `ST_RANGE` beyond that or the ring (D-59).
 
 `ekf_back_t` is the *back-shift* for delayed measurements: `{dx, dy, dth}`, the estimated motion between the measurement time and now, taken from the EKF's own pose history (`ekf_pose_at`, ring of 64 entries at 50 Hz = 1.28 s). The back-shift contains **motion only**: the EKF keeps the running sum `corr` of all measurement corrections applied to `(x, y, θ)`, the ring stores `pose − corr`, and Δ = `(pose − corr)_now − entry` (D-39). Otherwise every correction applied after the measurement time would be undone for the delayed measurement. The measurement is then evaluated at the past pose `p − Δp`, `θ − Δθ`, and Δ is treated as exact (REQ-EKF-02). Measurements older than 1.0 s are discarded.
 
@@ -1669,7 +1669,7 @@ Line-based, CR or LF terminated, case-sensitive. Values in **legacy units** (mm,
 | `Y<K_sync (mm/s)/mm>` | any | L/R synchronisation, 0 = off |
 | `-100` … `100` | `IDLE`/`BENCH` | open-loop duty both wheels in %, dead-man 2 s |
 | **New** | | |
-| `W<deg>` | `IDLE`/`BENCH` | turn in place, CCW positive: gyro-controlled if IMU present, else encoder |
+| `W<deg>` | `IDLE`/`BENCH` | turn in place, CCW positive: gyro-controlled if IMU present, else encoder (implemented as encoder turn plus correction turns on the gyro residual, D-54) |
 | `PWM <l %> <r %>` | `IDLE`/`BENCH` | open-loop duty per wheel, dead-man 2 s |
 | `M <v mm/s> <w mrad/s>` | `IDLE`/`MANUAL` | manual velocity; enters `MANUAL`; console dead-man 2 s |
 | `MODE IDLE\|BENCH\|MANUAL\|AUTO` | per §7.21.2 | mode request |
@@ -1759,7 +1759,7 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 303 | `bat_cut_v` | 10.0 | V | 9.5–11.5 | L | D | 3.33 V/cell |
 | 400 | `imu_tc1` | 0 | rad/s/K | ±1e-3 | S | D | `[MEASURE]` temperature run |
 | 401 | `imu_tc2` | 0 | rad/s/K² | ±1e-4 | S | D | idem |
-| 402 | `imu_gz_scale` | 1.0 | – | 0.95–1.05 | S | D | `[MEASURE]` 10-turn spin against marks |
+| 402 | `imu_gz_scale` | 1.0 | – | 0.95–1.05 | S | D | `[MEASURE]` 10-turn spin against marks; applied to ω_z before the temperature term (D-62) |
 | 403 | `imu_timeout` | 0.020 | s | 0.005–0.2 | L | D | |
 | 404 | `imu_extrap_max` | 0.002 | s | 0–0.005 | L | D | |
 | 410 | `att_tau` | 1.0 | s | 0.1–10 | L | D | complementary filter |
@@ -1786,10 +1786,10 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 514 | `ekf_sig_post` | 0.03 | m | 0.005–0.3 | L | E | |
 | 515 | `ekf_edge_skip` | 0.25 | m | 0–1 | L | D | segment ends, after turns |
 | 516 | `ekf_bg_conv` | 3.5e-4 | rad/s | 1e-5–1e-2 | L | D | 0.02 °/s |
-| 517 | `ekf_p0_xy` | 0.01 | m | — | S | D | σ |
-| 518 | `ekf_p0_th` | 0.0087 | rad | — | S | D | 0.5° |
-| 519 | `ekf_p0_bg` | 0.0087 | rad/s | — | S | D | 0.5 °/s |
-| 520 | `ekf_p0_s` | 0.005 | – | — | S | D | |
+| 517 | `ekf_p0_xy` | 0.01 | m | 1e-3–1 | S | D | σ |
+| 518 | `ekf_p0_th` | 0.0087 | rad | 1e-3–0.5 | S | D | 0.5° |
+| 519 | `ekf_p0_bg` | 0.0087 | rad/s | 1e-4–0.1 | S | D | 0.5 °/s |
+| 520 | `ekf_p0_s` | 0.005 | – | 1e-4–0.1 | S | D | |
 | 521 | `ekf_sf_corr` | 6.2832 | rad | 0.1–100 | L | E | correlation angle of the gyro scale-factor noise, §7.17.2, D-38; `[DECIDE]` 2π: exact for one net revolution, conservative below, overconfident by √(Θ/2π) beyond; adequate while the net turning between heading fixes stays ≤ 2π |
 | 522 | `ekf_slip_T` | 0.04 | s | 0.02–0.5 | L | D | minimum duration of the slip residual, §7.17.2, D-43 |
 
@@ -2033,7 +2033,7 @@ Pure modules compile with the host compiler using `-std=gnu11 -Wall -Wextra -Wdo
 | `t_drv_move` | REQ-DRV-01/02 | with `sim_plant` (first-order wheels K = 7.6, τ = 50 ms, Coulomb friction, ±10 % L/R mismatch): `D300`, `D1000`, `D5000` end within 2 mm, never reverse; sync max < 3 mm |
 | `t_drv_vel` | REQ-DRV-03/04/05 | limits respected; curvature preserved under wheel saturation; reference anti-windup; bumpless mode switches |
 | `t_enc_est` | REQ-ENC-05 | synthetic edge trains 5–500 mm/s: DIFF error ≤ one count/period; MT error ≤ 10 % at ≥ 10 mm/s |
-| `t_att` | REQ-ATT-01 | synthetic IMU at 6° static pitch converges within 0.5° in 3 s; rejects 0.3 g lateral acceleration |
+| `t_att` | REQ-ATT-01 | synthetic IMU at 6° static pitch converges within 0.5° in 3 s; rejects 0.3 g lateral acceleration (contradicts `att_acc_gate` 0.1: 0.3 g lateral gives \|a\| = 1.044 g, inside the gate; the test uses 0.5 g, OQ-11) |
 | `t_ekf_static` | REQ-EKF-01/05/09 | stepped at 50 Hz like `S_CTRL`: 60 s stationary with bias 0.5 °/s + noise: σ_bg < 0.02 °/s after 3 s; heading drift < 0.01° (fails with `F(3,4)` = −dt while `still`: 0.45°, D-36); `still` is set in the first step after `ekf_init` and, with steps of 20 000 µs, the first ZUPT is applied in step 50 (step 51 with a float sum of `dt`, D-41; step 59 with the standstill time started at 0, D-37); P symmetric, positive definite after 10⁶ steps |
 | `t_ekf_line` | §7.17 | stepped at 50 Hz: simulated 40 m straight with scale error 0.5 %, gyro bias drift, edge events every 0.5 m: cross-track error < 3 cm; NIS within the 95 % band ≥ 90 % |
 | `t_ekf_gate` | REQ-EKF-05 | a 10σ edge outlier is rejected; a 2σ one is accepted |
@@ -2101,7 +2101,7 @@ A failed gate is a finding, not a delay to hide. Weeks refer to the 16-week cour
 |---|---|---|---|
 | **0 — Restructure** | 6–7 | CubeMX target state §4 except phase-tagged peripherals (TIM6 1 kHz, TIM2 1 MHz, TIM1 ARR 8999, build flags). Modules `sys_*`, `par`, `units`, `mot`, `enc` (DIFF), `prof`, `whl`, `drv` (MOVE, TURN_ENC, OPEN, HOLD), `bat`, `com_uart` (IT both ports), `con` with all legacy commands, `app`, `app_isr`. Fault handlers. `test/` with `t_prof`, `t_whl_law`, `t_drv_move`, `t_par`, `t_crc`. | H1, H2, H3, H4, H5. The `D` regression matches the old firmware. Host tests green. |
 | **1 — Calibrate** | 7 | Follow `PHASE1_CALIBRATION.md` with the vehicle firmware and its console (D-31): straight-line scale (`odo_m_per_cnt`), UMBmark (`odo_scale_l/r`, `odo_wheelbase`), feedforward (`whl_ks_*`, `whl_kv_*`, `whl_ksb_*`) with the host tools. Enter results as defaults. Deferred: `whl_tau_m` (phase 2), `odo_backlash_l/r` (phase 5), feedforward normalisation (battery divider). | H6. Parameter defaults updated and committed with the calibration logs. |
-| **2 — IMU and EKF** | 7–9 | `imu` (LSM6DS3 backend), `att`, `ekf` (prediction, ZUPT, encoder fallback; one step per `S_CTRL` period at 50 Hz, D-30), TIM2 capture, SPI DMA, IWDG, capture buffer (sets 0, 1). Console `IMU`, `EKF`, `W` with gyro. | H7, H8 (stationary part). `t_att`, `t_ekf_*` green. **Week-8 milestone:** IMU and encoders logged with timestamps. |
+| **2 — IMU and EKF** | 7–9 | `imu` (LSM6DS3 backend), `att`, `ekf` (prediction, ZUPT, encoder fallback; one step per `S_CTRL` period at 50 Hz, D-30), TIM2 capture, SPI DMA, IWDG, capture buffer (sets 0, 1; **deferred**, needs `tlm`, the 48 KB buffer and the phase-4 protocol, OQ-11). Console `IMU`, `EKF`, `W` with gyro. | H7, H8 (stationary part). `t_att`, `t_ekf_*` green. **Week-8 milestone:** IMU and encoders logged with timestamps. |
 | **3 — Sensing and guidance** | 8–11 | `vl`, `gnd`, `fwd` (reflex, governor), edge updates in `ekf`, `map` + `course_rect10`, `nav` (follow, final, turn), `msn` (AUTO without evasion, RECOVER), `drv` VEL mode. Lateral tilt test of S1/S2 (§7.13.4). SIL simulation. | H9, H9b, H10, SIL pass on `rect10`, `t_gnd`, `t_fwd`, `t_map`, `t_nav_*`, `t_msn`, `t_lat_tilt` green. **Week-8 milestone** extended by ToF logging. |
 | **4 — Telemetry** | 9–10 | `proto`, `tlm` (FAST, SLOW, EVENT), USART1 DMA, port modes, `HELLO`, radio timing. Ground station logging (separate spec). | H11. `t_cobs`, `t_proto_msgs` green. **Week-10 milestone.** |
 | **5 — Course aiding** | 10–12 | Course survey → `course_jardin.yaml`. `lat` (face, post), landmark updates, backlash model, optional `EST_MT`. Replay tool. | H8 (pushed), H12 (rectangle ≤ 30 cm, week 13 at the latest). `t_lat`, `t_enc_est` green. |
@@ -2232,6 +2232,7 @@ All HAL callbacks (`HAL_TIM_PeriodElapsedCallback`, `HAL_TIM_IC_CaptureCallback`
 | OQ-8 | Does the start-heading jig exist? Without it the world frame is defined by placement accuracy (≈ 1°). | team | phase 3 |
 | OQ-9 | Will a mechanical E-stop be wired into the EN lines? | team | phase 0 (wiring) |
 | OQ-10 | A second, **horizontal** lateral sensor per side (S3/S4, mounted at 25–35 cm for bench faces and posts up to `lat_r_max`) in addition to the tilted S1/S2? The tilted beam reaches only `D_far` (34–73 cm at the test angles) and at 7 cm sees only legs of benches. Costs two more VL53L1X (XSHUT pins, I2C2 addresses, `VL_CFG[10]`, polled). `[DECIDE]` after H9b | team | phase 3 (after H9b), before phase 5 |
+| OQ-11 | Phase-2 code leftovers: (1) capture sets 0/1 deferred (`tlm`, 48 KB buffer, phase-4 protocol); (2) REQ-IMU-07 "q_θ ×100 on saturation" not wired; (3) §14 `t_att` "rejects 0.3 g" contradicts `att_acc_gate` 0.1 (decide gate or test); (4) `IMU`/`EKF` console commands print one snapshot, "(1 s)" unclear; (5) no roll/pitch mounting-offset parameter (`att` assumes the board level); (6) `[VERIFY]` at first power-up: §7.11.1 register values, `DRDY_PULSE_CFG_G`, CTRL4_C `I2C_disable` (not set), temperature raw/16 + 25 °C, WHO_AM_I 0x69 vs 0x6A, `IMU_AXIS_MAP` identity `[MEASURE]`. See `PHASE2_IMU_EKF.md` | team | phase 2 bench |
 
 ### 18.2 Decisions taken in this specification
 
@@ -2286,12 +2287,21 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-45 | **Slip inflation uses the mean absolute wheel travel: while `slip` is set, `σ²_ds = ekf_kd·(\|ds_l\| + \|ds_r\|)/2·ekf_slip_infl`** instead of `ekf_kd·\|Δs_e\|·ekf_slip_infl`. Without slip the term is unchanged (`ekf_kd·\|Δs_e\|`); the mapping along `g` is unchanged (§7.17.2) | in an in-place turn Δs_e ≈ 0, so the old form added no variance for a detected slip (finding F-11). MATLAB study, in-place turn at 0.8 rad/s, one wheel without grip for 300 ms, detected after 41 ms: 13.4 mm position error; σ added by the flag 0.00 mm (old) against 15.8 mm (new, error/σ = 0.85). The five detected in-place events (30 to 300 ms): error/σ 0.32 to 0.85 (old: no σ added). The error lies along the heading (a wheel that spins in place moves the centre along the heading), so the mapping along `g` covers it: across the main axis of the added covariance the error is at most 0.12 mm against σ 0.50 mm. The simulation has no lateral wheel slip; a sideways slide is not covered by this term. With both wheels moving in the same direction the two forms are equal: the straight and arc cases of the study and all runs without slip are unchanged. Simulation only; `[VERIFY]` on the vehicle in phase 2 | `ekf_kd·\|Δs_e\|·ekf_slip_infl` while `slip` (§7.17.2, version 1.4); `mx_slip_abs` = 0 in `Matlab/ekf_design` |
 | D-46 | Lateral sensors S1/S2 **tilted down** by `lat_tilt` (test 13° / 15° / 19°, default 19°); ranges converted to horizontal range and height with roll compensation; their ground class is log-only | flush at 7 cm the beam reaches the path only beyond 53 cm; the tilt puts the footprint on boundaries within about 15–35 cm; pitch does not matter because the beam axis is the pitch axis | `lat_tilt` = 0 (horizontal view) |
 | D-47 | **The calibration firmware is supplied.** `Challenge_TestHC/Core/Src/calib.c` and `Core/Inc/calib.h` exist (written at the user's request, overriding the old "do not rewrite" rule), with `docs/CALIB_README.md` and `tools/calib_host.py`; `APP_CALIB = 1` builds. Commands `?`, `s` (abort, in the RX ISR via `sys_fault_hard_stop()`), `r`, `odo`, `C` (sign check ±30 % per wheel), `G` (steady state 15–60 %, both directions, 6 s holds), `B` (breakaway 8–34 %, 1 % steps of 1.8 s), `K [pct]` (step at 50 Hz, default 40 %), `L` (reversal: motor-side counts and latency only), `U`/`A` → `ERR not available`. Duty clamp 0.6; stall/sign guard (≥ 35 % duty, no progress 0.5 s → FAULT). Timing counts TIM6 ticks (50 Hz), not DWT (§7.27). `G` and `B` print the vehicle console's status lines so `tools/ffit.py` can read them. D-31 stands: phase 1 runs on the vehicle firmware, this is a second route | phase 1 can use a dedicated firmware where the console route is awkward; D-31 only removed the dependency. Real gear backlash is not observable with motor-side encoders, so `odo_backlash_l/r` stay deferred (phase 5, D-31) | changes to `calib.c` go through review like any other file; not yet run on the vehicle |
-| D-48 | **CSS is on in the `.ioc` before its callback exists.** Headless CubeMX drops `RCC.EnbaleCSS`; the team ticked it in the CubeMX GUI before commit `f126577`, so `SystemClock_Config` calls `HAL_RCC_EnableCSS()`. `HAL_RCC_CSSCallback` (§7.3, `F_CSS`) follows in phase 2. Until then an HSE failure reaches `NMI_Handler`: `sys_fault_hard_stop()` (bridge off), `HAL_RCC_NMI_IRQHandler()`, halt; no fault record, looks like a hang | the bridge is off on HSE loss either way, and the `.ioc` already holds its target state | leave CSS off until phase 2 |
-| D-49 | **The IWDG init call is not generated.** The `.ioc` has the IWDG (prescaler 32, reload 100) and CubeMX generates `MX_IWDG_Init` (non-static, not in `main.h`), but not its call. `app_init()` starts it last in phase 2 (§5, REQ-EXE-13) | a started IWDG cannot be stopped; it must run only once `sys_wdg_service()` exists | — |
+| D-48 | **CSS is on in the `.ioc` before its callback exists.** Headless CubeMX drops `RCC.EnbaleCSS`; the team ticked it in the CubeMX GUI before commit `f126577`, so `SystemClock_Config` calls `HAL_RCC_EnableCSS()`. `HAL_RCC_CSSCallback` (§7.3, `F_CSS`) follows in phase 2 (written 2026-11-18 in `sys_fault.c`, not run). Until then an HSE failure reaches `NMI_Handler`: `sys_fault_hard_stop()` (bridge off), `HAL_RCC_NMI_IRQHandler()`, halt; no fault record, looks like a hang | the bridge is off on HSE loss either way, and the `.ioc` already holds its target state | leave CSS off until phase 2 |
+| D-49 | **The IWDG init call is not generated.** The `.ioc` has the IWDG (prescaler 32, reload 100) and CubeMX generates `MX_IWDG_Init` (non-static, not in `main.h`), but not its call. `app_init()` starts it last in phase 2 (§5, REQ-EXE-13; written 2026-11-18 as `sys_wdg_start()`/`sys_wdg_service()`, `wdg_enable` 905, not run, D-61) | a started IWDG cannot be stopped; it must run only once `sys_wdg_service()` exists | — |
 | D-53 | **H3: `sync_max` above 3 mm on reversal and turn accepted for phase 0** (2026-11-17). New firmware `a17bfac`: `D-500` `sync_max` 6.1 mm, `W90` 4.3 and 3.1 mm in 2 of 5 runs (limit 3 mm, §14.3 H3); `W90` L ends 0.04–0.14 mm outside 2 mm. No baseline exists: the old firmware prints no `sync_max` and has no `W` command. Rationale: the excess appears only when the wheels start in a new direction; on `D-500` the old firmware ends further from the target than the new one (R −4.3…−4.6 mm against −1.6 mm), both lose about 4 % ground distance on reversal, and with the casters already aligned backwards the ground distance improves by about 10 mm (team test) — caster swivel and wheel slip, i.e. mechanics, not the phase-0 restructure. Forward series (`D300`, `D1000`, `D5000`) keep `sync_max` 2.3–3.8 mm. Revisit in phase 1 (reverse scale, UMBmark turns) and when the heading controller exists |
 | D-52 | **`-Wno-unused-parameter` for the `Drivers` folder only** (2026-11-17, commit `8c4a225`). Debug and Release build `Core/Src` with `-Wall -Wextra -Wdouble-promotion -Wshadow` (§4, REQ-ARC-04). The generated HAL file `stm32f4xx_hal_flash_ex.c` gives three `-Wunused-parameter` warnings (`Banks`) under `-Wextra`; generated code is never hand-edited (CLAUDE.md), so the warning is switched off as a folder setting of `Drivers` in both configurations. User code keeps every warning. Same commission: CubeIDE had no optimisation level for Debug (`-O0`) and `-Os` for Release; set to `-Og`/`-O2` as in §4 (`a17bfac`); the `-O0` builds failed REQ-NFR-01 (tick ISR 2.6 µs, 1.2–1.3 µs after the fix) |
 | D-51 | **USART1 runs at 19200 Bd before H11.** Set in the CubeMX GUI by the team before commit `f126577` (deviation from D-35, which switches only after H11 passes). Both HC-12 modules need `AT+B19200` (SET low); the radio checks of phase 0 (HELLO, `p`, `I`, `s` over radio, replug) were made at 9600 and are repeated at 19200 (status 2026-11-17: both modules reconfigured to `AT+B19200`, radio link at 19200 tested per team report; `I` with 5 lines over radio still open in H2). If H11 fails at 19200, the `.ioc` goes back to 9600 (D-35 fallback) | team decision; all §8.3 airtimes halve | stay at 9600 until H11 |
 | D-50 | **CubeMX labels are kept as they are:** PA5 `LD2 [Green Led]` (spec `LED`), PC9 `HC12_Set` (spec `HC12_SET`), PA0 `hadc1`. Code uses `LD2_Pin` and the generated names; the spec tables name the logical signal, §4.3 notes the label | renaming in the `.ioc` changes generated defines the phase-0 code already uses, with no gain | rename in CubeMX and in the code together |
+| D-54 | **`W<deg>` with IMU: encoder turn (`drv_turn_enc`), then up to 2 correction turns** while the residual `target − Σdψ` ≥ 0.5° (`#define` in `app.c`, `[DECIDE]`) | §9 says "gyro-controlled" but §7.9 has no gyro turn mode; reuses the proven encoder turn and still ends on the gyro | add a gyro turn mode to `drv` (§7.9) |
+| D-55 | **`imu_yaw.c/h` split out of `imu.c`** as a pure file (no HAL) | `t_imu_yaw` runs on the host (REQ-IMU-05, D-40); `imu.c` keeps the SPI/DRDY code | merge back, drop the host test |
+| D-56 | **IMU timeout measured from the last DRDY capture, raised as `F_IMU_TIMEOUT` with R1 override** (no AUTO mode yet; R3 would stop BENCH moves). `main` re-kicks one SPI read every `imu_timeout` to restart a latched DRDY (REQ-IMU-06) | the §11 table wants R3 only in `AUTO`; without the re-kick one lost edge would stop the stream for good | R3 once `AUTO` exists |
+| D-57 | **Console `r` (`enc_zero`) skips one EKF step** | the count jump would otherwise enter the prediction as motion | none |
+| D-58 | **`ekf_odo_t.still` = drive layer HOLD/DISABLED only.** "No count change for `ekf_still_s`" is derived inside `ekf_predict`, and the ZUPT is applied inside `ekf_predict` (as the MATLAB reference, D-30); `ekf_update_zupt` stays public | one place decides standstill; the caller cannot forget the ZUPT | caller passes the combined flag and calls `ekf_update_zupt` (§7.17.4) |
+| D-59 | **`ekf_back_at()` added** (from the MATLAB reference): back-shift for a time up to 1.0 s back, `ST_RANGE` beyond that or the ring | §7.17.1 names `ekf_back_t` but no function that builds it from the history | compute the shift in each caller |
+| D-60 | **EKF health check also after the predict step:** non-finite state or P_xx > 25 m² → degraded → `F_EKF` | a diverged prediction would otherwise reach guidance for one period | check after the update only |
+| D-61 | **The EKF step, `att_init` and the IWDG run in every build, also `FEAT_IMU` 0** (encoder-heading mode, `dpsi` = NAN); `FEAT_IMU` defaults to 0, no `FEAT_EKF` switch. Consequence: firmware from this branch is phase-2 firmware; phase-1 calibration runs keep using the firmware at tag `phase0`/main until H6 passes | without IMU the EKF is the encoder fallback of §7.17; a second switch adds a build variant nobody tests | add `FEAT_EKF` |
+| D-62 | **`imu_gz_scale` is applied to ω_z before the temperature term** | the scale comes from the 10-turn spin of the raw rate (H7); the temperature term is an additive bias and must not be scaled | scale after the sum |
 
 ---
 

@@ -138,3 +138,8 @@ bool sys_fault_take_hard_record(uint32_t *code, uint32_t *msp, uint32_t words[SY
     bkp[0] = 0U;
     return true;
 }
+
+/* HSE failure (CSS, D-48). NMI_Handler has already called sys_fault_hard_stop() and calls this
+ * through HAL_RCC_NMI_IRQHandler(); the R4 raise logs and latches, the NMI handler then spins
+ * until the IWDG resets the part. */
+void HAL_RCC_CSSCallback(void) { sys_fault_raise(F_CSS, 0); }

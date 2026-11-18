@@ -10,6 +10,7 @@
 #include "sys_sched.h"
 
 #include "enc.h"
+#include "par.h"
 #include "sys_irq.h"
 
 typedef struct { uint16_t div; uint16_t phase; } slot_cfg_t;
@@ -115,4 +116,35 @@ void sys_sched_stats_reset(void)
     for (uint32_t i = 0U; i < (uint32_t)SLOT_N; i++) { s_max[i] = 0U; }
     sys_per_clear(&s_ctrl_per);
     s_isr_max = 0U;
+}
+
+/* ---- watchdog (spec §5.7, REQ-EXE-13, D-49) ----------------------------------------------- */
+#define WDG_CTRL_MAX_US 30000U   /* S_CTRL (with the EKF step) completed within 30 ms */
+#define WDG_LOOP_MAX_US 5000U    /* the main loop itself ran within 5 ms              */
+
+void MX_IWDG_Init(void);         /* main.c: non-static, not declared in main.h, call not generated (D-49) */
+
+static IWDG_HandleTypeDef *s_iwdg;
+static uint32_t s_wdg_ctrl_us, s_wdg_loop_us;
+
+void sys_wdg_start(IWDG_HandleTypeDef *h)
+{
+#ifdef DEBUG
+    if (par()->wdg_enable < 0.5f) { return; }
+    __HAL_DBGMCU_FREEZE_IWDG();
+#endif
+    s_wdg_ctrl_us = s_wdg_loop_us = TIM2->CNT;
+    s_iwdg = h;
+    MX_IWDG_Init();                  /* HAL_IWDG_Init starts the counter: it cannot be stopped again */
+}
+
+void sys_wdg_ctrl_done(void) { s_wdg_ctrl_us = TIM2->CNT; }
+
+void sys_wdg_service(void)
+{
+    if (s_iwdg == NULL) { return; }
+    const uint32_t t = TIM2->CNT;
+    const bool loop_ok = (uint32_t)(t - s_wdg_loop_us) <= WDG_LOOP_MAX_US;
+    s_wdg_loop_us = t;
+    if (loop_ok && (uint32_t)(t - s_wdg_ctrl_us) <= WDG_CTRL_MAX_US) { (void)HAL_IWDG_Refresh(s_iwdg); }
 }

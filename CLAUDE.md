@@ -7,7 +7,7 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 ## Current state
 Phase 0 is closed: all gates passed 2026-11-17 (H1, H2, H3 with deviation D-53, H3b Release build, H5), H4 by user report; git tag `phase0`. Open leftover: H4 "EN lines 0 V at boot" not measured (measure PB12/PB13 after reset before phase 1 floor runs). Details: `docs/PHASE0_COMMISSIONING.md` Status section.
 Phase 1 (calibration, gate H6) is in progress: follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31). Done: host tools `tools/straight_scale.py`, `umbmark.py`, `ffit.py` exist, `--selftest` passes. No floor measurement recorded yet in `PHASE1_CALIBRATION.md`. Next (vehicle track): UMBmark (`odo_scale_l/r`, `odo_wheelbase`), then remaining steps of `PHASE1_CALIBRATION.md` (straight-line scale, feedforward, verification, defaults committed with logs). `calib.c`/`calib.h` exist (spec D-47), optional.
-Phase 2 (IMU LSM6DS3 and EKF): IMU available, breakout board being delivered (OQ-1 `[VERIFY]` until then; it sets the §7.11.1 register values). Host-track work (`att`, `ekf`, their tests) may start now (spec §15, D-29); vehicle enable waits for H6.
+Phase 2 (IMU LSM6DS3 and EKF): host and vehicle code written on branch `phase2-imu-ekf` (2026-11-18, spec D-54 to D-62), `make -C test` green; not flashed, `FEAT_IMU` 0. This branch is phase-2 firmware (EKF and IWDG run in every build, D-61): phase-1 runs keep using `phase0`/main until H6. Breakout board being delivered (OQ-1); first power-up checklist and open items in `docs/PHASE2_IMU_EKF.md`. Vehicle enable waits for H6.
 Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle track stays gated.
 
 ## Sources of truth

@@ -1,9 +1,13 @@
 /* app_cmd.c — executes the console commands of §9 (phase-0 subset). Part of the app module. */
 #include <stdio.h>
 
+#include "app_config.h"
 #include "app_priv.h"
 #include "bat.h"
 #include "enc.h"
+#if FEAT_IMU
+#include "imu.h"
+#endif
 #include "par.h"
 #include "sys_fault.h"
 #include "sys_sched.h"
@@ -120,6 +124,39 @@ int con_info_line(uint32_t i, char *buf, size_t n)
     }
 }
 
+void con_imu_snapshot(con_imu_t *s)
+{
+    *s = (con_imu_t){ .roll_rad = att_roll(&g_app.att), .pitch_rad = att_pitch(&g_app.att),
+                      .bg_radps = g_app.ekf.x[3] };
+#if FEAT_IMU
+    const imu_info_t i = imu_info();
+    s->present = i.present;
+    s->alive = i.alive;
+    for (uint32_t k = 0U; k < 3U; k++) { s->w_radps[k] = i.w_radps[k]; }
+    s->temp_c = i.temp_c;
+    s->n_samples = i.n_samples;
+    s->n_drop = i.n_drop;
+    s->n_sat = i.n_sat;
+#endif
+}
+
+void con_ekf_snapshot(con_ekf_t *s)
+{
+    ekf_out_t o;
+    ekf_get(&g_app.ekf, &o);
+    *s = (con_ekf_t){ .x_m = o.x[0], .y_m = o.x[1], .th_rad = o.x[2], .bg_radps = o.x[3], .s = o.x[4],
+                      .sig_x_m = sqrtf(o.P_diag[0]), .sig_y_m = sqrtf(o.P_diag[1]),
+                      .sig_th_rad = sqrtf(o.P_diag[2]), .sig_bg_radps = sqrtf(o.P_diag[3]),
+                      .slip_episodes = o.slip_episodes, .step_us = g_app.ekf_cyc_max / (SystemCoreClock / 1000000U),
+                      .still = (o.flags & EKF_STILL) != 0U, .slip = (o.flags & EKF_SLIP) != 0U,
+                      .degraded = (o.flags & EKF_DEGRADED) != 0U };
+    for (uint32_t k = 0U; k < CON_EKF_NU; k++) {
+        s->nis_mean[k] = o.nis_mean[k];
+        s->n_acc[k] = o.n_acc[k];
+        s->n_rej[k] = o.n_rej[k];
+    }
+}
+
 void app_cmd_exec(const con_cmd_t *c)
 {
     const com_port_t p = c->port;
@@ -136,6 +173,8 @@ void app_cmd_exec(const con_cmd_t *c)
     case CMD_DUMP:      con_job(p, CON_JOB_DUMP); break;
     case CMD_EVLOG:     con_job(p, CON_JOB_EVLOG); break;
     case CMD_FAULTS:    con_job(p, CON_JOB_FAULTS); break;
+    case CMD_IMU:       con_job(p, CON_JOB_IMU); break;
+    case CMD_EKF:       con_job(p, CON_JOB_EKF); break;
     case CMD_PRINT:     app_print_status(p); break;
     case CMD_INFO:      con_job(p, CON_JOB_INFO); break;
     case CMD_STATUS:
@@ -158,6 +197,7 @@ void app_cmd_exec(const con_cmd_t *c)
             con_printf(p, "Busy, send s first\r\n");
         } else {
             enc_zero();
+            g_app.ekf_primed = false;                        /* counts restart at 0: skip one EKF step */
             drv_reset_meas(d);
             sys_sched_stats_reset();                         /* `I` maxima and period restart too */
             con_printf(p, "Counters reset\r\n");
@@ -184,12 +224,19 @@ void app_cmd_exec(const con_cmd_t *c)
     case CMD_TURN:
         if (!motion_allowed(p)) { break; }
         {
-            /* The wheels use the D speed and ramp; there is no separate turn-rate parameter before
-             * nav (phase 3). omega = v_nom / (b/2). */
-            const float w = q->drv_v_nom / (0.5f * q->odo_wheelbase);
-            const st_t s = drv_turn_enc(d, c->f[0], w, q->drv_t_acc);
-            if (s == ST_OK) { enter_bench(p); con_printf(p, "Turn %ld deg\r\n", lroundf(c->f[0] * RAD2DEG_F)); }
-            else { reply_move_result(p, s); }
+            const st_t s = drv_turn_enc(d, c->f[0], app_turn_w(q), q->drv_t_acc);
+            if (s == ST_OK) {
+                bool gyro = false;
+#if FEAT_IMU
+                gyro = imu_alive();                          /* app_ctrl checks the end angle against the yaw integral */
+#endif
+                g_app.turn_gyro = gyro;
+                g_app.turn_target_rad = c->f[0];
+                g_app.turn_acc_rad = 0.0f;
+                g_app.turn_fix = 0U;
+                enter_bench(p);
+                con_printf(p, "Turn %ld deg%s\r\n", lroundf(c->f[0] * RAD2DEG_F), gyro ? " (gyro)" : "");
+            } else { reply_move_result(p, s); }
         }
         break;
 
