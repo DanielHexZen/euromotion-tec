@@ -21,7 +21,7 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 | `whl_ksb_l/r` (120, 121) | open-loop duty steps from rest, `tools/ffit.py breakaway` | 6 | covered, 1 % resolution |
 | `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **deferred**: the console prints every 300 ms and there is no capture (`CAP`, spec §7.25) before phase 2. Needs the calibration firmware (`K`, 50 Hz step, §19.2) or phase 2. Default 0.050 s stays `[MEASURE]`. |
 | `odo_backlash_l/r` (204, 205) | reversal test | – | **deferred**: the parameters do not exist in `par_table.h` yet and are used only in phase 5 (§7.6.3). Needs phase 5: calibration `L` reports motor-side counts and latency only, real gear backlash is not observable with motor-side encoders. |
-| `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the battery divider is not wired (`7 bat absent`), so there is no voltage to normalise with. Keep `whl_ff_norm_en = 0`. Read the pack with a multimeter and record it (section 3). |
+| `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the divider is wired since 2026-11-17 (`7 bat OK`, voltage in `S`), but `bat_ratio` is not yet checked against a multimeter. Keep `whl_ff_norm_en = 0`; record the `S` voltage during section 6 so `whl_ff_u_ref` can be set from it later. |
 
 ## 2. What the console really gives (checked in the code)
 
@@ -60,7 +60,7 @@ L=31416 (1999.5 mm, 301 mm/s)  R=-12 (-0.8 mm, 0 mm/s)  BENCH OPEN
   Each ends with `SELFTEST PASSED`.
 - [ ] Flat, hard, clean floor, the same surface for the whole session. At least **3 m × 3 m** free for the UMBmark square (2 m side plus run-out) and a **4 m straight** runway (6 m if you do the `D5000` runs). Note the surface: the scale depends on the tyre and the floor.
 - [ ] Material: steel tape measure ≥ 5 m (mm), masking tape, fine marker, a carpenter's/set square, a plumb line or second square for dropping a point from the hub to the floor, laptop with the USB console.
-- [ ] Battery fully charged. Measure the pack with a multimeter now and after each part (there is no `bat` reading). Record it.
+- [ ] Battery fully charged. Read the pack voltage with `S` (`bat … mV`) now and after each part and record it. `bat_ratio` (300) is still the nominal 5.7 `[MEASURE]`: compare once with a multimeter and correct it (`P300=…`) when one is at hand.
 - [ ] Same firmware build for the whole session, flashed once. **Do not reset the board during a part:** `P` values are RAM only. After any reset (USB plug, button, fault, watchdog) re-enter every `P` line of this session before you continue.
 - [ ] Open the console (USB, 115200 8N1) **with logging to a file**, e.g. `screen -L -Logfile tools/data/<date>/session.log /dev/cu.usbmodem11403 115200`. (Old `screen` versions, such as the one macOS ships, have no `-Logfile` and write `screenlog.0` in the current directory; CubeIDE's terminal log works too. Any capture that stores every received byte is enough. USB only: the radio drops lines.)
 - [ ] Record the session header, and save the output of `I`, `k` and `L` into the log:
@@ -220,7 +220,7 @@ Model (REQ-WHL-01): while the wheel rolls `|duty| = Ks + Kv·|v|`; from rest the
 - No time stamps. `tools/ffit.py` takes the speed from the **difference of the printed positions over the steady window** divided by the print period (300 ms, section 3). That resolves well below 1 mm/s; the printed `mm/s` is only used as a cross-check (lost lines show up as a disagreement).
 - Duty has 1 % resolution. `Ks_break` is therefore found to ±1 %.
 - Only steady states are identified. The dynamic part (`Kv·τ_m·a_ref`, `whl_tau_m`) is deferred (above).
-- The values depend on the battery voltage (no `bat` reading) and the floor. Note the pack voltage; use a charged pack.
+- The values depend on the battery voltage (read it with `S`) and the floor. Note the pack voltage; use a charged pack.
 - **Validation is weak.** The closed loop (PI + position loop) hides small feedforward errors, and the console cannot log `e_x`. Judge the fit by its statistics (R², scatter between the directions) and by H3-style `D` runs, not by "the vehicle looks better".
 
 Do section 6 **after** 4 and 5: speed in m/s uses `odo_m_per_cnt`.
