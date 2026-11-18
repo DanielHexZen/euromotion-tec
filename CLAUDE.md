@@ -5,7 +5,10 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 **Always use the `/ponytail` skill** for work in this repository.
 
 ## Current state
-Phase 0 is in commissioning and not closed (H3, H3b and the H2 period measurement are open). Read the **Status** section of `docs/PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Work runs on two tracks (spec §15, D-29): host-track work may run ahead of the gates, the vehicle track stays gated. Phase 1 is not blocked: it follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31); `calib.c`/`calib.h` exist (spec D-47) and are optional.
+Phase 0 is closed: all gates passed 2026-11-17 (H1, H2, H3 with deviation D-53, H3b Release build, H5), H4 by user report; git tag `phase0`. Open leftover: H4 "EN lines 0 V at boot" not measured (measure PB12/PB13 after reset before phase 1 floor runs). Details: `docs/PHASE0_COMMISSIONING.md` Status section.
+Phase 1 (calibration, gate H6) is in progress: follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31). Done: host tools `tools/straight_scale.py`, `umbmark.py`, `ffit.py` exist, `--selftest` passes. No floor measurement recorded yet in `PHASE1_CALIBRATION.md`. Next (vehicle track): UMBmark (`odo_scale_l/r`, `odo_wheelbase`), then remaining steps of `PHASE1_CALIBRATION.md` (straight-line scale, feedforward, verification, defaults committed with logs). `calib.c`/`calib.h` exist (spec D-47), optional.
+Phase 2 (IMU LSM6DS3 and EKF): IMU available, breakout board being delivered (OQ-1 `[VERIFY]` until then; it sets the §7.11.1 register values). Host-track work (`att`, `ekf`, their tests) may start now (spec §15, D-29); vehicle enable waits for H6.
+Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle track stays gated.
 
 ## Sources of truth
 - `docs/FIRMWARE_SPEC.md`: normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.
