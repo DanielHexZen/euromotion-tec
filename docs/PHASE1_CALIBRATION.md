@@ -8,7 +8,22 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 
 ## Status
 
-**Not started.** Nothing has been measured. Every table below is empty and every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+**Section 6 done by the calibration-firmware route (2026-11-18, `CALIB_README.md`), sections 4, 5, 7 open.** Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+
+Calibration firmware (`APP_CALIB 1`, built on `129e42f` + uncommitted `X` tests): `C`, `B`, `K` on blocks (`tools/data/2026-11-18/calib_blocks.log`), `G`, `L`, `X` S/P/N/L/D on the floor (`calib_floor.log`, copy in `tools/data/assessment1/`). `calib_host.py check` OK, `eval` over both logs:
+
+| Parameter | ID | L | R | Source |
+|---|---|---|---|---|
+| `whl_ks` | 116 / 118 | 0.0524 (se 0.0039) | 0.0612 (se 0.0097) | `G` floor, 27 / 25 points, R² 0.996 / 0.980 |
+| `whl_kv` 1/(m/s) | 117 / 119 | 1.3605 (se 0.016) | 1.3077 (se 0.039) | `G` floor, nominal `odo_m_per_cnt` |
+| `whl_ksb` | 120 / 121 | 0.110 (fwd 12 %, rev 10 %) | 0.135 (fwd 12 %, rev 15 %) | `B` **on blocks** (unloaded: likely below the floor value) |
+| `whl_tau_m` s | 115 | 0.042–0.044 | 0.054–0.063 | `K` on blocks, 6 runs (40 % ×4, 25 % ×2); mean of both wheels 0.04975 |
+
+Entered as compiled defaults in `par_table.h` (`t_whl_law` now pins the hand-computed values with `par_set`). Not yet checked on the vehicle (§6.3: `D2000` ×3, `D300`). `Kv` scales with `odo_m_per_cnt`: if §4 changes it by a factor k, divide `Kv` by k. `L` (report only): latency 40–80 ms. Same duty: the right wheel runs 8–15 % faster, open loop the vehicle drifts left.
+
+**§6.3 check (2026-11-18, `d_runs_newff.log`, `d_runs_oldff.log`), same floor as H3.** New defaults: `D300` ×10, `D2000` ×12, `D5000` ×10, all `DONE` 1.4–2.0 mm short (design, `drv_pos_tol`), `sync_max` 0.8–1.3 mm (H3 with the 9 Oct values: 2.3–3.8 mm), no `TIMEOUT`/`FAULT`. Tape: `D300` 296–300, `D2000` 2015–2025 mm with 15–80 mm drift right, `D5000` 5030–5070 mm with 130–480 mm drift right (H3: 5000.7 mm, ≤ 250 mm). Counter-check with the 9 Oct values set live: `D2000` ×3 tape 2010–2020 mm, drift 30–100 mm right, `sync_max` 2.7–3.6 mm. The ground error is the same with both sets, so it is not the feedforward: the mechanics changed (both wheels re-tightened before these runs, the left one was loose on its hex). The new defaults stay; §4 and §5 are redone on the current mechanics. Align the casters (push the vehicle ~10 cm forward) before every run: the drift scatter at equal encoder counts points to caster swivel.
+
+**§4 (2026-11-18, `straight.csv`, `straight.log`, `straight.txt`).** 5 × `D2000` + 3 × `D5000`, tape at the hub of each wheel, counts from the `DONE` values (`--done`, `p` was not read per run). `odo_m_per_cnt` = 6.35444e-5 m, sd 0.147 %, −0.15 % vs nominal; per wheel L 6.37241e-5, R 6.33647e-5, k_r/k_l = 0.9944 (the right wheel rolls 0.56 % less per count: the drift to the right, for §5). The earlier +1 % (single tape point on the vehicle, not the hubs) was the measuring method. `Kv` correction for the new scale: × 1/0.9985, below its standard error, not applied. Check after `P200=6.35444e-05` (`straight_check.log`), 3 × `D2000`, tape − `DONE`: L +1.7 / −2.2 / +6.0 mm, R −2.1 / −6.3 / −7.1 mm; mean of both wheels −0.2 / −4.3 / −0.6 mm. The mean scale is right; the per-wheel 3 mm limit fails on R (mean −5.2 mm, the expected −0.28 % of the L/R diameter difference) and once on L: left for §5 (`odo_scale_l/r`).
 
 ## 1. What this procedure covers
 
@@ -21,7 +36,7 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 | `whl_ksb_l/r` (120, 121) | open-loop duty steps from rest, `tools/ffit.py breakaway` | 6 | covered, 1 % resolution |
 | `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **deferred**: the console prints every 300 ms and there is no capture (`CAP`, spec §7.25) before phase 2. Needs the calibration firmware (`K`, 50 Hz step, §19.2) or phase 2. Default 0.050 s stays `[MEASURE]`. |
 | `odo_backlash_l/r` (204, 205) | reversal test | – | **deferred**: the parameters do not exist in `par_table.h` yet and are used only in phase 5 (§7.6.3). Needs phase 5: calibration `L` reports motor-side counts and latency only, real gear backlash is not observable with motor-side encoders. |
-| `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the battery divider is not wired (`7 bat absent`), so there is no voltage to normalise with. Keep `whl_ff_norm_en = 0`. Read the pack with a multimeter and record it (section 3). |
+| `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the divider is wired since 2026-11-17 (`7 bat OK`, voltage in `S`), but `bat_ratio` is not yet checked against a multimeter. Keep `whl_ff_norm_en = 0`; record the `S` voltage during section 6 so `whl_ff_u_ref` can be set from it later. |
 
 ## 2. What the console really gives (checked in the code)
 
@@ -60,7 +75,7 @@ L=31416 (1999.5 mm, 301 mm/s)  R=-12 (-0.8 mm, 0 mm/s)  BENCH OPEN
   Each ends with `SELFTEST PASSED`.
 - [ ] Flat, hard, clean floor, the same surface for the whole session. At least **3 m × 3 m** free for the UMBmark square (2 m side plus run-out) and a **4 m straight** runway (6 m if you do the `D5000` runs). Note the surface: the scale depends on the tyre and the floor.
 - [ ] Material: steel tape measure ≥ 5 m (mm), masking tape, fine marker, a carpenter's/set square, a plumb line or second square for dropping a point from the hub to the floor, laptop with the USB console.
-- [ ] Battery fully charged. Measure the pack with a multimeter now and after each part (there is no `bat` reading). Record it.
+- [ ] Battery fully charged. Read the pack voltage with `S` (`bat … mV`) now and after each part and record it. `bat_ratio` (300) is still the nominal 5.7 `[MEASURE]`: compare once with a multimeter and correct it (`P300=…`) when one is at hand.
 - [ ] Same firmware build for the whole session, flashed once. **Do not reset the board during a part:** `P` values are RAM only. After any reset (USB plug, button, fault, watchdog) re-enter every `P` line of this session before you continue.
 - [ ] Open the console (USB, 115200 8N1) **with logging to a file**, e.g. `screen -L -Logfile tools/data/<date>/session.log /dev/cu.usbmodem11403 115200`. (Old `screen` versions, such as the one macOS ships, have no `-Logfile` and write `screenlog.0` in the current directory; CubeIDE's terminal log works too. Any capture that stores every received byte is enough. USB only: the radio drops lines.)
 - [ ] Record the session header, and save the output of `I`, `k` and `L` into the log:
@@ -220,7 +235,7 @@ Model (REQ-WHL-01): while the wheel rolls `|duty| = Ks + Kv·|v|`; from rest the
 - No time stamps. `tools/ffit.py` takes the speed from the **difference of the printed positions over the steady window** divided by the print period (300 ms, section 3). That resolves well below 1 mm/s; the printed `mm/s` is only used as a cross-check (lost lines show up as a disagreement).
 - Duty has 1 % resolution. `Ks_break` is therefore found to ±1 %.
 - Only steady states are identified. The dynamic part (`Kv·τ_m·a_ref`, `whl_tau_m`) is deferred (above).
-- The values depend on the battery voltage (no `bat` reading) and the floor. Note the pack voltage; use a charged pack.
+- The values depend on the battery voltage (read it with `S`) and the floor. Note the pack voltage; use a charged pack.
 - **Validation is weak.** The closed loop (PI + position loop) hides small feedforward errors, and the console cannot log `e_x`. Judge the fit by its statistics (R², scatter between the directions) and by H3-style `D` runs, not by "the vehicle looks better".
 
 Do section 6 **after** 4 and 5: speed in m/s uses `odo_m_per_cnt`.

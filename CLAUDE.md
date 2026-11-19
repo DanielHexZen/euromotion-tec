@@ -5,7 +5,7 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 **Always use the `/ponytail` skill** for work in this repository.
 
 ## Current state
-Phase 0 is in commissioning and not closed (H3, H3b and the H2 period measurement are open). Read the **Status** section of `docs/PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Work runs on two tracks (spec §15, D-29): host-track work may run ahead of the gates, the vehicle track stays gated. Phase 1 is not blocked: it follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31); `calib.c`/`calib.h` exist (spec D-47) and are optional.
+Phase 0 is closed (tag `phase0`; H2 scope check, EN at boot and the runaway EN check done 2026-11-18). Read the **Status** section of `docs/PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Work runs on two tracks (spec §15, D-29): host-track work may run ahead of the gates, the vehicle track stays gated. Phase 1 is not blocked: it follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31); `calib.c`/`calib.h` exist (spec D-47) and are optional.
 
 ## Sources of truth
 - `docs/FIRMWARE_SPEC.md`: normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.

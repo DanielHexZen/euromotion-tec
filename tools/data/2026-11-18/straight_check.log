@@ -1,0 +1,72 @@
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.1 R=4998.1 sync_max=1.0 t=18200
+> P200=6.35444e-05
+P200 odo_m_per_cnt=6.35444e-05 m
+> Dr
+ERR syntax, use D<mm>
+> r
+Counters reset
+> p
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+> D2000
+ERR syntax, use D<mm>
+> P200=?
+ERR syntax, use P<id|name>=<value>
+> P200?
+P200 odo_m_per_cnt=6.35444e-05 m
+> DD
+ERR syntax, use D<mm>
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.3 R=1998.1 sync_max=1.0 t=8320
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.4 sync_max=1.2 t=8260
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.1 sync_max=0.9 t=8300
+> CW111
+ERR unknown, ? for help
+> r
+Counters reset
+> CW1
+ERR unknown, ? for help
+> CW
+ERR unknown, ? for help
+> I
+ERR unknown, ? for help
+> I
+MR2006B fw 0.1-phase0 f7fe0a2-dirty calib=0
+reset cause 0x03, tick 1000.0 Hz, cpu 0.3 %
+S_CTRL max 8 us, overruns 0; S_FAST max 5 us
+S_CTRL period min 20000 max 20000 mean 20000.0 us n 982; tick isr max 1.3 us
+boot failures 0x0000, par generation 1, m/cnt 63544 nm
+> CW1
+ERR unknown, ? for help
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.2 sync_max=0.9 t=8280
+> W90
+Turn 90 deg
+DONE L=-173.7 R=174.3 sync_max=1.7 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+> s
+STOP
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.4 R=1998.2 sync_max=1.0 t=8260
+> W90
+Turn 90 deg
+DONE L=-173.9 R=173.8 sync_max=1.6 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.3 R=1997.9 sync_max=1.3 t=8260
+> W90
+Turn 90 deg
+DONE L=-173.9 R=173.8 sync_max=1.8 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+> s
+STOP

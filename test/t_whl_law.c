@@ -9,9 +9,14 @@ static whl_in_t in_speed(float v_cmd, float v_meas)
     return in;
 }
 
+/* The hand-computed values below use these feedforward numbers, not the calibrated defaults. */
 static void fresh(whl_t *w, uint8_t side)
 {
+    static const struct { uint16_t id; float v; } ff[] = {
+        { 115, 0.050f }, { 116, 0.098f }, { 117, 1.275f }, { 118, 0.041f },
+        { 119, 1.361f }, { 120, 0.141f }, { 121, 0.169f } };
     (void)par_init();
+    for (unsigned i = 0U; i < sizeof ff / sizeof ff[0]; i++) { CHECK(par_set(ff[i].id, ff[i].v) == ST_OK); }
     whl_init(w, side);
 }
 

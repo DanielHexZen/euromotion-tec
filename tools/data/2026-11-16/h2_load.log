@@ -1,0 +1,159 @@
+> I
+MR2006B fw 0.1-phase0 3c8afed calib=0
+reset cause 0x02, tick 1000.0 Hz, cpu 0.4 %
+S_CTRL max 15 us, overruns 0; S_FAST max 4 us
+S_CTRL period min 20000 max 20000 mean 20000.0 us n 16973; tick isr max 2.6 us
+boot failures 0x0000, par generation 0, m/cnt 63638 nm
+> r
+Counters reset
+> I
+MR2006B fw 0.1-phase0 3c8afed calib=0
+reset cause 0x02, tick 1000.0 Hz, cpu 0.4 %
+S_CTRL max 15 us, overruns 0; S_FAST max 6 us
+S_CTRL period min 20000 max 20000 mean 20000.0 us n 303; tick isr max 2.6 us
+boot failures 0x0000, par generation 0, m/cnt 63638 nm
+> I
+MR2006B fw 0.1-phase0 3c8afed calib=0
+reset cause 0x02, tick 1000.0 Hz, cpu 0.4 %
+S_CTRL max 15 us, overruns 0; S_FAST max 7 us
+S_CTRL period min 19999 max 20001 mean 20000.0 us n 1059; tick isr max 2.6 us
+boot failures 0x0000, par generation 0, m/cnt 63638 nm
+> r
+Counters reset
+> a
+Auto print ON
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+L=0 (0.0 mm, 0 mm/s)  R=0 (0.0 mm, 0 mm/s)  IDLE OFF
+> D1000
+Move 1000 mm: Vmax 300 mm/s, T 4333 ms
+L=121 (7.7 mm, 54 mm/s)  R=72 (4.6 mm, 24 mm/s)  BENCH MOVE
+L=642 (40.9 mm, 146 mm/s)  R=633 (40.3 mm, 160 mm/s)  BENCH MOVE
+L=1581 (100.6 mm, 232 mm/s)  R=1587 (101.0 mm, 230 mm/s)  BENCH MOVE
+L=2911 (185.3 mm, 303 mm/s)  R=2925 (186.1 mm, 306 mm/s)  BENCH MOVE
+L=4316 (274.7 mm, 296 mm/s)  R=4327 (275.4 mm, 293 mm/s)  BENCH MOVE
+L=5714 (363.6 mm, 298 mm/s)  R=5718 (363.9 mm, 297 mm/s)  BENCH MOVE
+L=7117 (452.9 mm, 297 mm/s)  R=7119 (453.0 mm, 297 mm/s)  BENCH MOVE
+L=8525 (542.5 mm, 298 mm/s)  R=8526 (542.6 mm, 299 mm/s)  BENCH MOVE
+L=9935 (632.2 mm, 299 mm/s)  R=9936 (632.3 mm, 299 mm/s)  BENCH MOVE
+L=11347 (722.1 mm, 300 mm/s)  R=11347 (722.1 mm, 300 mm/s)  BENCH MOVE
+L=12760 (812.0 mm, 299 mm/s)  R=12760 (812.0 mm, 299 mm/s)  BENCH MOVE
+L=14113 (898.1 mm, 262 mm/s)  R=14112 (898.1 mm, 261 mm/s)  BENCH MOVE
+L=15062 (958.5 mm, 163 mm/s)  R=15049 (957.7 mm, 164 mm/s)  BENCH MOVE
+L=15555 (989.9 mm, 66 mm/s)  R=15527 (988.1 mm, 64 mm/s)  BENCH MOVE
+L=15627 (994.5 mm, 8 mm/s)  R=15617 (993.8 mm, 5 mm/s)  BENCH SETTLE
+L=15664 (996.8 mm, 9 mm/s)  R=15668 (997.1 mm, 9 mm/s)  BENCH SETTLE
+DONE L=998.1 R=998.7 sync_max=3.7 t=4900
+L=15680 (997.8 mm, -1 mm/s)  R=15692 (998.6 mm, -1 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+> a
+Auto print OFF
+> I
+MR2006B fw 0.1-phase0 3c8afed calib=0
+reset cause 0x02, tick 1000.0 Hz, cpu 0.4 %
+S_CTRL max 177 us, overruns 0; S_FAST max 6 us
+S_CTRL period min 20000 max 20000 mean 20000.0 us n 655; tick isr max 2.6 us
+boot failures 0x0000, par generation 0, m/cnt 63638 nm
+> a
+Auto print ON
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+L=15680 (997.8 mm, 0 mm/s)  R=15691 (998.5 mm, 0 mm/s)  IDLE OFF
+> D1000
+Move 1000 mm: Vmax 300 mm/s, T 4333 ms
+L=15681 (997.9 mm, 0 mm/s)  R=15692 (998.6 mm, 0 mm/s)  BENCH MOVE
+L=15972 (1016.4 mm, 90 mm/s)  R=15967 (1016.1 mm, 109 mm/s)  BENCH MOVE
+L=16663 (1060.4 mm, 178 mm/s)  R=16680 (1061.5 mm, 178 mm/s)  BENCH MOVE
+L=17752 (1129.7 mm, 265 mm/s)  R=17768 (1130.7 mm, 265 mm/s)  BENCH MOVE
+L=19150 (1218.7 mm, 297 mm/s)  R=19174 (1220.2 mm, 298 mm/s)  BENCH MOVE
+L=20547 (1307.6 mm, 296 mm/s)  R=20562 (1308.5 mm, 296 mm/s)  BENCH MOVE
+L=21949 (1396.8 mm, 298 mm/s)  R=21962 (1397.6 mm, 299 mm/s)  BENCH MOVE
+L=23356 (1486.3 mm, 297 mm/s)  R=23368 (1487.1 mm, 299 mm/s)  BENCH MOVE
+L=24766 (1576.1 mm, 299 mm/s)  R=24777 (1576.8 mm, 300 mm/s)  BENCH MOVE
+L=26177 (1665.9 mm, 299 mm/s)  R=26188 (1666.6 mm, 299 mm/s)  BENCH MOVE
+L=27590 (1755.8 mm, 300 mm/s)  R=27601 (1756.5 mm, 301 mm/s)  BENCH MOVE
+L=29003 (1845.7 mm, 300 mm/s)  R=29014 (1846.4 mm, 301 mm/s)  BENCH MOVE
+L=30228 (1923.6 mm, 223 mm/s)  R=30229 (1923.7 mm, 220 mm/s)  BENCH MOVE
+L=30992 (1972.3 mm, 126 mm/s)  R=30985 (1971.8 mm, 124 mm/s)  BENCH MOVE
+L=31290 (1991.2 mm, 21 mm/s)  R=31280 (1990.6 mm, 27 mm/s)  BENCH MOVE
+L=31322 (1993.3 mm, 14 mm/s)  R=31330 (1993.8 mm, 5 mm/s)  BENCH SETTLE
+L=31353 (1995.2 mm, 5 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  BENCH SETTLE
+DONE L=998.0 R=998.5 sync_max=3.4 t=4900
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+L=31361 (1995.8 mm, 0 mm/s)  R=31381 (1997.0 mm, 0 mm/s)  IDLE OFF
+> D1000
+Move 1000 mm: Vmax 300 mm/s, T 4333 ms
+L=31461 (2002.1 mm, 48 mm/s)  R=31431 (2000.2 mm, 27 mm/s)  BENCH MOVE
+L=31931 (2032.0 mm, 134 mm/s)  R=31954 (2033.5 mm, 139 mm/s)  BENCH MOVE
+L=32801 (2087.4 mm, 217 mm/s)  R=32825 (2088.9 mm, 217 mm/s)  BENCH MOVE
+L=34080 (2168.8 mm, 301 mm/s)  R=34106 (2170.4 mm, 303 mm/s)  BENCH MOVE
+L=35482 (2258.0 mm, 296 mm/s)  R=35508 (2259.7 mm, 295 mm/s)  BENCH MOVE
+L=36880 (2347.0 mm, 296 mm/s)  R=36904 (2348.5 mm, 297 mm/s)  BENCH MOVE
+L=38286 (2436.4 mm, 299 mm/s)  R=38307 (2437.8 mm, 297 mm/s)  BENCH MOVE
+L=39695 (2526.1 mm, 301 mm/s)  R=39715 (2527.4 mm, 299 mm/s)  BENCH MOVE
+L=41105 (2615.8 mm, 299 mm/s)  R=41126 (2617.2 mm, 301 mm/s)  BENCH MOVE
+L=42518 (2705.8 mm, 299 mm/s)  R=42538 (2707.0 mm, 298 mm/s)  BENCH MOVE
+L=43931 (2795.7 mm, 299 mm/s)  R=43951 (2797.0 mm, 300 mm/s)  BENCH MOVE
+L=45311 (2883.5 mm, 275 mm/s)  R=45330 (2884.7 mm, 274 mm/s)  BENCH MOVE
+L=46321 (2947.8 mm, 176 mm/s)  R=46327 (2948.2 mm, 176 mm/s)  BENCH MOVE
+L=46876 (2983.1 mm, 82 mm/s)  R=46868 (2982.6 mm, 77 mm/s)  BENCH MOVE
+L=46979 (2989.6 mm, 4 mm/s)  R=46994 (2990.6 mm, 21 mm/s)  BENCH SETTLE
+L=47020 (2992.3 mm, 13 mm/s)  R=47041 (2993.6 mm, 5 mm/s)  BENCH SETTLE
+DONE L=998.0 R=998.7 sync_max=3.2 t=4900
+L=47044 (2993.8 mm, 1 mm/s)  R=47072 (2995.6 mm, -1 mm/s)  IDLE OFF
+L=47044 (2993.8 mm, 0 mm/s)  R=47072 (2995.6 mm, 0 mm/s)  IDLE OFF
+L=47044 (2993.8 mm, 0 mm/s)  R=47072 (2995.6 mm, 0 mm/s)  IDLE OFF
+L=47044 (2993.8 mm, 0 mm/s)  R=47072 (2995.6 mm, 0 mm/s)  IDLE OFF
+> D1000
+Move 1000 mm: Vmax 300 mm/s, T 4333 ms
+L=47053 (2994.4 mm, 10 mm/s)  R=47082 (2996.2 mm, 10 mm/s)  BENCH MOVE
+L=47374 (3014.8 mm, 99 mm/s)  R=47392 (3015.9 mm, 116 mm/s)  BENCH MOVE
+L=48090 (3060.4 mm, 182 mm/s)  R=48124 (3062.5 mm, 182 mm/s)  BENCH MOVE
+L=49205 (3131.3 mm, 271 mm/s)  R=49238 (3133.4 mm, 272 mm/s)  BENCH MOVE
+L=50607 (3220.5 mm, 296 mm/s)  R=50646 (3223.0 mm, 297 mm/s)  BENCH MOVE
+L=52004 (3309.4 mm, 298 mm/s)  R=52035 (3311.4 mm, 296 mm/s)  BENCH MOVE
+L=53406 (3398.7 mm, 298 mm/s)  R=53436 (3400.6 mm, 297 mm/s)  BENCH MOVE
+L=54813 (3488.2 mm, 299 mm/s)  R=54842 (3490.0 mm, 299 mm/s)  BENCH MOVE
+L=56224 (3578.0 mm, 300 mm/s)  R=56252 (3579.8 mm, 299 mm/s)  BENCH MOVE
+L=57635 (3667.8 mm, 299 mm/s)  R=57664 (3669.6 mm, 301 mm/s)  BENCH MOVE
+L=59048 (3757.7 mm, 300 mm/s)  R=59076 (3759.5 mm, 300 mm/s)  BENCH MOVE
+L=60462 (3847.7 mm, 299 mm/s)  R=60490 (3849.5 mm, 301 mm/s)  BENCH MOVE
+L=61655 (3923.6 mm, 216 mm/s)  R=61673 (3924.7 mm, 213 mm/s)  BENCH MOVE
+L=62390 (3970.4 mm, 121 mm/s)  R=62399 (3970.9 mm, 118 mm/s)  BENCH MOVE
+L=62657 (3987.4 mm, 15 mm/s)  R=62664 (3987.8 mm, 20 mm/s)  BENCH MOVE
+L=62689 (3989.4 mm, 12 mm/s)  R=62742 (3992.8 mm, 38 mm/s)  BENCH SETTLE
+L=62718 (3991.2 mm, 2 mm/s)  R=62773 (3994.7 mm, -1 mm/s)  BENCH SETTLE
+DONE L=998.4 R=999.2 sync_max=3.1 t=4940
+L=62730 (3992.0 mm, 0 mm/s)  R=62773 (3994.7 mm, 0 mm/s)  IDLE OFF
+L=62730 (3992.0 mm, 0 mm/s)  R=62773 (3994.7 mm, 0 mm/s)  IDLE OFF
+> a
+Auto print OFF
+> I
+MR2006B fw 0.1-phase0 3c8afed calib=0
+reset cause 0x02, tick 1000.0 Hz, cpu 0.4 %
+S_CTRL max 177 us, overruns 0; S_FAST max 8 us
+S_CTRL period min 19999 max 20001 mean 20000.0 us n 2266; tick isr max 2.6 us
+boot failures 0x0000, par generation 0, m/cnt 63638 nm

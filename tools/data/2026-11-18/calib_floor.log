@@ -1,0 +1,2923 @@
+ERR unknown, ? for help
+# L wheel,fwd_cnt,rev_cnt,fwd_latency_ms,rev_latency_ms (motor-side counts and time to the first count in the c> PWM 25 0
+L=32361 (2059.4 mm, 147 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L=33071 (2104.6 mm, 152 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L=33783 (2149.9 mm, 152 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+> s
+L=34096 (2169.8 mm, 1 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB HOLD
+> PWM -25 0
+L=34096 (2169.8 mm, 0 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L=33631 (2140.2 mm, -154 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L=32887 (2092.9 mm, -157 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L=32140 (2045.3 mm, -158 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L,L,2047,-2205,80,40
+> s
+L=31811 (2024.4 mm, -1 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB HOLD
+> PWM 0 25
+L=31811 (2024.4 mm, 0 mm/s)  R=35455 (2256.3 mm, 0 mm/s)  CALIB OPEN
+L=31811 (2024.4 mm, 0 mm/s)  R=35911 (2285.3 mm, 162 mm/s)  CALIB OPEN
+L=31811 (2024.4 mm, 0 mm/s)  R=36715 (2336.5 mm, 172 mm/s)  CALIB OPEN
+L=31811 (2024.4 mm, 0 mm/s)  R=37526 (2388.1 mm, 172 mm/s)  CALIB OPEN
+> s
+L=31811 (2024.4 mm, 0 mm/s)  R=37888 (2411.1 mm, 1 mm/s)  CALIB HOLD
+> PWM 0 -25
+L=31811 (2024.4 mm, 0 mm/s)  R=37888 (2411.1 mm, 0 mm/s)  CALIB OPEN
+L=31811 (2024.4 mm, 0 mm/s)  R=37552 (2389.7 mm, -130 mm/s)  CALIB OPEN
+L=31811 (2024.4 mm, 0 mm/s)  R=36889 (2347.5 mm, -142 mm/s)  CALIB OPEN
+L=31811 (2024.4 mm, 0 mm/s)  R=36216 (2304.7 mm, -143 mm/s)  CALIB OPEN
+L,R,2342,-1897,60,80
+> s
+L=31811 (2024.4 mm, 0 mm/s)  R=35918 (2285.7 mm, -1 mm/s)  CALIB HOLD
+DONE L
+# G duty_pct,v_l_mm_s,v_r_mm_s (mean of the second half of each step; ffit.py steady reads the status lines)
+> 15
+L=31966 (2034.3 mm, 52 mm/s)  R=36083 (2296.2 mm, 59 mm/s)  CALIB OPEN
+L=32228 (2050.9 mm, 57 mm/s)  R=36400 (2316.4 mm, 71 mm/s)  CALIB OPEN
+L=32510 (2068.9 mm, 62 mm/s)  R=36746 (2338.4 mm, 75 mm/s)  CALIB OPEN
+L=32802 (2087.5 mm, 63 mm/s)  R=37100 (2361.0 mm, 76 mm/s)  CALIB OPEN
+L=33093 (2106.0 mm, 61 mm/s)  R=37459 (2383.8 mm, 76 mm/s)  CALIB OPEN
+L=33382 (2124.4 mm, 61 mm/s)  R=37812 (2406.3 mm, 75 mm/s)  CALIB OPEN
+L=33672 (2142.8 mm, 61 mm/s)  R=38169 (2429.0 mm, 76 mm/s)  CALIB OPEN
+L=33961 (2161.2 mm, 62 mm/s)  R=38526 (2451.7 mm, 76 mm/s)  CALIB OPEN
+L=34252 (2179.7 mm, 62 mm/s)  R=38888 (2474.8 mm, 78 mm/s)  CALIB OPEN
+L=34536 (2197.8 mm, 60 mm/s)  R=39235 (2496.8 mm, 72 mm/s)  CALIB OPEN
+L=34823 (2216.1 mm, 62 mm/s)  R=39588 (2519.3 mm, 76 mm/s)  CALIB OPEN
+L=35113 (2234.5 mm, 62 mm/s)  R=39943 (2541.9 mm, 76 mm/s)  CALIB OPEN
+L=35401 (2252.8 mm, 60 mm/s)  R=40303 (2564.8 mm, 75 mm/s)  CALIB OPEN
+L=35685 (2270.9 mm, 60 mm/s)  R=40657 (2587.3 mm, 75 mm/s)  CALIB OPEN
+L=35973 (2289.2 mm, 61 mm/s)  R=41015 (2610.1 mm, 76 mm/s)  CALIB OPEN
+L=36266 (2307.9 mm, 63 mm/s)  R=41378 (2633.2 mm, 77 mm/s)  CALIB OPEN
+L=36555 (2326.3 mm, 61 mm/s)  R=41741 (2656.3 mm, 76 mm/s)  CALIB OPEN
+L=36841 (2344.5 mm, 60 mm/s)  R=42098 (2679.0 mm, 76 mm/s)  CALIB OPEN
+L=37130 (2362.9 mm, 61 mm/s)  R=42458 (2701.9 mm, 77 mm/s)  CALIB OPEN
+G,15,61,76
+> s
+L=37421 (2381.4 mm, 61 mm/s)  R=42820 (2725.0 mm, 76 mm/s)  CALIB HOLD
+L=37446 (2383.0 mm, 0 mm/s)  R=42857 (2727.3 mm, 0 mm/s)  CALIB HOLD
+L=37446 (2383.0 mm, 0 mm/s)  R=42857 (2727.3 mm, 0 mm/s)  CALIB HOLD
+L=37446 (2383.0 mm, 0 mm/s)  R=42857 (2727.3 mm, 0 mm/s)  CALIB HOLD
+L=37446 (2383.0 mm, 0 mm/s)  R=42857 (2727.3 mm, 0 mm/s)  CALIB HOLD
+> -15
+L=37446 (2383.0 mm, 0 mm/s)  R=42857 (2727.3 mm, 0 mm/s)  CALIB OPEN
+L=37232 (2369.4 mm, -62 mm/s)  R=42790 (2723.1 mm, -25 mm/s)  CALIB OPEN
+L=36949 (2351.4 mm, -60 mm/s)  R=42683 (2716.3 mm, -19 mm/s)  CALIB OPEN
+L=36643 (2331.9 mm, -70 mm/s)  R=42637 (2713.3 mm, -3 mm/s)  CALIB OPEN
+L=36292 (2309.6 mm, -75 mm/s)  R=42629 (2712.8 mm, 0 mm/s)  CALIB OPEN
+L=35939 (2287.1 mm, -75 mm/s)  R=42629 (2712.8 mm, 0 mm/s)  CALIB OPEN
+L=35581 (2264.3 mm, -75 mm/s)  R=42629 (2712.8 mm, 0 mm/s)  CALIB OPEN
+L=35219 (2241.3 mm, -77 mm/s)  R=42625 (2712.6 mm, -6 mm/s)  CALIB OPEN
+L=34848 (2217.7 mm, -79 mm/s)  R=42566 (2708.8 mm, -14 mm/s)  CALIB OPEN
+L=34483 (2194.4 mm, -75 mm/s)  R=42501 (2704.7 mm, -14 mm/s)  CALIB OPEN
+L=34122 (2171.5 mm, -77 mm/s)  R=42429 (2700.1 mm, -16 mm/s)  CALIB OPEN
+L=33759 (2148.4 mm, -77 mm/s)  R=42355 (2695.4 mm, -17 mm/s)  CALIB OPEN
+L=33394 (2125.1 mm, -77 mm/s)  R=42276 (2690.4 mm, -18 mm/s)  CALIB OPEN
+L=33024 (2101.6 mm, -78 mm/s)  R=42191 (2685.0 mm, -19 mm/s)  CALIB OPEN
+L=32657 (2078.2 mm, -77 mm/s)  R=42106 (2679.5 mm, -17 mm/s)  CALIB OPEN
+L=32295 (2055.2 mm, -76 mm/s)  R=42020 (2674.1 mm, -17 mm/s)  CALIB OPEN
+L=31929 (2031.9 mm, -78 mm/s)  R=41931 (2668.4 mm, -19 mm/s)  CALIB OPEN
+L=31555 (2008.1 mm, -80 mm/s)  R=41835 (2662.3 mm, -20 mm/s)  CALIB OPEN
+L=31181 (1984.3 mm, -78 mm/s)  R=41739 (2656.2 mm, -20 mm/s)  CALIB OPEN
+L=30816 (1961.1 mm, -79 mm/s)  R=41648 (2650.4 mm, -20 mm/s)  CALIB OPEN
+G,-15,-78,-18
+> s
+L=30445 (1937.5 mm, -79 mm/s)  R=41557 (2644.6 mm, -19 mm/s)  CALIB HOLD
+L=30414 (1935.5 mm, 0 mm/s)  R=41555 (2644.5 mm, 0 mm/s)  CALIB HOLD
+L=30414 (1935.5 mm, 0 mm/s)  R=41555 (2644.5 mm, 0 mm/s)  CALIB HOLD
+L=30414 (1935.5 mm, 0 mm/s)  R=41555 (2644.5 mm, 0 mm/s)  CALIB HOLD
+L=30414 (1935.5 mm, 0 mm/s)  R=41555 (2644.5 mm, 0 mm/s)  CALIB HOLD
+> 20
+L=30414 (1935.5 mm, 0 mm/s)  R=41555 (2644.5 mm, 0 mm/s)  CALIB OPEN
+L=30722 (1955.1 mm, 98 mm/s)  R=41843 (2662.8 mm, 96 mm/s)  CALIB OPEN
+  CALIB OPEN
+L=32606 (2075.0 mm, 106 mm/s)  R=44167 (2810.7 mm, 129 mm/s)  CALIB OPEN
+L=33105 (2106.7 mm, 107 mm/s)  R=44763 (2848.6 mm, 127 mm/s)  CALIB OPEN
+L=33608 (2138.7 mm, 106 mm/s)  R=45367 (2887.1 mm, 130 mm/s)  CALIB OPEN
+L=34111 (2170.8 mm, 106 mm/s)  R=45969 (2925.4 mm, 127 mm/s)  CALIB OPEN
+L=34617 (2203.0 mm, 107 mm/s)  R=46568 (2963.5 mm, 126 mm/s)  CALIB OPEN
+L=35123 (2235.2 mm, 107 mm/s)  R=47168 (3001.7 mm, 127 mm/s)  CALIB OPEN
+L=35627 (2267.2 mm, 106 mm/s)  R=47756 (3039.1 mm, 120 mm/s)  CALIB OPEN
+L=36092 (2296.8 mm, 95 mm/s)  R=48247 (3070.3 mm, 94 mm/s)  CALIB OPEN
+L=36506 (2323.2 mm, 80 mm/s)  R=48619 (3094.0 mm, 84 mm/s)  CALIB OPEN
+L=36917 (2349.3 mm, 92 mm/s)  R=49061 (3122.1 mm, 105 mm/s)  CALIB OPEN
+L=37342 (2376.4 mm, 92 mm/s)  R=49575 (3154.9 mm, 114 mm/s)  CALIB OPEN
+L=37778 (2404.1 mm, 94 mm/s)  R=50096 (3188.0 mm, 109 mm/s)  CALIB OPEN
+L=38228 (2432.8 mm, 96 mm/s)  R=50614 (3221.0 mm, 112 mm/s)  CALIB OPEN
+L=38690 (2462.2 mm, 98 mm/s)  R=51141 (3254.5 mm, 112 mm/s)  CALIB OPEN
+L=39148 (2491.3 mm, 98 mm/s)  R=51669 (3288.1 mm, 112 mm/s)  CALIB OPEN
+G,20,95,107
+> s
+L=39604 (2520.3 mm, 96 mm/s)  R=52196 (3321.6 mm, 112 mm/s)  CALIB HOLD
+L=39642 (2522.7 mm, 0 mm/s)  R=52244 (3324.7 mm, 0 mm/s)  CALIB HOLD
+> s
+STOP
+# G duty_pct,v_l_mm_s,v_r_mm_s (mean of the second half of each step; ffit.py steady reads the status lines)
+> 15
+L=39815 (2533.7 mm, 59 mm/s)  R=52425 (3336.2 mm, 66 mm/s)  CALIB OPEN
+L=40106 (2552.3 mm, 63 mm/s)  R=52776 (3358.6 mm, 76 mm/s)  CALIB OPEN
+L=40404 (2571.2 mm, 64 mm/s)  R=53140 (3381.7 mm, 78 mm/s)  CALIB OPEN
+L=40702 (2590.2 mm, 64 mm/s)  R=53505 (3405.0 mm, 77 mm/s)  CALIB OPEN
+L=40994 (2608.8 mm, 63 mm/s)  R=53861 (3427.6 mm, 76 mm/s)  CALIB OPEN
+L=41286 (2627.4 mm, 63 mm/s)  R=54220 (3450.5 mm, 76 mm/s)  CALIB OPEN
+L=41580 (2646.1 mm, 62 mm/s)  R=54584 (3473.6 mm, 77 mm/s)  CALIB OPEN
+L=41872 (2664.7 mm, 61 mm/s)  R=54948 (3496.8 mm, 77 mm/s)  CALIB OPEN
+L=42161 (2683.0 mm, 61 mm/s)  R=55308 (3519.7 mm, 76 mm/s)  CALIB OPEN
+L=42451 (2701.5 mm, 62 mm/s)  R=55671 (3542.8 mm, 78 mm/s)  CALIB OPEN
+L=42738 (2719.8 mm, 60 mm/s)  R=56039 (3566.2 mm, 78 mm/s)  CALIB OPEN
+L=43026 (2738.1 mm, 60 mm/s)  R=56404 (3589.4 mm, 76 mm/s)  CALIB OPEN
+L=43314 (2756.4 mm, 61 mm/s)  R=56766 (3612.5 mm, 77 mm/s)  CALIB OPEN
+L=43605 (2774.9 mm, 62 mm/s)  R=57129 (3635.6 mm, 78 mm/s)  CALIB OPEN
+L=43894 (2793.3 mm, 61 mm/s)  R=57485 (3658.2 mm, 76 mm/s)  CALIB OPEN
+L=44180 (2811.5 mm, 60 mm/s)  R=57842 (3680.9 mm, 76 mm/s)  CALIB OPEN
+L=44470 (2830.0 mm, 61 mm/s)  R=58201 (3703.8 mm, 77 mm/s)  CALIB OPEN
+L=44763 (2848.6 mm, 63 mm/s)  R=58566 (3727.0 mm, 79 mm/s)  CALIB OPEN
+L=45055 (2867.2 mm, 63 mm/s)  R=58931 (3750.3 mm, 77 mm/s)  CALIB OPEN
+G,15,61,77
+> s
+L=45342 (2885.5 mm, 62 mm/s)  R=59293 (3773.3 mm, 77 mm/s)  CALIB HOLD
+L=45362 (2886.7 mm, 0 mm/s)  R=59328 (3775.5 mm, 0 mm/s)  CALIB HOLD
+L=45362 (2886.7 mm, 0 mm/s)  R=59328 (3775.5 mm, 0 mm/s)  CALIB HOLD
+L=45362 (2886.7 mm, 0 mm/s)  R=59328 (3775.5 mm, 0 mm/s)  CALIB HOLD
+L=45362 (2886.7 mm, 0 mm/s)  R=59328 (3775.5 mm, 0 mm/s)  CALIB HOLD
+> -15
+L=45362 (2886.7 mm, 0 mm/s)  R=59328 (3775.5 mm, 0 mm/s)  CALIB OPEN
+L=45139 (2872.6 mm, -63 mm/s)  R=59268 (3771.7 mm, -24 mm/s)  CALIB OPEN
+L=44848 (2854.0 mm, -60 mm/s)  R=59162 (3765.0 mm, -19 mm/s)  CALIB OPEN
+L=44542 (2834.6 mm, -70 mm/s)  R=59131 (3763.0 mm, 0 mm/s)  CALIB OPEN
+L=44198 (2812.7 mm, -74 mm/s)  R=59131 (3763.0 mm, 0 mm/s)  CALIB OPEN
+L=43836 (2789.6 mm, -77 mm/s)  R=59131 (3763.0 mm, 0 mm/s)  CALIB OPEN
+L=43471 (2766.4 mm, -78 mm/s)  R=59125 (3762.6 mm, -7 mm/s)  CALIB OPEN
+L=43105 (2743.1 mm, -75 mm/s)  R=59073 (3759.3 mm, -12 mm/s)  CALIB OPEN
+L=42744 (2720.1 mm, -78 mm/s)  R=59007 (3755.1 mm, -13 mm/s)  CALIB OPEN
+L=42377 (2696.8 mm, -79 mm/s)  R=58939 (3750.8 mm, -15 mm/s)  CALIB OPEN
+L=42007 (2673.2 mm, -77 mm/s)  R=58864 (3746.0 mm, -16 mm/s)  CALIB OPEN
+L=41639 (2649.8 mm, -79 mm/s)  R=58785 (3741.0 mm, -17 mm/s)  CALIB OPEN
+L=41272 (2626.5 mm, -77 mm/s)  R=58703 (3735.7 mm, -18 mm/s)  CALIB OPEN
+L=40909 (2603.4 mm, -77 mm/s)  R=58620 (3730.5 mm, -18 mm/s)  CALIB OPEN
+L=40545 (2580.2 mm, -77 mm/s)  R=58537 (3725.2 mm, -19 mm/s)  CALIB OPEN
+L=40178 (2556.8 mm, -77 mm/s)  R=58452 (3719.8 mm, -17 mm/s)  CALIB OPEN
+L=39805 (2533.1 mm, -80 mm/s)  R=58363 (3714.1 mm, -19 mm/s)  CALIB OPEN
+L=39443 (2510.1 mm, -76 mm/s)  R=58272 (3708.3 mm, -19 mm/s)  CALIB OPEN
+L=39078 (2486.8 mm, -77 mm/s)  R=58183 (3702.6 mm, -19 mm/s)  CALIB OPEN
+L=38705 (2463.1 mm, -79 mm/s)  R=58091 (3696.8 mm, -20 mm/s)  CALIB OPEN
+G,-15,-78,-18
+> s
+L=38333 (2439.4 mm, -79 mm/s)  R=58000 (3691.0 mm, -20 mm/s)  CALIB HOLD
+L=38298 (2437.2 mm, 0 mm/s)  R=57994 (3690.6 mm, 0 mm/s)  CALIB HOLD
+L=38298 (2437.2 mm, 0 mm/s)  R=57994 (3690.6 mm, 0 mm/s)  CALIB HOLD
+L=38298 (2437.2 mm, 0 mm/s)  R=57994 (3690.6 mm, 0 mm/s)  CALIB HOLD
+L=38298 (2437.2 mm, 0 mm/s)  R=57994 (3690.6 mm, 0 mm/s)  CALIB HOLD
+> 20
+L=38298 (2437.2 mm, 0 mm/s)  R=57994 (3690.6 mm, 0 mm/s)  CALIB OPEN
+L=38603 (2456.6 mm, 99 mm/s)  R=58292 (3709.6 mm, 100 mm/s)  CALIB OPEN
+L=39037 (2484.2 mm, 93 mm/s)  R=58832 (3744.0 mm, 124 mm/s)  CALIB OPEN
+L=39504 (2514.0 mm, 102 mm/s)  R=59438 (3782.5 mm, 130 mm/s)  CALIB OPEN
+L=39996 (2545.3 mm, 105 mm/s)  R=60045 (3821.1 mm, 128 mm/s)  CALIB OPEN
+L=40489 (2576.6 mm, 105 mm/s)  R=60648 (3859.5 mm, 129 mm/s)  CALIB OPEN
+L=40987 (2608.3 mm, 105 mm/s)  R=61246 (3897.6 mm, 127 mm/s)  CALIB OPEN
+L=41486 (2640.1 mm, 105 mm/s)  R=61848 (3935.9 mm, 128 mm/s)  CALIB OPEN
+L=41991 (2672.2 mm, 108 mm/s)  R=62454 (3974.4 mm, 129 mm/s)  CALIB OPEN
+L=42494 (2704.2 mm, 106 mm/s)  R=63061 (4013.1 mm, 128 mm/s)  CALIB OPEN
+L=42996 (2736.2 mm, 106 mm/s)  R=63670 (4051.8 mm, 129 mm/s)  CALIB OPEN
+L=43502 (2768.4 mm, 106 mm/s)  R=64278 (4090.5 mm, 128 mm/s)  CALIB OPEN
+L=44007 (2800.5 mm, 107 mm/s)  R=64874 (4128.5 mm, 126 mm/s)  CALIB OPEN
+L=44511 (2832.6 mm, 106 mm/s)  R=65471 (4166.4 mm, 127 mm/s)  CALIB OPEN
+L=45014 (2864.6 mm, 107 mm/s)  R=66068 (4204.4 mm, 127 mm/s)  CALIB OPEN
+L=45519 (2896.7 mm, 108 mm/s)  R=66671 (4242.8 mm, 129 mm/s)  CALIB OPEN
+L=46022 (2928.7 mm, 107 mm/s)  R=67273 (4281.1 mm, 127 mm/s)  CALIB OPEN
+L=46525 (2960.8 mm, 107 mm/s)  R=67875 (4319.4 mm, 127 mm/s)  CALIB OPEN
+L=47026 (2992.6 mm, 106 mm/s)  R=68469 (4357.2 mm, 126 mm/s)  CALIB OPEN
+L=47528 (3024.6 mm, 106 mm/s)  R=69062 (4395.0 mm, 125 mm/s)  CALIB OPEN
+G,20,107,127
+> s
+L=48031 (3056.6 mm, 106 mm/s)  R=69658 (4432.9 mm, 126 mm/s)  CALIB HOLD
+L=48081 (3059.8 mm, 0 mm/s)  R=69727 (4437.3 mm, 0 mm/s)  CALIB HOLD
+L=48081 (3059.8 mm, 0 mm/s)  R=69727 (4437.3 mm, 0 mm/s)  CALIB HOLD
+L=48081 (3059.8 mm, 0 mm/s)  R=69727 (4437.3 mm, 0 mm/s)  CALIB HOLD
+L=48081 (3059.8 mm, 0 mm/s)  R=69727 (4437.3 mm, 0 mm/s)  CALIB HOLD
+> -20
+L=48081 (3059.8 mm, 0 mm/s)  R=69727 (4437.3 mm, 0 mm/s)  CALIB OPEN
+L=47744 (3038.3 mm, -104 mm/s)  R=69503 (4423.0 mm, -87 mm/s)  CALIB OPEN
+L=47256 (3007.3 mm, -103 mm/s)  R=69084 (4396.4 mm, -80 mm/s)  CALIB OPEN
+L=46721 (2973.2 mm, -118 mm/s)  R=68745 (4374.8 mm, -75 mm/s)  CALIB OPEN
+L=46158 (2937.4 mm, -119 mm/s)  R=68371 (4351.0 mm, -82 mm/s)  CALIB OPEN
+L=45593 (2901.4 mm, -119 mm/s)  R=67971 (4325.5 mm, -88 mm/s)  CALIB OPEN
+L=45033 (2865.8 mm, -118 mm/s)  R=67559 (4299.3 mm, -86 mm/s)  CALIB OPEN
+L=44473 (2830.2 mm, -118 mm/s)  R=67147 (4273.1 mm, -89 mm/s)  CALIB OPEN
+L=43915 (2794.7 mm, -118 mm/s)  R=66731 (4246.6 mm, -87 mm/s)  CALIB OPEN
+L=43358 (2759.2 mm, -119 mm/s)  R=66320 (4220.5 mm, -88 mm/s)  CALIB OPEN
+L=42801 (2723.8 mm, -118 mm/s)  R=65906 (4194.1 mm, -88 mm/s)  CALIB OPEN
+L=42245 (2688.4 mm, -118 mm/s)  R=65492 (4167.8 mm, -86 mm/s)  CALIB OPEN
+L=41691 (2653.1 mm, -118 mm/s)  R=65085 (4141.9 mm, -86 mm/s)  CALIB OPEN
+L=41139 (2618.0 mm, -116 mm/s)  R=64677 (4115.9 mm, -86 mm/s)  CALIB OPEN
+L=40591 (2583.1 mm, -117 mm/s)  R=64264 (4089.6 mm, -89 mm/s)  CALIB OPEN
+L=40039 (2548.0 mm, -118 mm/s)  R=63850 (4063.3 mm, -87 mm/s)  CALIB OPEN
+L=39486 (2512.8 mm, -117 mm/s)  R=63432 (4036.7 mm, -89 mm/s)  CALIB OPEN
+L=38935 (2477.7 mm, -118 mm/s)  R=63018 (4010.3 mm, -88 mm/s)  CALIB OPEN
+L=38380 (2442.4 mm, -118 mm/s)  R=62604 (3984.0 mm, -89 mm/s)  CALIB OPEN
+L=37829 (2407.4 mm, -118 mm/s)  R=62196 (3958.0 mm, -86 mm/s)  CALIB OPEN
+G,-20,-117,-87
+> s
+L=37277 (2372.2 mm, -116 mm/s)  R=61786 (3931.9 mm, -88 mm/s)  CALIB HOLD
+L=37220 (2368.6 mm, 0 mm/s)  R=61747 (3929.5 mm, 0 mm/s)  CALIB HOLD
+L=37220 (2368.6 mm, 0 mm/s)  R=61747 (3929.5 mm, 0 mm/s)  CALIB HOLD
+L=37220 (2368.6 mm, 0 mm/s)  R=61747 (3929.5 mm, 0 mm/s)  CALIB HOLD
+L=37220 (2368.6 mm, 0 mm/s)  R=61747 (3929.5 mm, 0 mm/s)  CALIB HOLD
+> 30
+L=37220 (2368.6 mm, 0 mm/s)  R=61747 (3929.5 mm, 0 mm/s)  CALIB OPEN
+L=37699 (2399.1 mm, 176 mm/s)  R=62202 (3958.4 mm, 171 mm/s)  CALIB OPEN
+L=38495 (2449.7 mm, 171 mm/s)  R=63089 (4014.9 mm, 203 mm/s)  CALIB OPEN
+L=39332 (2503.0 mm, 181 mm/s)  R=64064 (4076.9 mm, 206 mm/s)  CALIB OPEN
+L=40187 (2557.4 mm, 183 mm/s)  R=65026 (4138.1 mm, 203 mm/s)  CALIB OPEN
+L=41048 (2612.2 mm, 183 mm/s)  R=65989 (4199.4 mm, 205 mm/s)  CALIB OPEN
+L=41910 (2667.1 mm, 182 mm/s)  R=66954 (4260.8 mm, 205 mm/s)  CALIB OPEN
+L=42769 (2721.7 mm, 182 mm/s)  R=67920 (4322.3 mm, 205 mm/s)  CALIB OPEN
+L=43631 (2776.6 mm, 184 mm/s)  R=68878 (4383.3 mm, 203 mm/s)  CALIB OPEN
+L=44496 (2831.6 mm, 184 mm/s)  R=69838 (4444.4 mm, 202 mm/s)  CALIB OPEN
+L=45361 (2886.7 mm, 183 mm/s)  R=70802 (4505.7 mm, 206 mm/s)  CALIB OPEN
+L=46222 (2941.5 mm, 183 mm/s)  R=71765 (4567.0 mm, 204 mm/s)  CALIB OPEN
+L=47083 (2996.3 mm, 183 mm/s)  R=72724 (4628.0 mm, 204 mm/s)  CALIB OPEN
+L=47948 (3051.3 mm, 184 mm/s)  R=73691 (4689.5 mm, 205 mm/s)  CALIB OPEN
+L=48814 (3106.4 mm, 184 mm/s)  R=74661 (4751.3 mm, 206 mm/s)  CALIB OPEN
+L=49680 (3161.5 mm, 184 mm/s)  R=75627 (4812.8 mm, 204 mm/s)  CALIB OPEN
+L=50549 (3216.8 mm, 186 mm/s)  R=76597 (4874.5 mm, 205 mm/s)  CALIB OPEN
+L=51420 (3272.3 mm, 185 mm/s)  R=77570 (4936.4 mm, 207 mm/s)  CALIB OPEN
+L=52291 (3327.7 mm, 185 mm/s)  R=78545 (4998.4 mm, 207 mm/s)  CALIB OPEN
+L=53161 (3383.1 mm, 185 mm/s)  R=79518 (5060.4 mm, 208 mm/s)  CALIB OPEN
+G,30,184,206
+> s
+L=54032 (3438.5 mm, 184 mm/s)  R=80492 (5122.3 mm, 205 mm/s)  CALIB HOLD
+L=54129 (3444.7 mm, 0 mm/s)  R=80618 (5130.4 mm, 0 mm/s)  CALIB HOLD
+L=54129 (3444.7 mm, 0 mm/s)  R=80618 (5130.4 mm, 0 mm/s)  CALIB HOLD
+L=54129 (3444.7 mm, 0 mm/s)  R=80618 (5130.4 mm, 0 mm/s)  CALIB HOLD
+L=54129 (3444.7 mm, 0 mm/s)  R=80618 (5130.4 mm, 0 mm/s)  CALIB HOLD
+> -30
+L=54129 (3444.7 mm, 0 mm/s)  R=80618 (5130.4 mm, 0 mm/s)  CALIB OPEN
+L=53653 (3414.4 mm, -171 mm/s)  R=80238 (5106.2 mm, -158 mm/s)  CALIB OPEN
+L=52843 (3362.8 mm, -169 mm/s)  R=79451 (5056.1 mm, -153 mm/s)  CALIB OPEN
+L=51963 (3306.8 mm, -192 mm/s)  R=78715 (5009.3 mm, -165 mm/s)  CALIB OPEN
+L=51067 (3249.8 mm, -188 mm/s)  R=77905 (4957.7 mm, -174 mm/s)  CALIB OPEN
+L=50174 (3193.0 mm, -190 mm/s)  R=77077 (4905.0 mm, -177 mm/s)  CALIB OPEN
+L=49282 (3136.2 mm, -191 mm/s)  R=76241 (4851.8 mm, -178 mm/s)  CALIB OPEN
+L=48390 (3079.4 mm, -189 mm/s)  R=75405 (4798.6 mm, -178 mm/s)  CALIB OPEN
+L=47495 (3022.5 mm, -189 mm/s)  R=74558 (4744.7 mm, -180 mm/s)  CALIB OPEN
+L=46597 (2965.3 mm, -190 mm/s)  R=73707 (4690.6 mm, -180 mm/s)  CALIB OPEN
+L=45698 (2908.1 mm, -191 mm/s)  R=72851 (4636.1 mm, -182 mm/s)  CALIB OPEN
+L=44796 (2850.7 mm, -191 mm/s)  R=71998 (4581.8 mm, -179 mm/s)  CALIB OPEN
+L=43893 (2793.3 mm, -191 mm/s)  R=71140 (4527.2 mm, -184 mm/s)  CALIB OPEN
+L=42990 (2735.8 mm, -191 mm/s)  R=70281 (4472.5 mm, -183 mm/s)  CALIB OPEN
+L=42088 (2678.4 mm, -191 mm/s)  R=69424 (4418.0 mm, -181 mm/s)  CALIB OPEN
+L=41183 (2620.8 mm, -191 mm/s)  R=68567 (4363.5 mm, -181 mm/s)  CALIB OPEN
+L=40282 (2563.5 mm, -191 mm/s)  R=67714 (4309.2 mm, -183 mm/s)  CALIB OPEN
+L=39384 (2506.3 mm, -189 mm/s)  R=66860 (4254.8 mm, -181 mm/s)  CALIB OPEN
+L=38486 (2449.2 mm, -191 mm/s)  R=66005 (4200.4 mm, -181 mm/s)  CALIB OPEN
+L=37588 (2392.0 mm, -191 mm/s)  R=65154 (4146.3 mm, -180 mm/s)  CALIB OPEN
+G,-30,-191,-181
+> s
+L=36692 (2335.0 mm, -191 mm/s)  R=64307 (4092.4 mm, -181 mm/s)  CALIB HOLD
+L=36590 (2328.5 mm, 0 mm/s)  R=64201 (4085.6 mm, 0 mm/s)  CALIB HOLD
+L=36590 (2328.5 mm, 0 mm/s)  R=64201 (4085.6 mm, 0 mm/s)  CALIB HOLD
+L=36590 (2328.5 mm, 0 mm/s)  R=64201 (4085.6 mm, 0 mm/s)  CALIB HOLD
+L=36590 (2328.5 mm, 0 mm/s)  R=64201 (4085.6 mm, 0 mm/s)  CALIB HOLD
+> 40
+L=36590 (2328.5 mm, 0 mm/s)  R=64201 (4085.6 mm, 0 mm/s)  CALIB OPEN
+L=37157 (2364.6 mm, 233 mm/s)  R=64763 (4121.4 mm, 231 mm/s)  CALIB OPEN
+L=38339 (2439.8 mm, 242 mm/s)  R=65954 (4197.2 mm, 258 mm/s)  CALIB OPEN
+L=39481 (2512.5 mm, 250 mm/s)  R=67250 (4279.7 mm, 280 mm/s)  CALIB OPEN
+L=40670 (2588.2 mm, 253 mm/s)  R=68549 (4362.3 mm, 274 mm/s)  CALIB OPEN
+L=41868 (2664.4 mm, 255 mm/s)  R=69842 (4444.6 mm, 275 mm/s)  CALIB OPEN
+L=43061 (2740.3 mm, 254 mm/s)  R=71139 (4527.1 mm, 276 mm/s)  CALIB OPEN
+L=44255 (2816.3 mm, 253 mm/s)  R=72430 (4609.3 mm, 274 mm/s)  CALIB OPEN
+L=45450 (2892.3 mm, 254 mm/s)  R=73724 (4691.6 mm, 276 mm/s)  CALIB OPEN
+L=46644 (2968.3 mm, 254 mm/s)  R=75023 (4774.3 mm, 276 mm/s)  CALIB OPEN
+L=47843 (3044.6 mm, 255 mm/s)  R=76321 (4856.9 mm, 277 mm/s)  CALIB OPEN
+L=49045 (3121.1 mm, 255 mm/s)  R=77627 (4940.  CALIB OPEN
+L=50249 (3197.7 mm, 256 mm/s)  R=78937 (5023.4 mm, 279 mm/s)  CALIB OPEN
+L=51455 (3274.5 mm, 256 mm/s)  R=80243 (5106.5 mm, 279 mm/s)  CALIB OPEN
+L=52658 (3351.0 mm, 255 mm/s)  R=81551 (5189.7 mm, 278 mm/s)  CALIB OPEN
+L=53855 (3427.2 mm, 253 mm/s)  R=82852 (5272.5 mm, 274 mm/s)  CALIB OPEN
+L=55054 (3503.5 mm, 255 mm/s)  R=84153 (5355.3 mm, 275 mm/s)  CALIB OPEN
+L=56252 (3579.8 mm, 255 mm/s)  R=85457 (5438.3 mm, 275 mm/s)  CALIB OPEN
+L=57450 (3656.0 mm, 253 mm/s)  R=86761 (5521.3 mm, 277 mm/s)  CALIB OPEN
+L=58656 (3732.8 mm, 256 mm/s)  R=88069 (5604.5 mm, 276 mm/s)  CALIB OPEN
+G,40,255,277
+> s
+L=59859 (3809.3 mm, 255 mm/s)  R=89378 (5687.8 mm, 277 mm/s)  CALIB HOLD
+L=60005 (3818.6 mm, 0 mm/s)  R=89545 (5698.5 mm, 0 mm/s)  CALIB HOLD
+L=60005 (3818.6 mm, 0 mm/s)  R=89545 (5698.5 mm, 0 mm/s)  CALIB HOLD
+L=60005 (3818.6 mm, 0 mm/s)  R=89545 (5698.5 mm, 0 mm/s)  CALIB HOLD
+L=60005 (3818.6 mm, 0 mm/s)  R=89545 (5698.5 mm, 0 mm/s)  CALIB HOLD
+> -40
+L=60005 (3818.6 mm, 0 mm/s)  R=89545 (5698.5 mm, 0 mm/s)  CALIB OPEN
+L=59409 (3780.7 mm, -232 mm/s)  R=89078 (5668.7 mm, -200 mm/s)  CALIB OPEN
+L=58250 (3706.9 mm, -245 mm/s)  R=87942 (5596.5 mm, -241 mm/s)  CALIB OPEN
+L=57063 (3631.4 mm, -262 mm/s)  R=86861 (5527.7 mm, -227 mm/s)  CALIB OPEN
+L=55824 (3552.5 mm, -263 mm/s)  R=85730 (5455.7 mm, -246 mm/s)  CALIB OPEN
+L=54594 (3474.3 mm, -261 mm/s)  R=84555 (5380.9 mm, -251 mm/s)  CALIB OPEN
+L=53361 (3395.8 mm, -263 mm/s)  R=83375 (5305.8 mm, -251 mm/s)  CALIB OPEN
+L=52125 (3317.1 mm, -262 mm/s)  R=82193 (5230.6 mm, -253 mm/s)  CALIB OPEN
+L=50891 (3238.6 mm, -261 mm/s)  R=81001 (5154.7 mm, -252 mm/s)  CALIB OPEN
+L=49660 (3160.3 mm, -261 mm/s)  R=79815 (5079.3 mm, -251 mm/s)  CALIB OPEN
+L=48430 (3082.0 mm, -261 mm/s)  R=78634 (5004.1 mm, -251 mm/s)  CALIB OPEN
+L=47205 (3004.0 mm, -260 mm/s)  R=77451 (4928.8 mm, -251 mm/s)  CALIB OPEN
+L=45980 (2926.1 mm, -261 mm/s)  R=76275 (4854.0 mm, -249 mm/s)  CALIB OPEN
+L=44752 (2847.9 mm, -261 mm/s)  R=75101 (4779.3 mm, -251 mm/s)  CALIB OPEN
+L=43522 (2769.7 mm, -262 mm/s)  R=73916 (4703.9 mm, -252 mm/s)  CALIB OPEN
+L=42288 (2691.1 mm, -263 mm/s)  R=72728 (4628.3 mm, -252 mm/s)  CALIB OPEN
+L=41050 (2612.3 mm, -263 mm/s)  R=71538 (4552.5 mm, -253 mm/s)  CALIB OPEN
+L=39812 (2533.6 mm, -263 mm/s)  R=70340 (4476.3 mm, -255 mm/s)  CALIB OPEN
+L=38576 (2454.9 mm, -263 mm/s)  R=69144 (4400.2 mm, -254 mm/s)  CALIB OPEN
+L=37338 (2376.1 mm, -263 mm/s)  R=67953 (4324.4 mm, -252 mm/s)  CALIB OPEN
+G,-40,-262,-252
+> s
+L=36101 (2297.4 mm, -263 mm/s)  R=66755 (4248.2 mm, -254 mm/s)  CALIB HOLD
+L=35950 (2287.8 mm, 0 mm/s)  R=66596 (4238.0 mm, 0 mm/s)  CALIB HOLD
+L=35950 (2287.8 mm, 0 mm/s)  R=66596 (4238.0 mm, 0 mm/s)  CALIB HOLD
+L=35950 (2287.8 mm, 0 mm/s)  R=66596 (4238.0 mm, 0 mm/s)  CALIB HOLD
+L=35950 (2287.8 mm, 0 mm/s)  R=66596 (4238.0 mm, 0 mm/s)  CALIB HOLD
+> 50
+L=35950 (2287.8 mm, 0 mm/s)  R=66596 (4238.0 mm, 0 mm/s)  CALIB OPEN
+L=36571 (2327.3 mm, 274 mm/s)  R=67197 (4276.3 mm, 263 mm/s)  CALIB OPEN
+L=38012 (2419.0 mm, 310 mm/s)  R=68700 (4371.9 mm, 340 mm/s)  CALIB OPEN
+L=39521 (2515.0 mm, 321 mm/s)  R=70328 (4475.5 mm, 346 mm/s)  CALIB OPEN
+L=41042 (2611.8 mm, 322 mm/s)  R=71952 (4578.9 mm, 342 mm/s)  CALIB OPEN
+L=42566 (2708.8 mm, 323 mm/s)  R=73573 (4682.0 mm, 345 mm/s)  CALIB OPEN
+L=44087 (2805.6 mm, 323 mm/s)  R=75200 (4785.6 mm, 344 mm/s)  CALIB OPEN
+L=45614 (2902.8 mm, 324 mm/s)  R=76825 (4889.0 mm, 346 mm/s)  CALIB OPEN
+L=47142 (3000.0 mm, 325 mm/s)  R=78462 (4993.2 mm, 347 mm/s)  CALIB OPEN
+L=48676 (3097.6 mm, 327 mm/s)  R=80095 (5097.1 mm, 348 mm/s)  CALIB OPEN
+L=50209 (3195.2 mm, 325 mm/s)  R=81734 (5201.4 mm, 349 mm/s)  CALIB OPEN
+L=51740 (3292.6 mm, 326 mm/s)  R=83362 (5305.0 mm, 346 mm/s)  CALIB OPEN
+L=53269 (3389.9 mm, 324 mm/s)  R=84988 (5408.5 mm, 348 mm/s)  CALIB OPEN
+L=54792 (3486.9 mm, 322 mm/s)  R=86611 (5511.8 mm, 342 mm/s)  CALIB OPEN
+L=56317 (3583.9 mm, 324 mm/s)  R=88235 (5615.1 mm, 345 mm/s)  CALIB OPEN
+L=57840 (3680.8 mm, 324 mm/s)  R=89864 (5718.8 mm, 344 mm/s)  CALIB OPEN
+L=59368 (3778.1 mm, 325 mm/s)  R=91490 (5822.2 mm, 346 mm/s)  CALIB OPEN
+L=60894 (3875.2 mm, 323 mm/s)  R=93121 (5926.0 mm, 345 mm/s)  CALIB OPEN
+L=62422 (3972.4 mm, 325 mm/s)  R=94747 (6029.5 mm, 345 mm/s)  CALIB OPEN
+L=63952 (4069.8 mm, 323 mm/s)  R=96377 (6133.2 mm, 346 mm/s)  CALIB OPEN
+G,50,324,345
+> s
+L=65479 (4167.0 mm, 325 mm/s)  R=98002 (6236.7 mm, 346 mm/s)  CALIB HOLD
+L=65671 (4179.2 mm, -1 mm/s)  R=98228 (6251.0 mm, 0 mm/s)  CALIB HOLD
+L=65671 (4179.2 mm, 0 mm/s)  R=98228 (6251.0 mm, 0 mm/s)  CALIB HOLD
+L=65671 (4179.2 mm, 0 mm/s)  R=98228 (6251.0 mm, 0 mm/s)  CALIB HOLD
+L=65671 (4179.2 mm, 0 mm/s)  R=98228 (6251.0 mm, 0 mm/s)  CALIB HOLD
+> -50
+L=65671 (4179.2 mm, 0 mm/s)  R=98228 (6251.0 mm, 0 mm/s)  CALIB OPEN
+L=65031 (4138.4 mm, -270 mm/s)  R=97727 (6219.2 mm, -241 mm/s)  CALIB OPEN
+.2 mm, -300 mm/s)  CALIB OPEN
+L=62001 (3945.6 mm, -334 mm/s)  R=94897 (6039.1 mm, -312 mm/s)  CALIB OPEN
+L=60430 (3845.6 mm, -332 mm/s)  R=93405 (5944.1 mm, -318 mm/s)  CALIB OPEN
+L=58857 (3745.5 mm, -334 mm/s)  R=91894 (5848.0 mm, -321 mm/s)  CALIB OPEN
+L=57284 (3645.4 mm, -334 mm/s)  R=90385 (5751.9 mm, -320 mm/s)  CALIB OPEN
+L=55709 (3545.2 mm, -334 mm/s)  R=88876 (5655.9 mm, -321 mm/s)  CALIB OPEN
+L=54135 (3445.0 mm, -334 mm/s)  R=87362 (5559.5 mm, -321 mm/s)  CALIB OPEN
+L=52562 (3344.9 mm, -333 mm/s)  R=85853 (5463.5 mm, -320 mm/s)  CALIB OPEN
+L=50988 (3244.8 mm, -334 mm/s)  R=84334 (5366.8 mm, -322 mm/s)  CALIB OPEN
+L=49415 (3144.7 mm, -334 mm/s)  R=82820 (5270.5 mm, -321 mm/s)  CALIB OPEN
+L=47842 (3044.6 mm, -333 mm/s)  R=81302 (5173.9 mm, -322 mm/s)  CALIB OPEN
+L=46269 (2944.5 mm, -333 mm/s)  R=79784 (5077.3 mm, -321 mm/s)  CALIB OPEN
+L=44694 (2844.2 mm, -334 mm/s)  R=78268 (4980.8 mm, -322 mm/s)  CALIB OPEN
+L=43121 (2744.1 mm, -334 mm/s)  R=76750 (4884.2 mm, -321 mm/s)  CALIB OPEN
+L=41549 (2644.1 mm, -334 mm/s)  R=75242 (4788.3 mm, -318 mm/s)  CALIB OPEN
+L=39979 (2544.2 mm, -332 mm/s)  R=73726 (4691.8 mm, -321 mm/s)  CALIB OPEN
+L=38407 (2444.1 mm, -334 mm/s)  R=72214 (4595.6 mm, -319 mm/s)  CALIB OPEN
+L=36830 (2343.8 mm, -334 mm/s)  R=70697 (4499.0 mm, -323 mm/s)  CALIB OPEN
+G,-50,-334,-322
+> s
+L=35255 (2243.6 mm, -334 mm/s)  R=69175 (4402.2 mm, -322 mm/s)  CALIB HOLD
+L=35054 (2230.8 mm, 0 mm/s)  R=68969 (4389.0 mm, 0 mm/s)  CALIB HOLD
+L=35054 (2230.8 mm, 0 mm/s)  R=68969 (4389.0 mm, 0 mm/s)  CALIB HOLD
+L=35054 (2230.8 mm, 0 mm/s)  R=68969 (4389.0 mm, 0 mm/s)  CALIB HOLD
+L=35054 (2230.8 mm, 0 mm/s)  R=68969 (4389.0 mm, 0 mm/s)  CALIB HOLD
+> 60
+L=35054 (2230.8 mm, 0 mm/s)  R=68969 (4389.0 mm, 0 mm/s)  CALIB OPEN
+L=35682 (2270.7 mm, 289 mm/s)  R=69571 (4427.4 mm, 276 mm/s)  CALIB OPEN
+L=37423 (2381.5 mm, 378 mm/s)  R=71340 (4539.9 mm, 402 mm/s)  CALIB OPEN
+L=39260 (2498.4 mm, 392 mm/s)  R=73274 (4663.0 mm, 412 mm/s)  CALIB OPEN
+L=41107 (2616.0 mm, 391 mm/s)  R=75214 (4786.5 mm, 411 mm/s)  CALIB OPEN
+L=42958 (2733.8 mm, 392 mm/s)  R=77154 (4909.9 mm, 412 mm/s)  CALIB OPEN
+L=44812 (2851.7 mm, 394 mm/s)  R=79100 (5033.8 mm, 411 mm/s)  CALIB OPEN
+L=46666 (2969.7 mm, 393 mm/s)  R=81044 (5157.5 mm, 414 mm/s)  CALIB OPEN
+L=48523 (3087.9 mm, 395 mm/s)  R=82990 (5281.3 mm, 411 mm/s)  CALIB OPEN
+L=50379 (3206.0 mm, 393 mm/s)  R=84941 (5405.5 mm, 416 mm/s)  CALIB OPEN
+L=52238 (3324.3 mm, 395 mm/s)  R=86891 (5529.6 mm, 413 mm/s)  CALIB OPEN
+L=54094 (3442.4 mm, 393 mm/s)  R=88842 (5653.7 mm, 414 mm/s)  CALIB OPEN
+L=55950 (3560.5 mm, 394 mm/s)  R=90789 (5777.6 mm, 413 mm/s)  CALIB OPEN
+L=57803 (3678.5 mm, 393 mm/s)  R=92740 (5901.8 mm, 413 mm/s)  CALIB OPEN
+L=59658 (3796.5 mm, 393 mm/s)  R=94686 (6025.6 mm, 414 mm/s)  CALIB OPEN
+L=61513 (3914.6 mm, 394 mm/s)  R=96639 (6149.9 mm, 414 mm/s)  CALIB OPEN
+L=63371 (4032.8 mm, 395 mm/s)  R=98589 (6274.0 mm, 414 mm/s)  CALIB OPEN
+L=65228 (4151.0 mm, 394 mm/s)  R=100543 (6398.4 mm, 414 mm/s)  CALIB OPEN
+L=67087 (4269.3 mm, 394 mm/s)  R=102491 (6522.3 mm, 414 mm/s)  CALIB OPEN
+L=68940 (4387.2 mm, 392 mm/s)  R=104438 (6646.2 mm, 412 mm/s)  CALIB OPEN
+G,60,394,413
+> s
+L=70799 (4505.5 mm, 395 mm/s)  R=106384 (6770.1 mm, 414 mm/s)  CALIB HOLD
+L=71037 (4520.7 mm, -1 mm/s)  R=106660 (6787.6 mm, 0 mm/s)  CALIB HOLD
+L=71036 (4520.6 mm, 0 mm/s)  R=106655 (6787.3 mm, 0 mm/s)  CALIB HOLD
+L=71036 (4520.6 mm, 0 mm/s)  R=106655 (6787.3 mm, 0 mm/s)  CALIB HOLD
+L=71036 (4520.6 mm, 0 mm/s)  R=106655 (6787.3 mm, 0 mm/s)  CALIB HOLD
+> -60
+L=71036 (4520.6 mm, 0 mm/s)  R=106655 (6787.3 mm, 0 mm/s)  CALIB OPEN
+L=70378 (4478.7 mm, -291 mm/s)  R=106148 (6755.0 mm, -252 mm/s)  CALIB OPEN
+L=68612 (4366.3 mm, -385 mm/s)  R=104538 (6652.6 mm, -355 mm/s)  CALIB OPEN
+L=66728 (4246.4 mm, -404 mm/s)  R=102743 (6538.4 mm, -388 mm/s)  CALIB OPEN
+L=64823 (4125.2 mm, -404 mm/s)  R=100912 (6421.8 mm, -388 mm/s)  CALIB OPEN
+L=62918 (4004.0 mm, -406 mm/s)  R=99071 (6304.7 mm, -392 mm/s)  CALIB OPEN
+L=61015 (3882.9 mm, -403 mm/s)  R=97232 (6187.7 mm, -389 mm/s)  CALIB OPEN
+L=59109 (3761.6 mm, -404 mm/s)  R=95387 (6070.2 mm, -392 mm/s)  CALIB OPEN
+L=57201 (3640.2 mm, -404 mm/s)  R=93543 (5952.9 mm, -390 mm/s)  CALIB OPEN
+L=55290 (3518.5 mm, -405 mm/s)  R=91689 (5834.9 mm, -394 mm/s)  CALIB OPEN
+L=53381 (3397.1 mm, -404 mm/s)  R=89839 (5717.2 mm, -391 mm/s)  CALIB OPEN
+L=51469 (3275.4 mm, -406 mm/s)  R=87983 (5599.1 mm, -394 mm/s)  CALIB OPEN
+L=49561 (3154.0 mm, -404 mm/s)  R=86137 (5481.6 mm, -391 mm/s)  CALIB OPEN
+L=47651 (3032.4 mm, -405 mm/s)  R=84285 (5363.7 mm, -393 mm/s)  CALIB OPEN
+L=45743 (2911.0 mm, -404 mm/s)  R=82444 (5246.6 mm, -390 mm/s)  CALIB OPEN
+L=43830 (2789.3 mm, -405 mm/s)  R=80595 (5128.9 mm, -391 mm/s)  CALIB OPEN
+L=41922 (2667.8 mm, -405 mm/s)  R=78754 (5011.7 mm, -391 mm/s)  CALIB OPEN
+L=40013 (2546.3 mm, -405 mm/s)  R=76906 (4894.1 mm, -391 mm/s)  CALIB OPEN
+L=38106 (2425.0 mm, -405 mm/s)  R=75066 (4777.1 mm, -390 mm/s)  CALIB OPEN
+L=36196 (2303.4 mm, -406 mm/s)  R=73215 (4659.3 mm, -392 mm/s)  CALIB OPEN
+G,-60,-405,-392
+> s
+L=34287 (2182.0 mm, -406 mm/s)  R=71371 (4541.9 mm, -392 mm/s)  CALIB HOLD
+> s
+STOP
+# G duty_pct,v_l_mm_s,v_r_mm_s (mean of the second half of each step; ffit.py steady reads the status lines)
+> 15
+L=34121 (2171.4 mm, 53 mm/s)  R=71184 (4530.0 mm, 69 mm/s)  CALIB OPEN
+L=34380 (2187.9 mm, 55 mm/s)  R=71546 (4553.0 mm, 77 mm/s)  CALIB OPEN
+L=34653 (2205.2 mm, 59 mm/s)  R=71905 (4575.9 mm, 76 mm/s)  CALIB OPEN
+L=34928 (2222.7 mm, 58 mm/s)  R=72270 (4599.1 mm, 78 mm/s)  CALIB OPEN
+L=35204 (2240.3 mm, 58 mm/s)  R=72633 (4622.2 mm, 76 mm/s)  CALIB OPEN
+L=35476 (2257.6 mm, 57 mm/s)  R=72996 (4645.3 mm, 78 mm/s)  CALIB OPEN
+L=35750 (2275.1 mm, 59 mm/s)  R=73358 (4668.4 mm, 76 mm/s)  CALIB OPEN
+L=36026 (2292.6 mm, 58 mm/s)  R=73725 (4691.7 mm, 77 mm/s)  CALIB OPEN
+L=36303 (2310.3 mm, 59 mm/s)  R=74090 (4714.9 mm, 77 mm/s)  CALIB OPEN
+L=36580 (2327.9 mm, 59 mm/s)  R=74453 (4738.0 mm, 78 mm/s)  CALIB OPEN
+L=36858 (2345.6 mm, 60 mm/s)  R=74819 (4761.3 mm, 77 mm/s)  CALIB OPEN
+L=37137 (2363.3 mm, 59 mm/s)  R=75184 (4784.6 mm, 76 mm/s)  CALIB OPEN
+L=37415 (2381.0 mm, 59 mm/s)  R=75539 (4807.2 mm, 76 mm/s)  CALIB OPEN
+L=37696 (2398.9 mm, 60 mm/s)  R=75901 (4830.2 mm, 78 mm/s)  CALIB OPEN
+L=37978 (2416.8 mm, 60 mm/s)  R=76266 (4853.4 mm, 78 mm/s)  CALIB OPEN
+L=38260 (2434.8 mm, 60 mm/s)  R=76633 (4876.8 mm, 78 mm/s)  CALIB OPEN
+L=38540 (2452.6 mm, 60 mm/s)  R=76996 (4899.9 mm, 77 mm/s)  CALIB OPEN
+L=38820 (2470.4 mm, 59 mm/s)  R=77363 (4923.2 mm, 78 mm/s)  CALIB OPEN
+L=39102 (2488.4 mm, 60 mm/s)  R=77735 (4946.9 mm, 80 mm/s)  CALIB OPEN
+G,15,59,77
+> s
+L=39380 (2506.1 mm, 59 mm/s)  R=78101 (4970.2 mm, 76 mm/s)  CALIB HOLD
+L=39400 (2507.3 mm, 0 mm/s)  R=78132 (4972.2 mm, 0 mm/s)  CALIB HOLD
+L=39400 (2507.3 mm, 0 mm/s)  R=78132 (4972.2 mm, 0 mm/s)  CALIB HOLD
+L=39400 (2507.3 mm, 0 mm/s)  R=78132 (4972.2 mm, 0 mm/s)  CALIB HOLD
+L=39400 (2507.3 mm, 0 mm/s)  R=78132 (4972.2 mm, 0 mm/s)  CALIB HOLD
+> -15
+L=39400 (2507.3 mm, 0 mm/s)  R=78132 (4972.2 mm, 0 mm/s)  CALIB OPEN
+L=39162 (2492.2 mm, -67 mm/s)  R=78072 (4968.3 mm, -25 mm/s)  CALIB OPEN
+L=38846 (2472.1 mm, -67 mm/s)  R=77962 (4961.3 mm, -20 mm/s)  CALIB OPEN
+L=38524 (2451.6 mm, -69 mm/s)  R=77885 (4956.4 mm, -13 mm/s)  CALIB OPEN
+L=38177 (2429.5 mm, -74 mm/s)  R=77871 (4955.6 mm, 0 mm/s)  CALIB OPEN
+L=37812 (2406.3 mm, -79 mm/s)  R=77871 (4955.6 mm, 0 mm/s)  CALIB OPEN
+L=37443 (2382.8 mm, -79 mm/s)  R=77850 (4954.2 mm, -13 mm/s)  CALIB OPEN
+L=37071 (2359.1 mm, -80 mm/s)  R=77776 (4949.5 mm, -18 mm/s)  CALIB OPEN
+L=36699 (2335.5 mm, -80 mm/s)  R=77695 (4944.4 mm, -18 mm/s)  CALIB OPEN
+L=36324 (2311.6 mm, -80 mm/s)  R=77607 (4938.8 mm, -18 mm/s)  CALIB OPEN
+L=35954 (2288.0 mm, -79 mm/s)  R=77519 (4933.2 mm, -18 mm/s)  CALIB OPEN
+L=35585 (2264.6 mm, -79 mm/s)  R=77430 (4927.5 mm, -18 mm/s)  CALIB OPEN
+L=35212 (2240.8 mm, -79 mm/s)  R=77334 (4921.4 mm, -20 mm/s)  CALIB OPEN
+L=34836 (2216.9 mm, -79 mm/s)  R=77239 (4915.3 mm, -19 mm/s)  CALIB OPEN
+L=34467 (2193.4 mm, -79 mm/s)  R=77141 (4909.1 mm, -20 mm/s)  CALIB OPEN
+L=34095 (2169.7 mm, -80 mm/s)  R=77044 (4902.9 mm, -20 mm/s)  CALIB OPEN
+L=33722 (2146.0 mm, -80 mm/s)  R=76944 (4896.6 mm, -21 mm/s)  CALIB OPEN
+L=33353 (2122.5 mm, -79 mm/s)  R=76844 (4890.2 mm, -22 mm/s)  CALIB OPEN
+L=32981 (2098.8 mm, -79 mm/s)  R=76742 (4883.7 mm, -22 mm/s)  CALIB OPEN
+L=32607 (2075.0 mm, -80 mm/s)  R=76639 (4877.2 mm, -22 mm/s)  CALIB OPEN
+G,-15,-79,-21
+> s
+L=32235 (2051.4 mm, -79 mm/s)  R=76539 (4870.8 mm, -21 mm/s)  CALIB HOLD
+L=32203 (2049.3 mm, 0 mm/s)  R=76531 (4870.3 mm, 0 mm/s)  CALIB HOLD
+L=32203 (2049.3 mm, 0 mm/s)  R=76531 (4870.3 mm, 0 mm/s)  CALIB HOLD
+L=32203 (2049.3 mm, 0 mm/s)  R=76531 (4870.3 mm, 0 mm/s)  CALIB HOLD
+L=32203 (2049.3 mm, 0 mm/s)  R=76531 (4870.3 mm, 0 mm/s)  CALIB HOLD
+> 20
+L=32203 (2049.3 mm, 0 mm/s)  R=76531 (4870.3 mm, 0 mm/s)  CALIB OPEN
+L=32512 (2069.0 mm, 100 mm/s)  R=76834 (4889.6 mm, 102 mm/s)  CALIB OPEN
+L=32952 (2097.0 mm, 92 mm/s)  R=77372 (4923.8 mm, 124 mm/s)  CALIB OPEN
+L=33412 (2126.3 mm, 100 mm/s)  R=77980 (4962.5 mm, 128 mm/s)  CALIB OPEN
+L=33894 (2156.9 mm, 103 mm/s)  R=78587 (5001.1 mm, 129 mm/s)  CALIB OPEN
+L=34385 (2188.2 mm, 104 mm/s)  R=79186 (5039.2 mm, 126 mm/s)  CALIB OPEN
+L=34879 (2219.6 mm, 105 mm/s)  R=79785 (5077.4 mm, 127 mm/s)  CALIB OPEN
+L=35375 (2251.2 mm, 104 mm/s)  R=80392 (5116.0 mm, 129 mm/s)  CALIB OPEN
+L=35867 (2282.5 mm, 105 mm/s)  R=80995 (5154.4 mm, 129 mm/s)  CALIB OPEN
+L=36367 (2314.3 mm, 105 mm/s)  R=81604 (5193.1 mm, 129 mm/s)  CALIB OPEN
+L=36864 (2346.0 mm, 106 mm/s)  R=82208 (5231.6 mm, 129 mm/s)  CALIB OPEN
+L=37364 (2377.8 mm, 108 mm/s)  R=82810 (5269.9 mm, 129 mm/s)  CALIB OPEN
+L=37868 (2409.8 mm, 108 mm/s)  R=83413 (5308.2 mm, 128 mm/s)  CALIB OPEN
+L=38371 (2441.9 mm, 106 mm/s)  R=84019 (5346.8 mm, 129 mm/s)  CALIB OPEN
+L=38875 (2473.9 mm, 107 mm/s)  R=84626 (5385.4 mm, 128 mm/s)  CALIB OPEN
+L=39376 (2505.8 mm, 107 mm/s)  R=85233 (5424.1 mm, 128 mm/s)  CALIB OPEN
+L=39880 (2537.9 mm, 106 mm/s)  R=85841 (5462.7 mm, 128 mm/s)  CALIB OPEN
+L=40384 (2570.0 mm, 107 mm/s)  R=86439 (5500.8 mm, 127 mm/s)  CALIB OPEN
+L=40891 (2602.2 mm, 108 mm/s)  R=87043 (5539.2 mm, 128 mm/s)  CALIB OPEN
+L=41395 (2634.3 mm, 106 mm/s)  R=87644 (5577.5 mm, 127 mm/s)  CALIB OPEN
+G,20,107,128
+> s
+L=41901 (2666.5 mm, 107 mm/s)  R=88247 (5615.9 mm, 128 mm/s)  CALIB HOLD
+L=41949 (2669.6 mm, 0 mm/s)  R=88320 (5620.5 mm, 0 mm/s)  CALIB HOLD
+L=41949 (2669.6 mm, 0 mm/s)  R=88320 (5620.5 mm, 0 mm/s)  CALIB HOLD
+L=41949 (2669.6 mm, 0 mm/s)  R=88320 (5620.5 mm, 0 mm/s)  CALIB HOLD
+L=41949 (2669.6 mm, 0 mm/s)  R=88320 (5620.5 mm, 0 mm/s)  CALIB HOLD
+> -20
+L=41949 (2669.6 mm, 0 mm/s)  R=88320 (5620.5 mm, 0 mm/s)  CALIB OPEN
+L=41614 (2648.2 mm, -104 mm/s)  R=88093 (5606.1 mm, -86 mm/s)  CALIB OPEN
+L=41125 (2617.1 mm, -102 mm/s)  R=87664 (5578.8 mm, -86 mm/s)  CALIB OPEN
+L=40619 (2584.9 mm, -114 mm/s)  R=87315 (5556.6 mm, -72 mm/s)  CALIB OPEN
+L=40058 (2549.2 mm, -121 mm/s)  R=86947 (5533.1 mm, -82 mm/s)  CALIB OPEN
+L=39494 (2513.3 mm, -118 mm/s)  R=86555 (5508.2 mm, -85 mm/s)  CALIB OPEN
+L=38937 (2477.9 mm, -118 mm/s)  R=86150 (5482.4 mm, -88 mm/s)  CALIB OPEN
+L=38374 (2442.0 mm, -120 mm/s)  R=85730 (5455.7 mm, -88 mm/s)  CALIB OPEN
+L=37818 (2406.7 mm, -119 mm/s)  R=85316 (5429.3 mm, -89 mm/s)  CALIB OPEN
+L=37262 (2371.3 mm, -118 mm/s)  R=84894 (5402.5 mm, -91 mm/s)  CALIB OPEN
+L=36712 (2336.3 mm, -117 mm/s)  R=84476 (5375.9 mm, -89 mm/s)  CALIB OPEN
+L=36157 (2301.0 mm, -118 mm/s)  R=84061 (5349.5 mm, -88 mm/s)  CALIB OPEN
+L=35605 (2265.8 mm, -116 mm/s)  R=83642 (5322.8 mm, -88 mm/s)  CALIB OPEN
+L=35052 (2230.6 mm, -119 mm/s)  R=83227 (5296.4 mm, -87 mm/s)  CALIB OPEN
+L=34497 (2195.3 mm, -118 mm/s)  R=82811 (5269.9 mm, -89 mm/s)  CALIB OPEN
+L=33944 (2160.1 mm, -118 mm/s)  R=82393 (5243.3 mm, -89 mm/s)  CALIB OPEN
+L=33389 (2124.8 mm, -118 mm/s)  R=81972 (5216.5 mm, -88 mm/s)  CALIB OPEN
+L=32835 (2089.6 mm, -117 mm/s)  R=81547 (5189.5 mm, -91 mm/s)  CALIB OPEN
+L=32280 (2054.2 mm, -117 mm/s)  R=81125 (5162.6 mm, -89 mm/s)  CALIB OPEN
+L=31725 (2018.9 mm, -118 mm/s)  R=80705 (5135.9 mm, -90 mm/s)  CALIB OPEN
+G,-20,-118,-89
+> s
+L=31169 (1983.5 mm, -118 mm/s)  R=80283 (5109.0 mm, -89 mm/s)  CALIB HOLD
+L=31118 (1980.3 mm, 0 mm/s)  R=80243 (5106.5 mm, 0 mm/s)  CALIB HOLD
+L=31118 (1980.3 mm, 0 mm/s)  R=80243 (5106.5 mm, 0 mm/s)  CALIB HOLD
+L=31118 (1980.3 mm, 0 mm/s)  R=80243 (5106.5 mm, 0 mm/s)  CALIB HOLD
+L=31118 (1980.3 mm, 0 mm/s)  R=80243 (5106.5 mm, 0 mm/s)  CALIB HOLD
+> 30
+L=31118 (1980.3 mm, 0 mm/s)  R=80243 (5106.5 mm, 0 mm/s)  CALIB OPEN
+L=31600 (2011.0 mm, 174 mm/s)  R=80709 (5136.2 mm, 171 mm/s)  CALIB OPEN
+L=32429 (2063.7 mm, 171 mm/s)  R=81587 (5192.0 mm, 198 mm/s)  CALIB OPEN
+L=33241 (2115.4 mm, 176 mm/s)  R=82558 (5253.8 mm, 208 mm/s)  CALIB OPEN
+L=34087 (2169.2 mm, 181 mm/s)  R=83531 (5315.7 mm, 207 mm/s)  CALIB OPEN
+L=34944 (2223.8 mm, 183 mm/s)  R=84503 (5377.6 mm, 205 mm/s)  CALIB OPEN
+L=35802 (2278.4 mm, 182 mm/s)  R=85479 (5439.7 mm, 207 mm/s)  CALIB OPEN
+L=36662 (2333.1 mm, 182 mm/s)  R=86447 (5501.3 mm, 205 mm/s)  CALIB OPEN
+L=37525 (2388.0 mm, 184 mm/s)  R=87417 (5563.0 mm, 207 mm/s)  CALIB OPEN
+L=38389 (2443.0 mm, 183 mm/s)  R=88385 (5624.6 mm, 205 mm/s)  CALIB OPEN
+L=39251 (2497.9 mm, 183 mm/s)  R=89359 (5686.6 mm, 207 mm/s)  CALIB OPEN
+L=40112 (2552.6 mm, 183 mm/s)  R=90327 (5748.2 mm, 205 mm/s)  CALIB OPEN
+L=40974 (2607.5 mm, 183 mm/s)  R=91297 (5810.0 mm, 205 mm/s)  CALIB OPEN
+L=41836 (2662.4 mm, 183 mm/s)  R=92269 (5871.8 mm, 206 mm/s)  CALIB OPEN
+L=42697 (2717.2 mm, 183 mm/s)  R=93239 (5933.5 mm, 205 mm/s)  CALIB OPEN
+L=43556 (2771.8 mm, 183 mm/s)  R=94206 (5995.1 mm, 206 mm/s)  CALIB OPEN
+L=44416 (2826.5 mm, 183 mm/s)  R=95174 (6056.7 mm, 204 mm/s)  CALIB OPEN
+L=45276 (2881.3 mm, 181 mm/s)  R=96143 (6118.3 mm, 205 mm/s)  CALIB OPEN
+L=46134 (2935.9 mm, 182 mm/s)  R=97109 (6179.8 mm, 204 mm/s)  CALIB OPEN
+L=46992 (2990.5 mm, 182 mm/s)  R=98076 (6241.4 mm, 206 mm/s)  CALIB OPEN
+G,30,182,205
+> s
+L=47851 (3045.1 mm, 182 mm/s)  R=99043 (6302.9 mm, 206 mm/s)  CALIB HOLD
+L=47945 (3051.1 mm, 0 mm/s)  R=99161 (6310.4 mm, 0 mm/s)  CALIB HOLD
+L=47945 (3051.1 mm, 0 mm/s)  R=99161 (6310.4 mm, 0 mm/s)  CALIB HOLD
+L=47945 (3051.1 mm, 0 mm/s)  R=99161 (6310.4 mm, 0 mm/s)  CALIB HOLD
+L=47945 (3051.1 mm, 0 mm/s)  R=99161 (6310.4 mm, 0 mm/s)  CALIB HOLD
+> -30
+L=47945 (3051.1 mm, 0 mm/s)  R=99159 (6310.3 mm, -3 mm/s)  CALIB OPEN
+L=47450 (3019.6 mm, -174 mm/s)  R=98775 (6285.8 mm, -158 mm/s)  CALIB OPEN
+L=46620 (2966.8 mm, -176 mm/s)  R=97954 (6233.6 mm, -169 mm/s)  CALIB OPEN
+L=45757 (2911.9 mm, -187 mm/s)  R=97169 (6183.6 mm, -162 mm/s)  CALIB OPEN
+L=44854 (2854.4 mm, -191 mm/s)  R=96364 (6132.4 mm, -175 mm/s)  CALIB OPEN
+L=43954 (2797.1 mm, -191 mm/s)  R=95521 (6078.8 mm, -179 mm/s)  CALIB OPEN
+L=43055 (2739.9 mm, -190 mm/s)  R=94674 (6024.9 mm, -182 mm/s)  CALIB OPEN
+L=42158 (2682.9 mm, -192 mm/s)  R=93828 (5971.0 mm, -180 mm/s)  CALIB OPEN
+L=41260 (2625.7 mm, -190 mm/s)  R=92979 (5917.0 mm, -180 mm/s)  CALIB OPEN
+L=40362 (2568.6 mm, -191 mm/s)  R=92124 (5862.6 mm, -182 mm/s)  CALIB OPEN
+L=39466 (2511.5 mm, -191 mm/s)  R=91273 (5808.4 mm, -180 mm/s)  CALIB OPEN
+L=38570 (2454.5 mm, -190 mm/s)  R=90420 (5754.1 mm, -179 mm/s)  CALIB OPEN
+L=37672 (2397.4 mm, -189 mm/s)  R=89569 (5700.0 mm, -180 mm/s)  CALIB OPEN
+L=36775 (2340.3 mm, -189 mm/s)  R=88715 (5645.6 mm, -183 mm/s)  CALIB OPEN
+L=35879 (2283.3 mm, -191 mm/s)  R=87863 (5591.4 mm, -179 mm/s)  CALIB OPEN
+L=34985 (2226.4 mm, -189 mm/s)  R=87009 (5537.1 mm, -180 mm/s)  CALIB OPEN
+L=34088 (2169.3 mm, -189 mm/s)  R=86162 (5483.2 mm, -180 mm/s)  CALIB OPEN
+L=33194 (2112.4 mm, -189 mm/s)  R=85312 (5429.1 mm, -179 mm/s)  CALIB OPEN
+L=32299 (2055.4 mm, -190 mm/s)  R=84459 (5374.8 mm, -179 mm/s)  CALIB OPEN
+L=31405 (1998.6 mm, -189 mm/s)  R=83605 (5320.5 mm, -182 mm/s)  CALIB OPEN
+G,-30,-190,-181
+> s
+L=30509 (1941.5 mm, -190 mm/s)  R=82758 (5266.6 mm, -179 mm/s)  CALIB HOLD
+L=30404 (1934.8 mm, 0 mm/s)  R=82654 (5259.9 mm, 0 mm/s)  CALIB HOLD
+L=30404 (1934.8 mm, 0 mm/s)  R=82654 (5259.9 mm, 0 mm/s)  CALIB HOLD
+L=30404 (1934.8 mm, 0 mm/s)  R=82654 (5259.9 mm, 0 mm/s)  CALIB HOLD
+L=30404 (1934.8 mm, 0 mm/s)  R=82654 (5259.9 mm, 0 mm/s)  CALIB HOLD
+> 40
+L=30404 (1934.8 mm, 0 mm/s)  R=82654 (5259.9 mm, 0 mm/s)  CALIB OPEN
+L=30979 (1971.4 mm, 232 mm/s)  R=83213 (5295.5 mm, 226 mm/s)  CALIB OPEN
+L=32138 (2045.2 mm, 238 mm/s)  R=84398 (5370.9 mm, 261 mm/s)  CALIB OPEN
+L=33284 (2118.1 mm, 248 mm/s)  R=85697 (5453.6 mm, 277 mm/s)  CALIB OPEN
+L=34470 (2193.6 mm, 252 mm/s)  R=86992 (5536.0 mm, 274 mm/s)  CALIB OPEN
+L=35659 (2269.  R=88291 (5618.L=36851 (2345.1 mm, 252 mm/s)  R=89590 (5701.3 mm, 275 mm/s)  CALIB OPEN
+L=38047 (2421.2 mm, 254 mm/s)  R=90882 (5783.5 mm, 275 mm/s)  CALIB OPEN
+L=39242 (2497.3 mm, 254 mm/s)  R=92182 (5866.3 mm, 277 mm/s)  CALIB OPEN
+L=40436 (2573.3 mm, 253 mm/s)  R=93480 (5948.9 mm, 275 mm/s)  CALIB OPEN
+L=41635 (2649.6 mm, 255 mm/s)  R=94776 (6031.4 mm, 276 mm/s)  CALIB OPEN
+L=42831 (2725.7 mm, 253 mm/s)  R=96075 (6114.0 mm, 275 mm/s)  CALIB OPEN
+L=44026 (2801.7 mm, 253 mm/s)  R=97371 (6196.5 mm, 274 mm/s)  CALIB OPEN
+L=45222 (2877.8 mm, 254 mm/s)  R=98666 (6278.9 mm, 275 mm/s)  CALIB OPEN
+L=46416 (2953.8 mm, 252 mm/s)  R=99965 (6361.6 mm, 276 mm/s)  CALIB OPEN
+L=47610 (3029.8 mm, 254 mm/s)  R=101262 (6444.1 mm, 276 mm/s)  CALIB OPEN
+L=48810 (3106.2 mm, 255 mm/s)  R=102564 (6527.0 mm, 277 mm/s)  CALIB OPEN
+L=50010 (3182.5 mm, 255 mm/s)  R=103874 (6610.3 mm, 278 mm/s)  CALIB OPEN
+L=51216 (3259.3 mm, 257 mm/s)  R=105182 (6693.6 mm, 278 mm/s)  CALIB OPEN
+L=52423 (3336.1 mm, 256 mm/s)  R=106488 (6776.7 mm, 279 mm/s)  CALIB OPEN
+G,40,254,276
+> s
+L=53622 (3412.4 mm, 255 mm/s)  R=107794 (6859.8 mm, 277 mm/s)  CALIB HOLD
+L=53765 (3421.5 mm, 0 mm/s)  R=107956 (6870.1 mm, -1 mm/s)  CALIB HOLD
+L=53765 (3421.5 mm, 0 mm/s)  R=107956 (6870.1 mm, 0 mm/s)  CALIB HOLD
+L=53765 (3421.5 mm, 0 mm/s)  R=107956 (6870.1 mm, 0 mm/s)  CALIB HOLD
+L=53765 (3421.5 mm, 0 mm/s)  R=107956 (6870.1 mm, 0 mm/s)  CALIB HOLD
+> -40
+L=53765 (3421.5 mm, 0 mm/s)  R=107956 (6870.1 mm, 0 mm/s)  CALIB OPEN
+L=53169 (3383.6 mm, -232 mm/s)  R=107494 (6840.7 mm, -203 mm/s)  CALIB OPEN
+L=51985 (3308.2 mm, -254 mm/s)  R=106359 (6768.5 mm, -238 mm/s)  CALIB OPEN
+L=50771 (3231.0 mm, -256 mm/s)  R=105276 (6699.6 mm, -226 mm/s)  CALIB OPEN
+L=49582 (3155.3 mm, -256 mm/s)  R=104147 (6627.7 mm, -247 mm/s)  CALIB OPEN
+L=48366 (3077.9 mm, -259 mm/s)  R=102967 (6552.6 mm, -250 mm/s)  CALIB OPEN
+L=47148 (3000.4 mm, -260 mm/s)  R=101793 (6477.9 mm, -248 mm/s)  CALIB OPEN
+L=45924 (2922.5 mm, -261 mm/s)  R=100623 (6403.4 mm, -248 mm/s)  CALIB OPEN
+L=44697 (2844.4 mm, -261 mm/s)  R=99440 (6328.2 mm, -251 mm/s)  CALIB OPEN
+L=43467 (2766.2 mm, -261 mm/s)  R=98254 (6252.7 mm, -251 mm/s)  CALIB OPEN
+L=42234 (2687.7 mm, -262 mm/s)  R=97069 (6177.3 mm, -251 mm/s)  CALIB OPEN
+L=41000 (2609.2 mm, -261 mm/s)  R=95878 (6101.5 mm, -252 mm/s)  CALIB OPEN
+L=39768 (2530.8 mm, -262 mm/s)  R=94687 (6025.7 mm, -251 mm/s)  CALIB OPEN
+L=38536 (2452.4 mm, -263 mm/s)  R=93502 (5950.3 mm, -250 mm/s)  CALIB OPEN
+L=37304 (2374.0 mm, -261 mm/s)  R=92313 (5874.6 mm, -251 mm/s)  CALIB OPEN
+L=36074 (2295.7 mm, -261 mm/s)  R=91126 (5799.1 mm, -251 mm/s)  CALIB OPEN
+L=34843 (2217.3 mm, -263 mm/s)  R=89943 (5723.8 mm, -249 mm/s)  CALIB OPEN
+L=33614 (2139.1 mm, -260 mm/s)  R=88756 (5648.3 mm, -250 mm/s)  CALIB OPEN
+L=32385 (2060.9 mm, -260 mm/s)  R=87568 (5572.7 mm, -251 mm/s)  CALIB OPEN
+L=31154 (1982.6 mm, -261 mm/s)  R=86384 (5497.3 mm, -250 mm/s)  CALIB OPEN
+G,-40,-261,-252
+> s
+L=29924 (1904.3 mm, -261 mm/s)  R=85194 (5421.6 mm, -252 mm/s)  CALIB HOLD
+L=29775 (1894.8 mm, 0 mm/s)  R=85043 (5412.0 mm, 1 mm/s)  CALIB HOLD
+L=29775 (1894.8 mm, 0 mm/s)  R=85043 (5412.0 mm, 0 mm/s)  CALIB HOLD
+L=29775 (1894.8 mm, 0 mm/s)  R=85043 (5412.0 mm, 0 mm/s)  CALIB HOLD
+L=29775 (1894.8 mm, 0 mm/s)  R=85043 (5412.0 mm, 0 mm/s)  CALIB HOLD
+> 50
+L=29775 (1894.8 mm, 0 mm/s)  R=85043 (5412.0 mm, 0 mm/s)  CALIB OPEN
+L=30395 (1934.3 mm, 273 mm/s)  R=85649 (5450.5 mm, 270 mm/s)  CALIB OPEN
+L=31874 (2028.4 mm, 311 mm/s)  R=87165 (5547.0 mm, 334 mm/s)  CALIB OPEN
+L=33385 (2124.6 mm, 324 mm/s)  R=88781 (5649.8 mm, 341 mm/s)  CALIB OPEN
+L=34889 (2220.3 mm, 317 mm/s)  R=90368 (5750.8 mm, 344 mm/s)  CALIB OPEN
+L=36405 (2316.7 mm, 323 mm/s)  R=92000 (5854.7 mm, 346 mm/s)  CALIB OPEN
+L=37929 (2413.7 mm, 324 mm/s)  R=93625 (5958.1 mm, 343 mm/s)  CALIB OPEN
+L=39451 (2510.6 mm, 323 mm/s)  R=95249 (6061.5 mm, 344 mm/s)  CALIB OPEN
+L=40972 (2607.4 mm, 322 mm/s)  R=96875 (6164.9 mm, 344 mm/s)  CALIB OPEN
+L=42495 (2704.3 mm, 323 mm/s)  R=98495 (6268.0 mm, 344 mm/s)  CALIB OPEN
+L=44019 (2801.3 mm, 323 mm/s)  R=100124 (6371.7 mm, 345 mm/s)  CALIB OPEN
+L=45544 (2898.3 mm, 324 mm/s)  R=101747 (6475.0 mm, 345 mm/s)  CALIB OPEN
+L=47067 (2995.2 mm, 323 mm/s)  R=103377 (6578.7 mm, 347 mm/s)  CALIB OPEN
+L=48592 (3092.3 mm, 323 mm/s)  R=105004 (6682.2 mm, 346 mm/s)  CALIB OPEN
+L=50119 (3189.5 mm, 324 mm/s)  R=106637 (6786.2 mm, 348 mm/s)  CALIB OPEN
+L=51647 (3286.7 mm, 325 mm/s)  R=108267 (6889.9 mm, 344 mm/s)  CALIB OPEN
+L=53178 (3384.1 mm, 323 mm/s)  R=109894 (6993.4 mm, 346 mm/s)  CALIB OPEN
+L=54704 (3481.3 mm, 324 mm/s)  R=111521 (7097.0 mm, 342 mm/s)  CALIB OPEN
+L=56235 (3578.7 mm, 324 mm/s)  R=113140 (7200.0 mm, 344 mm/s)  CALIB OPEN
+L=57758 (3675.6 mm, 324 mm/s)  R=114764 (7303.4 mm, 344 mm/s)  CALIB OPEN
+G,50,324,345
+> s
+L=59284 (3772.7 mm, 324 mm/s)  R=116385 (7406.5 mm, 346 mm/s)  CALIB HOLD
+L=59473 (3784.7 mm, 0 mm/s)  R=116608 (7420.7 mm, 0 mm/s)  CALIB HOLD
+L=59473 (3784.7 mm, 0 mm/s)  R=116608 (7420.7 mm, 0 mm/s)  CALIB HOLD
+L=59473 (3784.7 mm, 0 mm/s)  R=116608 (7420.7 mm, 0 mm/s)  CALIB HOLD
+L=59473 (3784.7 mm, 0 mm/s)  R=116608 (7420.7 mm, 0 mm/s)  CALIB HOLD
+> -50
+L=59473 (3784.7 mm, 0 mm/s)  R=116608 (7420.7 mm, 0 mm/s)  CALIB OPEN
+L=58816 (3742.9 mm, -279 mm/s)  R=116105 (7388.7 mm, -239 mm/s)  CALIB OPEN
+L=57323 (3647.9 mm, -319 mm/s)  R=114687 (7298.5 mm, -316 mm/s)  CALIB OPEN
+L=55778 (3549.6 mm, -330 mm/s)  R=113275 (7208.6 mm, -298 mm/s)  CALIB OPEN
+L=54246 (3452.1 mm, -330 mm/s)  R=111787 (7113.9 mm, -319 mm/s)  CALIB OPEN
+L=52685 (3352.8 mm, -332 mm/s)  R=110273 (7017.6 mm, -321 mm/s)  CALIB OPEN
+L=51126 (3253.6 mm, -330 mm/s)  R=108758 (6921.1 mm, -322 mm/s)  CALIB OPEN
+L=49566 (3154.3 mm, -329 mm/s)  R=107251 (6825.2 mm, -320 mm/s)  CALIB OPEN
+L=48006 (3055.0 mm, -329 mm/s)  R=105740 (6729.1 mm, -320 mm/s)  CALIB OPEN
+L=46446 (2955.7 mm, -331 mm/s)  R=104238 (6633.5 mm, -318 mm/s)  CALIB OPEN
+L=44885 (2856.4 mm, -331 mm/s)  R=102729 (6537.5 mm, -321 mm/s)  CALIB OPEN
+L=43326 (2757.2 mm, -330 mm/s)  R=101222 (6441.6 mm, -319 mm/s)  CALIB OPEN
+L=41764 (2657.8 mm, -331 mm/s)  R=99715 (6345.7 mm, -320 mm/s)  CALIB OPEN
+L=40201 (2558.3 mm, -332 mm/s)  R=98202 (6249.4 mm, -319 mm/s)  CALIB OPEN
+L=38635 (2458.7 mm, -333 mm/s)  R=96691 (6153.2 mm, -321 mm/s)  CALIB OPEN
+L=37069 (2359.0 mm, -331 mm/s)  R=95172 (6056.6 mm, -322 mm/s)  CALIB OPEN
+L=35503 (2259.3 mm, -333 mm/s)  R=93657 (5960.1 mm, -319 mm/s)  CALIB OPEN
+L=33935 (2159.6 mm, -332 mm/s)  R=92137 (5863.4 mm, -324 mm/s)  CALIB OPEN
+L=32366 (2059.7 mm, -334 mm/s)  R=90617 (5766.7 mm, -322 mm/s)  CALIB OPEN
+L=30798 (1959.9 mm, -334 mm/s)  R=89099 (5670.1 mm, -324 mm/s)  CALIB OPEN
+G,-50,-332,-321
+> s
+L=29233 (1860.3 mm, -333 mm/s)  R=87581 (5573.5 mm, -321 mm/s)  CALIB HOLD
+L=29037 (1847.9 mm, 2 mm/s)  R=87379 (5560.6 mm, 1 mm/s)  CALIB HOLD
+L=29038 (1847.9 mm, 0 mm/s)  R=87379 (5560.6 mm, 0 mm/s)  CALIB HOLD
+L=29038 (1847.9 mm, 0 mm/s)  R=87379 (5560.6 mm, 0 mm/s)  CALIB HOLD
+L=29038 (1847.9 mm, 0 mm/s)  R=87379 (5560.6 mm, 0 mm/s)  CALIB HOLD
+> 60
+L=29038 (1847.9 mm, 0 mm/s)  R=87379 (5560.6 mm, 0 mm/s)  CALIB OPEN
+L=29672 (1888.3 mm, 287 mm/s)  R=88009 (5600.7 mm, 285 mm/s)  CALIB OPEN
+L=31445 (2001.1 mm, 385 mm/s)  R=89819 (5715.9 mm, 400 mm/s)  CALIB OPEN
+L=33242 (2115.5 mm, 380 mm/s)  R=91717 (5836.7 mm, 408 mm/s)  CALIB OPEN
+L=35074 (2232.0 mm, 391 mm/s)  R=93658 (5960.2 mm, 411 mm/s)  CALIB OPEN
+L=36923 (2349.7 mm, 392 mm/s)  R=95605 (6084.1 mm, 414 mm/s)  CALIB OPEN
+L=38774 (2467.5 mm, 393 mm/s)  R=97549 (6207.8 mm, 412 mm/s)  CALIB OPEN
+L=40629 (2585.5 mm, 394 mm/s)  R=99502 (6332.1 mm, 415 mm/s)  CALIB OPEN
+L=42483 (2703.5 mm, 394 mm/s)  R=101448 (6455.9 mm, 413 mm/s)  CALIB OPEN
+L=44337 (2821.5 mm, 393 mm/s)  R=103404 (6580.4 mm, 414 mm/s)  CALIB OPEN
+L=46193 (2939.6 mm, 393 mm/s)  R=105352 (6704.4 mm, 414 mm/s)  CALIB OPEN
+L=48049 (3057.7 mm, 394 mm/s)  R=107306 (6828.7 mm, 413 mm/s)  CALIB OPEN
+L=49901 (3175.6 mm, 392 mm/s)  R=109251 (6952.5 mm, 415 mm/s)  CALIB OPEN
+L=51752 (3293.4 mm, 392 mm/s)  R=111201 (7076.6 mm, 413 mm/s)  CALIB OPEN
+L=53605 (3411.3 mm, 393 mm/s)  R=113146 (7200.4 mm, 414 mm/s)  CALIB OPEN
+L=55456 (3529.1 mm, 392 mm/s)  R=115092 (7324.2 mm, 411 mm/s)  CALIB OPEN
+L=57307 (3646.9 mm, 393 mm/s)  R=117038 (7448.1 mm, 414 mm/s)  CALIB OPEN
+L=59158 (3764.7 mm, 394 mm/s)  R=118983 (7571.8 mm, 411 mm/s)  CALIB OPEN
+L=61013 (3882.7 mm, 394 mm/s)  R=120936 (7696.1 mm, 416 mm/s)  CALIB OPEN
+L=62869 (4000.9 mm, 394 mm/s)  R=122885 (7820.2 mm, 413 mm/s)  CALIB OPEN
+G,60,393,413
+> s
+L=64725 (4119.0 mm, 393 mm/s)  R=124839 (7944.5 mm, 415 mm/s)  CALIB HOLD
+L=64965 (4134.2 mm, 0 mm/s)  R=125110 (7961.8 mm, 0 mm/s)  CALIB HOLD
+L=64965 (4134.2 mm, 0 mm/s)  R=125108 (7961.6 mm, 0 mm/s)  CL=64965 (4134.2 mm, 0 mm/s)  R=125108 (7961.6 mm, 0 mm/s)  CALIB HOLD
+L=64965 (4134.2 mm, 0 mm/s)  R=125108 (7961.6 mm, 0 mm/s)  CALIB HOLD
+> -60
+L=64965 (4134.2 mm, 0 mm/s)  R=125108 (7961.6 mm, 0 mm/s)  CALIB OPEN
+L=64299 (4091.9 mm, -297 mm/s)  R=124597 (7929.1 mm, -251 mm/s)  CALIB OPEN
+L=62498 (3977.2 mm, -391 mm/s)  R=122949 (7824.2 mm, -377 mm/s)  CALIB OPEN
+L=60659 (3860.2 mm, -389 mm/s)  R=121188 (7712.2 mm, -378 mm/s)  CALIB OPEN
+L=58792 (3741.4 mm, -401 mm/s)  R=119365 (7596.2 mm, -388 mm/s)  CALIB OPEN
+L=56895 (3620.7 mm, -403 mm/s)  R=117531 (7479.4 mm, -390 mm/s)  CALIB OPEN
+L=54995 (3499.8 mm, -403 mm/s)  R=115695 (7362.6 mm, -388 mm/s)  CALIB OPEN
+L=53091 (3378.6 mm, -404 mm/s)  R=113854 (7245.4 mm, -393 mm/s)  CALIB OPEN
+L=51187 (3257.4 mm, -403 mm/s)  R=112012 (7128.2 mm, -390 mm/s)  CALIB OPEN
+L=49284 (3136.3 mm, -404 mm/s)  R=110171 (7011.1 mm, -391 mm/s)  CALIB OPEN
+L=47382 (3015.3 mm, -403 mm/s)  R=108333 (6894.1 mm, -389 mm/s)  CALIB OPEN
+L=45479 (2894.2 mm, -404 mm/s)  R=106492 (6776.9 mm, -391 mm/s)  CALIB OPEN
+L=43578 (2773.2 mm, -403 mm/s)  R=104654 (6660.0 mm, -390 mm/s)  CALIB OPEN
+L=41678 (2652.3 mm, -402 mm/s)  R=102817 (6543.1 mm, -389 mm/s)  CALIB OPEN
+L=39782 (2531.6 mm, -402 mm/s)  R=100984 (6426.4 mm, -388 mm/s)  CALIB OPEN
+L=37883 (2410.8 mm, -402 mm/s)  R=99148 (6309.6 mm, -390 mm/s)  CALIB OPEN
+L=35985 (2290.0 mm, -404 mm/s)  R=97314 (6192.9 mm, -390 mm/s)  CALIB OPEN
+L=34086 (2169.2 mm, -403 mm/s)  R=95475 (6075.8 mm, -391 mm/s)  CALIB OPEN
+L=32187 (2048.3 mm, -404 mm/s)  R=93637 (5958.9 mm, -391 mm/s)  CALIB OPEN
+L=30285 (1927.3 mm, -404 mm/s)  R=91791 (5841.4 mm, -392 mm/s)  CALIB OPEN
+G,-60,-403,-390
+> s
+L=28383 (1806.2 mm, -403 mm/s)  R=89947 (5724.0 mm, -391 mm/s)  CALIB HOLD
+L=28132 (1790.3 mm, 0 mm/s)  R=89691 (5707.8 mm, 0 mm/s)  CALIB HOLD
+L=28132 (1790.3 mm, 0 mm/s)  R=89694 (5707.9 mm, 0 mm/s)  CALIB HOLD
+L=28132 (1790.3 mm, 0 mm/s)  R=89694 (5707.9 mm, 0 mm/s)  CALIB HOLD
+L=28132 (1790.3 mm, 0 mm/s)  R=89694 (5707.9 mm, 0 mm/s)  CALIB HOLD
+DONE G
+# X S base_pct=40 diff_pct=0
+# X par m_per_cnt_l_nm=63638 m_per_cnt_r_nm=63638 wheelbase_um=223250 hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+> s
+STOP
+# C sign check | G steady steps | B breakaway | K [pct] step response (default 40)
+# X<p> [base_pct] [diff_pct] excitation, floor, 4 m free: S step, P PRBS, N chirp, L lane change, D double (L,D# L reversal latency | odo raw counts | r reset counts | s stop | U,A not available
+# X S base_pct=40 diff_pct=0
+# X par m_per_cnt_l_nm=63638 m_per_cnt_r_nm=63638 wheelbase_um=223250 hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+X,20,0,0,0,0
+X,40,0,0,0,0
+X,60,0,0,0,0
+X,80,0,0,0,0
+X,100,0,0,0,0
+X,120,0,0,0,0
+X,140,0,0,0,0
+X,160,0,0,0,0
+X,180,0,0,0,0
+X,200,0,0,0,0
+X,220,0,0,0,0
+X,240,0,0,0,0
+X,260,0,0,0,0
+X,280,0,0,0,0
+X,300,0,0,0,0
+X,320,0,0,0,0
+X,340,0,0,0,0
+X,360,0,0,0,0
+X,380,0,0,0,0
+X,400,0,0,0,0
+X,420,200,200,6,7
+X,440,200,200,17,17
+X,460,200,200,23,23
+X,480,200,200,24,25
+X,500,200,200,25,28
+X,520,200,200,27,29
+X,540,200,200,29,30
+X,560,200,200,30,33
+X,580,200,200,32,35
+X,600,200,200,33,35
+X,620,200,200,32,37
+X,640,200,200,34,36
+X,660,200,200,33,36
+X,680,200,200,33,37
+X,700,200,200,33,37
+X,720,200,200,33,38
+X,740,200,200,34,37
+X,760,200,200,34,38
+X,780,200,200,34,37
+X,800,200,200,33,38
+X,820,200,200,34,39
+X,840,200,200,34,38
+X,860,200,200,34,39
+X,880,200,200,34,38
+X,900,200,200,34,39
+X,920,200,200,35,39
+X,940,200,200,34,39
+X,960,200,200,34,39
+X,980,200,200,34,38
+X,1000,200,200,35,39
+X,1020,200,200,34,39
+X,1040,200,200,34,39
+X,1060,200,200,34,39
+X,1080,200,200,35,39
+X,1100,200,200,34,39
+X,1120,200,200,34,39
+X,1140,200,200,34,39
+X,1160,200,200,34,38
+X,1180,200,200,34,39
+X,1200,200,200,34,39
+X,1220,200,200,34,39
+X,1240,200,200,34,39
+X,1260,200,200,34,39
+X,1280,200,200,35,39
+X,1300,200,200,34,38
+X,1320,200,200,33,39
+X,1340,200,200,34,38
+X,1360,200,200,34,38
+X,1380,200,200,34,39
+X,1400,200,200,33,38
+X,1420,200,200,34,39
+X,1440,200,200,34,39
+X,1460,200,200,33,39
+X,1480,200,200,34,39
+X,1500,200,200,34,39
+X,1520,200,200,34,40
+X,1540,200,200,33,39
+X,1560,200,200,34,40
+X,1580,200,200,34,40
+X,1600,200,200,34,40
+X,1620,200,200,33,40
+X,1640,200,200,34,40
+X,1660,200,200,34,39
+X,1680,200,200,33,40
+X,1700,200,200,34,40
+X,1720,200,200,34,40
+X,1740,200,200,34,40
+X,1760,200,200,33,39
+X,1780,200,200,34,40
+X,1800,200,200,34,39
+X,1820,200,200,34,40
+X,1840,200,200,33,39
+X,1860,200,200,34,40
+X,1880,200,200,34,39
+X,1900,200,200,33,39
+X,1920,400,400,43,47
+X,1940,400,400,56,57
+X,1960,400,400,63,64
+X,1980,400,400,68,68
+X,2000,400,400,69,70
+X,2020,400,400,71,74
+X,2040,400,400,72,76
+X,2060,400,400,75,78
+X,2080,400,400,75,80
+X,2100,400,400,77,82
+X,2120,400,400,78,83
+X,2140,400,400,78,83
+X,2160,400,400,78,83
+X,2180,400,400,79,83
+X,2200,400,400,79,84
+X,2220,400,400,79,84
+X,2240,400,400,79,84
+X,2260,400,400,79,85
+X,2280,400,400,80,85
+X,2300,400,400,79,85
+X,2320,400,400,79,85
+X,2340,400,400,79,84
+X,2360,400,400,79,84
+X,2380,400,400,79,85
+X,2400,400,400,79,85
+X,2420,400,400,80,86
+X,2440,400,400,79,85
+X,2460,400,400,80,85
+X,2480,400,400,79,86
+X,2500,400,400,80,85
+X,2520,400,400,79,85
+X,2540,400,400,80,85
+X,2560,400,400,80,86
+X,2580,400,400,79,84
+X,2600,400,400,80,86
+X,2620,400,400,79,85
+X,2640,400,400,80,84
+X,2660,400,400,79,86
+X,2680,400,400,79,85
+X,2700,400,400,79,85
+X,2720,400,400,80,86
+X,2740,400,400,79,85
+X,2760,400,400,79,85
+X,2780,400,400,80,86
+X,2800,400,400,79,85
+X,2820,400,400,79,85
+X,2840,400,400,80,86
+X,2860,400,400,79,86
+X,2880,400,400,80,85
+X,2900,400,400,80,86
+X,2920,400,400,79,85
+X,2940,400,400,79,85
+X,2960,400,400,80,85
+X,2980,400,400,79,84
+X,3000,400,400,79,85
+X,3020,400,400,79,85
+X,3040,400,400,80,85
+X,3060,400,400,79,85
+X,3080,400,400,79,85
+X,3100,400,400,80,85
+X,3120,400,400,80,85
+X,3140,400,400,79,86
+X,3160,400,400,80,85
+X,3180,400,400,80,86
+X,3200,400,400,79,85
+X,3220,400,400,80,85
+X,3240,400,400,80,85
+X,3260,400,400,79,85
+X,3280,400,400,80,85
+X,3300,400,400,79,85
+X,3320,400,400,80,86
+X,3340,400,400,80,86
+X,3360,400,400,79,85
+X,3380,400,400,80,86
+X,3400,400,400,80,85
+X,3420,200,200,75,79
+X,3440,200,200,67,69
+X,3460,200,200,62,61
+X,3480,200,200,59,57
+X,3500,200,200,56,54
+X,3520,200,200,53,51
+X,3540,200,200,51,48
+X,3560,200,200,49,47
+X,3580,200,200,46,45
+X,3600,200,200,45,43
+X,3620,200,200,42,43
+X,3640,200,200,41,43
+X,3660,200,200,39,41
+X,3680,200,200,38,40
+X,3700,200,200,37,40
+X,3720,200,200,37,39
+X,3740,200,200,36,40
+X,3760,200,200,35,39
+X,3780,200,200,36,40
+X,3800,200,200,35,39
+X,3820,200,200,36,39
+X,3840,200,200,35,40
+X,3860,200,200,35,39
+X,3880,200,200,35,40
+X,3900,200,200,35,39
+X,3920,200,200,35,39
+X,3940,200,200,34,40
+X,3960,200,200,35,39
+X,3980,200,200,35,39
+X,4000,200,200,35,39
+X,4020,200,200,35,40
+X,4040,200,200,35,39
+X,4060,200,200,35,39
+X,4080,200,200,35,39
+X,4100,200,200,34,39
+X,4120,200,200,35,39
+X,4140,200,200,34,38
+X,4160,200,200,35,38
+X,4180,200,200,34,38
+X,4200,200,200,34,38
+X,4220,200,200,34,38
+X,4240,200,200,34,39
+X,4260,200,200,34,39
+X,4280,200,200,34,39
+X,4300,200,200,33,39
+X,4320,200,200,34,39
+X,4340,200,200,34,39
+X,4360,200,200,34,40
+X,4380,200,200,34,39
+X,4400,200,200,34,40
+X,4420,200,200,34,40
+X,4440,200,200,34,39
+X,4460,200,200,34,40
+X,4480,200,200,34,40
+X,4500,200,200,34,40
+X,4520,200,200,34,40
+X,4540,200,200,35,40
+X,4560,200,200,34,40
+X,4580,200,200,34,40
+X,4600,200,200,34,40
+X,4620,200,200,35,40
+X,4640,200,200,34,40
+X,4660,200,200,34,39
+X,4680,200,200,34,40
+X,4700,200,200,34,40
+X,4720,200,200,35,40
+X,4740,200,200,34,40
+X,4760,200,200,34,39
+X,4780,200,200,34,40
+X,4800,200,200,34,39
+X,4820,200,200,34,39
+X,4840,200,200,34,40
+X,4860,200,200,33,39
+X,4880,200,200,34,39
+X,4900,200,200,34,39
+X,4920,400,400,42,47
+X,4940,400,400,57,57
+X,4960,400,400,64,65
+X,4980,400,400,68,69
+X,5000,400,400,71,72
+X,5020,400,400,72,75
+X,5040,400,400,73,77
+X,5060,400,400,75,79
+X,5080,400,400,76,80
+X,5100,400,400,77,83
+X,5120,400,400,78,84
+X,5140,400,400,78,84
+X,5160,400,400,79,85
+X,5180,400,400,79,85
+X,5200,400,400,79,85
+X,5220,400,400,79,86
+X,5240,400,400,80,84
+X,5260,400,400,79,85
+X,5280,400,400,79,85
+X,5300,400,400,79,85
+X,5320,400,400,79,85
+X,5340,400,400,80,85
+X,5360,400,400,79,85
+X,5380,400,400,80,86
+X,5400,400,400,79,86
+X,5420,400,400,80,85
+X,5440,400,400,79,85
+X,5460,400,400,80,86
+X,5480,400,400,80,85
+X,5500,400,400,79,85
+X,5520,400,400,80,85
+X,5540,400,400,80,85
+X,5560,400,400,79,84
+X,5580,400,400,80,85
+X,5600,400,400,79,85
+X,5620,400,400,80,84
+X,5640,400,400,79,85
+X,5660,400,400,80,85
+X,5680,400,400,80,86
+X,5700,400,400,79,85
+X,5720,400,400,80,85
+X,5740,400,400,80,86
+X,5760,400,400,80,85
+X,5780,400,400,80,86
+X,5800,400,400,80,86
+X,5820,400,400,79,85
+X,5840,400,400,80,86
+X,5860,400,400,80,84
+X,5880,400,400,80,85
+X,5900,400,400,80,85
+X,5920,400,400,79,86
+X,5940,400,400,80,85
+X,5960,400,400,80,85
+X,5980,400,400,80,85
+X,6000,400,400,79,86
+X,6020,400,400,80,86
+X,6040,400,400,80,85
+X,6060,400,400,79,86
+X,6080,400,400,80,86
+X,6100,400,400,80,85
+X,6120,400,400,80,85
+X,6140,400,400,79,85
+X,6160,400,400,80,85
+X,6180,400,400,79,84
+X,6200,400,400,79,85
+X,6220,400,400,80,85
+X,6240,400,400,79,86
+X,6260,400,400,80,85
+X,6280,400,400,80,85
+X,6300,400,400,79,85
+X,6320,400,400,80,85
+X,6340,400,400,79,84
+X,6360,400,400,80,85
+X,6380,400,400,80,85
+X,6400,400,400,79,85
+X,6420,0,0,64,69
+X,6440,0,0,36,41
+X,6460,0,0,21,24
+X,6480,0,0,11,14
+X,6500,0,0,6,9
+X,6520,0,0,2,4
+X,6540,0,0,0,1
+X,6560,0,0,0,0
+X,6580,0,0,0,0
+X,6600,0,0,0,0
+X,6620,0,0,0,0
+X,6640,0,0,0,-1
+X,6660,0,0,0,-1
+X,6680,0,0,-1,0
+X,6700,0,0,0,0
+X,6720,0,0,0,0
+X,6740,0,0,0,0
+X,6760,0,0,0,0
+X,6780,0,0,0,0
+X,6800,0,0,0,0
+X,6820,0,0,0,0
+X,6840,0,0,0,0
+X,6860,0,0,0,0
+X,6880,0,0,0,0
+X,6900,0,0,0,0
+X,6920,0,0,0,0
+X,6940,0,0,0,0
+X,6960,0,0,0,0
+X,6980,0,0,0,0
+X,7000,0,0,0,0
+X,7020,0,0,0,0
+X,7040,0,0,0,0
+X,7060,0,0,0,0
+X,7080,0,0,0,0
+X,7100,0,0,0,0
+X,7120,0,0,0,0
+X,7140,0,0,0,0
+X,7160,0,0,0,0
+X,7180,0,0,0,0
+X,7200,0,0,0,0
+X,7220,0,0,0,0
+X,7240,0,0,0,0
+X,7260,0,0,0,0
+X,7280,0,0,0,0
+X,7300,0,0,0,0
+X,7320,0,0,0,0
+X,7340,0,0,0,0
+X,7360,0,0,0,0
+X,7380,0,0,0,0
+X,7400,0,0,0,0
+X,7420,0,0,0,0
+X,7440,0,0,0,0
+X,7460,0,0,0,0
+X,7480,0,0,0,0
+X,7500,0,0,0,0
+X,7520,0,0,0,0
+X,7540,0,0,0,0
+X,7560,0,0,0,0
+X,7580,0,0,0,0
+X,7600,0,0,0,0
+X,7620,0,0,0,0
+X,7640,0,0,0,0
+X,7660,0,0,0,0
+X,7680,0,0,0,0
+X,7700,0,0,0,0
+X,7720,0,0,0,0
+X,7740,0,0,0,0
+X,7760,0,0,0,0
+X,7780,0,0,0,0
+X,7800,0,0,0,0
+X,7820,0,0,0,0
+X,7840,0,0,0,0
+X,7860,0,0,0,0
+X,7880,0,0,0,0
+X,7900,0,0,0,0
+X,7920,0,0,0,0
+X,7940,0,0,0,0
+X,7960,0,0,0,0
+X,7980,0,0,0,0
+X,8000,0,0,0,0
+X,8020,0,0,0,0
+X,8040,0,0,0,0
+X,8060,0,0,0,0
+X,8080,0,0,0,0
+X,8100,0,0,0,0
+X,8120,0,0,0,0
+X,8140,0,0,0,0
+X,8160,0,0,0,0
+X,8180,0,0,0,0
+X,8200,0,0,0,0
+X,8220,0,0,0,0
+X,8240,0,0,0,0
+X,8260,0,0,0,0
+X,8280,0,0,0,0
+X,8300,0,0,0,0
+X,8320,0,0,0,0
+X,8340,0,0,0,0
+X,8360,0,0,0,0
+X,8380,0,0,0,0
+X,8400,0,0,0,0
+X,8420,0,0,0,0
+X,8440,0,0,0,0
+X,8460,0,0,0,0
+X,8480,0,0,0,0
+X,8500,0,0,0,0
+X,8520,0,0,0,0
+X,8540,0,0,0,0
+X,8560,0,0,0,0
+X,8580,0,0,0,0
+X,8600,0,0,0,0
+X,8620,0,0,0,0
+X,8640,0,0,0,0
+X,8660,0,0,0,0
+X,8680,0,0,0,0
+X,8700,0,0,0,0
+X,8720,0,0,0,0
+X,8740,0,0,0,0
+X,8760,0,0,0,0
+X,8780,0,0,0,0
+X,8800,0,0,0,0
+X,8820,0,0,0,0
+X,8840,0,0,0,0
+X,8860,0,0,0,0
+X,8880,0,0,0,0
+X,8900,0,0,0,0
+DONE X
+# X P base_pct=40 diff_pct=0
+# X par m_per_cnt_l_nm=63638 m_per_cnt_r_nm=63638 wheelbase_um=223250 hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+X,20,0,0,0,0
+X,40,0,0,0,0
+X,60,0,0,0,0
+X,80,0,0,0,0
+X,100,0,0,0,0
+X,120,0,0,0,0
+X,140,0,0,0,0
+X,160,0,0,0,0
+X,180,0,0,0,0
+X,200,0,0,0,0
+X,220,0,0,0,0
+X,240,0,0,0,0
+X,260,0,0,0,0
+X,280,0,0,0,0
+X,300,0,0,0,0
+X,320,0,0,0,0
+X,340,0,0,0,0
+X,360,0,0,0,0
+X,380,0,0,0,0
+X,400,0,0,0,0
+X,420,300,300,11,10
+X,440,300,300,30,27
+X,460,300,300,39,37
+X,480,300,300,44,42
+X,500,300,300,47,46
+X,520,300,300,48,50
+X,540,300,300,50,51
+X,560,300,300,52,52
+X,580,300,300,53,54
+X,600,300,300,55,56
+X,620,300,300,56,57
+X,640,300,300,56,59
+X,660,300,300,57,60
+X,680,300,300,57,61
+X,700,300,300,58,61
+X,720,300,300,58,61
+X,740,300,300,58,61
+X,760,300,300,58,62
+X,780,300,300,58,61
+X,800,300,300,58,62
+X,820,300,300,58,61
+X,840,300,300,58,62
+X,860,300,300,58,62
+X,880,300,300,58,62
+X,900,300,300,57,63
+X,920,300,300,58,63
+X,940,300,300,57,62
+X,960,300,300,57,64
+X,980,300,300,58,63
+X,1000,300,300,57,63
+X,1020,300,300,58,64
+X,1040,300,300,57,63
+X,1060,300,300,58,64
+X,1080,300,300,57,63
+X,1100,300,300,58,64
+X,1120,300,300,57,63
+X,1140,300,300,58,64
+X,1160,300,300,58,63
+X,1180,300,300,57,63
+X,1200,300,300,58,62
+X,1220,300,300,57,63
+X,1240,300,300,57,62
+X,1260,300,300,57,63
+X,1280,300,300,58,63
+X,1300,300,300,57,63
+X,1320,300,300,57,64
+X,1340,300,300,57,63
+X,1360,300,300,57,64
+X,1380,300,300,57,63
+X,1400,300,300,57,63
+X,1420,400,400,61,66
+X,1440,400,400,68,71
+X,1460,400,400,70,74
+X,1480,400,400,73,76
+X,1500,400,400,74,78
+X,1520,400,400,75,79
+X,1540,400,400,77,82
+X,1560,400,400,78,82
+X,1580,200,200,73,77
+X,1600,200,200,66,67
+X,1620,200,200,61,59
+X,1640,200,200,58,56
+X,1660,400,400,60,59
+X,1680,400,400,68,68
+X,1700,400,400,73,73
+X,1720,400,400,75,75
+X,1740,400,400,76,76
+X,1760,400,400,76,77
+X,1780,400,400,76,79
+X,1800,400,400,77,80
+X,1820,400,400,77,81
+X,1840,400,400,78,83
+X,1860,400,400,79,84
+X,1880,400,400,79,84
+X,1900,400,400,79,84
+X,1920,400,400,79,84
+X,1940,400,400,80,84
+X,1960,400,400,79,85
+X,1980,200,200,75,78
+X,2000,200,200,67,68
+X,2020,200,200,62,60
+X,2040,200,200,59,56
+X,2060,400,400,61,60
+X,2080,400,400,69,69
+X,2100,400,400,73,73
+X,2120,400,400,76,76
+X,2140,400,400,77,77
+X,2160,400,400,78,77
+X,2180,400,400,77,78
+X,2200,400,400,77,80
+X,2220,200,200,72,74
+X,2240,200,200,66,65
+X,2260,200,200,61,59
+X,2280,200,200,57,54
+X,2300,200,200,55,52
+X,2320,200,200,52,50
+X,2340,200,200,51,48
+X,2360,200,200,48,45
+X,2380,200,200,46,45
+X,2400,200,200,45,43
+X,2420,200,200,42,43
+X,2440,200,200,41,41
+X,2460,400,400,48,48
+X,2480,400,400,60,58
+X,2500,400,400,67,64
+X,2520,400,400,71,68
+X,2540,400,400,72,71
+X,2560,400,400,73,73
+X,2580,400,400,74,76
+X,2600,400,400,76,78
+X,2620,200,200,72,74
+X,2640,200,200,65,64
+X,2660,200,200,61,58
+X,2680,200,200,57,55
+X,2700,400,400,61,58
+X,2720,400,400,68,68
+X,2740,400,400,73,72
+X,2760,400,400,76,75
+X,2780,200,200,72,70
+X,2800,200,200,65,61
+X,2820,200,200,60,55
+X,2840,200,200,56,51
+X,2860,200,200,53,48
+X,2880,200,200,50,48
+X,2900,200,200,47,47
+X,2920,200,200,46,45
+X,2940,400,400,52,51
+X,2960,400,400,63,62
+X,2980,400,400,69,68
+X,3000,400,400,74,71
+X,3020,200,200,69,66
+X,3040,200,200,61,58
+X,3060,200,200,57,53
+X,3080,200,200,54,49
+X,3100,400,400,58,55
+X,3120,400,400,66,64
+X,3140,400,400,71,72
+X,3160,400,400,75,74
+X,3180,400,400,75,76
+X,3200,400,400,75,78
+X,3220,400,400,76,79
+X,3240,400,400,77,80
+X,3260,400,400,77,81
+X,3280,400,400,79,82
+X,3300,400,400,79,84
+X,3320,400,400,80,83
+X,3340,200,200,75,78
+X,3360,200,200,67,68
+X,3380,200,200,63,60
+X,3400,200,200,59,55
+X,3420,400,400,62,60
+X,3440,400,400,69,67
+X,3460,400,400,74,74
+X,3480,400,400,76,75
+X,3500,400,400,77,77
+X,3520,400,400,78,78
+X,3540,400,400,77,78
+X,3560,400,400,76,79
+X,3580,400,400,77,80
+X,3600,400,400,78,82
+X,3620,400,400,78,82
+X,3640,400,400,79,84
+X,3660,200,200,75,78
+X,3680,200,200,67,67
+X,3700,200,200,62,61
+X,3720,200,200,59,56
+X,3740,200,200,57,53
+X,3760,200,200,54,50
+X,3780,200,200,53,49
+X,3800,200,200,49,46
+X,3820,400,400,55,52
+X,3840,400,400,65,62
+X,3860,400,400,70,66
+X,3880,400,400,71,70
+X,3900,400,400,73,72
+X,3920,400,400,73,75
+X,3940,400,400,74,76
+X,3960,400,400,76,79
+X,3980,200,200,72,75
+X,4000,200,200,66,65
+X,4020,200,200,61,59
+X,4040,200,200,58,56
+X,4060,200,200,56,52
+X,4080,200,200,55,50
+X,4100,200,200,52,48
+X,4120,200,200,49,46
+X,4140,400,400,55,52
+X,4160,400,400,64,61
+X,4180,400,400,69,66
+X,4200,400,400,72,70
+X,4220,200,200,68,66
+X,4240,200,200,61,57
+X,4260,200,200,57,53
+X,4280,200,200,53,50
+X,4300,400,400,58,55
+X,4320,400,400,66,66
+X,4340,400,400,72,71
+X,4360,400,400,74,75
+X,4380,200,200,72,69
+X,4400,200,200,64,61
+X,4420,200,200,60,55
+X,4440,200,200,56,50
+X,4460,400,400,59,56
+X,4480,400,400,68,66
+X,4500,400,400,72,72
+X,4520,400,400,74,75
+X,4540,200,200,71,69
+X,4560,200,200,64,61
+X,4580,200,200,59,55
+X,4600,200,200,56,51
+X,4620,400,400,59,55
+X,4640,400,400,67,65
+X,4660,400,400,72,71
+X,4680,400,400,75,75
+X,4700,400,400,76,77
+X,4720,400,400,76,77
+X,4740,400,400,77,79
+X,4760,400,400,77,79
+X,4780,400,400,78,80
+X,4800,400,400,78,82
+X,4820,400,400,79,83
+X,4840,400,400,80,84
+X,4860,400,400,79,84
+X,4880,400,400,80,84
+X,4900,400,400,80,85
+X,4920,400,400,80,85
+X,4940,400,400,80,84
+X,4960,400,400,81,84
+X,4980,400,400,80,85
+X,5000,400,400,80,85
+X,5020,400,400,80,85
+X,5040,400,400,81,85
+X,5060,400,400,80,85
+X,5080,400,400,80,85
+X,5100,400,400,81,85
+X,5120,400,400,80,85
+X,5140,400,400,80,85
+X,5160,400,400,81,85
+X,5180,200,200,76,79
+X,5200,200,200,67,68
+X,5220,200,200,63,61
+X,5240,200,200,60,56
+X,5260,200,200,56,53
+X,5280,200,200,55,50
+X,5300,200,200,52,49
+X,5320,200,200,50,47
+X,5340,200,200,47,45
+X,5360,200,200,45,44
+X,5380,200,200,43,43
+X,5400,200,200,41,42
+X,5420,200,200,40,41
+X,5440,200,200,38,40
+X,5460,200,200,37,40
+X,5480,200,200,37,40
+X,5500,200,200,35,39
+X,5520,200,200,36,39
+X,5540,200,200,35,40
+X,5560,200,200,35,39
+X,5580,200,200,35,39
+X,5600,200,200,35,39
+X,5620,200,200,35,40
+X,5640,200,200,35,39
+X,5660,400,400,44,46
+X,5680,400,400,58,58
+X,5700,400,400,66,64
+X,5720,400,400,70,68
+X,5740,200,200,67,65
+X,5760,200,200,59,56
+X,5780,200,200,55,52
+X,5800,200,200,52,49
+X,5820,200,200,49,47
+X,5840,200,200,46,46
+X,5860,200,200,44,46
+X,5880,200,200,43,44
+X,5900,200,200,41,44
+X,5920,200,200,39,43
+X,5940,200,200,38,42
+X,5960,200,200,38,43
+X,5980,200,200,36,41
+X,6000,200,200,37,39
+X,6020,200,200,35,40
+X,6040,200,200,36,39
+X,6060,200,200,35,39
+X,6080,200,200,35,39
+X,6100,200,200,35,39
+X,6120,200,200,34,40
+X,6140,400,400,44,46
+X,6160,400,400,58,57
+X,6180,400,400,66,64
+X,6200,400,400,69,69
+X,6220,400,400,70,71
+X,6240,400,400,72,73
+X,6260,400,400,73,76
+X,6280,400,400,74,78
+X,6300,200,200,71,73
+X,6320,200,200,64,65
+X,6340,200,200,61,59
+X,6360,200,200,56,54
+X,6380,200,200,54,52
+X,6400,200,200,52,50
+X,6420,200,200,50,48
+X,6440,200,200,48,46
+X,6460,200,200,45,44
+X,6480,200,200,44,44
+X,6500,200,200,42,43
+X,6520,200,200,40,42
+X,6540,200,200,38,41
+X,6560,200,200,38,40
+X,6580,200,200,37,40
+X,6600,200,200,36,39
+X,6620,400,400,45,46
+X,6640,400,400,58,57
+X,6660,400,400,66,64
+X,6680,400,400,70,68
+X,6700,200,200,66,65
+X,6720,200,200,60,57
+X,6740,200,200,55,52
+X,6760,200,200,53,50
+X,6780,400,400,56,55
+X,6800,400,400,66,65
+X,6820,400,400,71,72
+X,6840,400,400,73,75
+X,6860,200,200,69,69
+X,6880,200,200,62,60
+X,6900,200,200,58,54
+X,6920,200,200,54,51
+X,6940,200,200,51,49
+X,6960,200,200,49,48
+X,6980,200,200,47,46
+X,7000,200,200,45,45
+X,7020,200,200,44,44
+X,7040,200,200,42,44
+X,7060,200,200,40,42
+X,7080,200,200,39,43
+X,7100,400,400,47,48
+X,7120,400,400,60,59
+X,7140,400,400,67,65
+X,7160,400,400,70,68
+X,7180,400,400,71,72
+X,7200,400,400,72,73
+X,7220,400,400,73,74
+X,7240,400,400,74,77
+X,7260,400,400,76,78
+X,7280,400,400,77,81
+X,7300,400,400,78,81
+X,7320,400,400,78,84
+X,7340,400,400,79,83
+X,7360,400,400,79,84
+X,7380,400,400,79,84
+X,7400,400,400,79,85
+X,7420,200,200,75,78
+X,7440,200,200,67,68
+X,7460,200,200,63,60
+X,7480,200,200,58,56
+X,7500,200,200,56,54
+X,7520,200,200,54,50
+X,7540,200,200,52,48
+X,7560,200,200,49,46
+X,7580,400,400,54,52
+X,7600,400,400,65,63
+X,7620,400,400,70,67
+X,7640,400,400,72,71
+X,7660,200,200,67,66
+X,7680,200,200,62,58
+X,7700,200,200,56,53
+X,7720,200,200,54,50
+X,7740,200,200,51,47
+X,7760,200,200,49,48
+X,7780,200,200,46,46
+X,7800,200,200,45,45
+X,7820,200,200,44,44
+X,7840,200,200,42,43
+X,7860,200,200,40,42
+X,7880,200,200,39,42
+X,7900,400,400,47,49
+X,7920,400,400,60,59
+X,7940,400,400,67,65
+X,7960,400,400,69,69
+X,7980,200,200,67,66
+X,8000,200,200,59,57
+X,8020,200,200,56,52
+X,8040,200,200,52,49
+X,8060,400,400,56,55
+X,8080,400,400,66,65
+X,8100,400,400,71,71
+X,8120,400,400,74,75
+X,8140,400,400,74,76
+X,8160,400,400,74,76
+X,8180,400,400,76,78
+X,8200,400,400,76,80
+X,8220,200,200,73,74
+X,8240,200,200,66,65
+X,8260,200,200,61,59
+X,8280,200,200,58,55
+X,8300,200,200,56,52
+X,8320,200,200,54,49
+X,8340,200,200,52,48
+X,8360,200,200,49,46
+X,8380,400,400,55,52
+X,8400,400,400,64,61
+X,8420,400,400,70,67
+X,8440,400,400,71,71
+X,8460,400,400,73,72
+X,8480,400,400,72,75
+X,8500,400,400,74,77
+X,8520,400,400,76,77
+X,8540,400,400,77,80
+X,8560,400,400,78,81
+X,8580,400,400,78,83
+X,8600,400,400,79,83
+X,8620,200,200,74,77
+X,8640,200,200,68,68
+X,8660,200,200,62,60
+X,8680,200,200,60,56
+X,8700,400,400,62,60
+X,8720,400,400,70,68
+X,8740,400,400,74,73
+X,8760,400,400,76,76
+X,8780,200,200,72,70
+X,8800,200,200,64,60
+X,8820,200,200,59,55
+X,8840,200,200,55,51
+X,8860,400,400,59,55
+X,8880,400,400,67,66
+X,8900,400,400,72,71
+X,8920,400,400,75,76
+X,8940,200,200,71,70
+X,8960,200,200,64,61
+X,8980,200,200,59,55
+X,9000,200,200,56,51
+X,9020,200,200,53,50
+X,9040,200,200,51,48
+X,9060,200,200,48,47
+X,9080,200,200,46,46
+X,9100,400,400,53,52
+X,9120,400,400,63,62
+X,9140,400,400,70,68
+X,9160,400,400,72,71
+X,9180,400,400,73,72
+X,9200,400,400,73,73
+X,9220,400,400,73,76
+X,9240,400,400,76,77
+X,9260,400,400,76,79
+X,9280,400,400,78,81
+X,9300,400,400,79,83
+X,9320,400,400,79,84
+X,9340,400,400,80,84
+X,9360,400,400,79,84
+X,9380,400,400,80,85
+X,9400,400,400,80,84
+X,9420,0,0,64,67
+X,9440,0,0,37,41
+X,9460,0,0,21,24
+X,9480,0,0,12,14
+X,9500,0,0,6,8
+X,9520,0,0,3,4
+X,9540,0,0,3,3
+X,9560,0,0,1,0
+X,9580,0,0,0,0
+X,9600,0,0,0,0
+X,9620,0,0,0,-1
+X,9640,0,0,0,0
+X,9660,0,0,0,0
+X,9680,0,0,0,0
+X,9700,0,0,0,0
+X,9720,0,0,0,0
+X,9740,0,0,0,0
+X,9760,0,0,0,0
+X,9780,0,0,0,0
+X,9800,0,0,0,0
+X,9820,0,0,0,0
+X,9840,0,0,0,0
+X,9860,0,0,0,0
+X,9880,0,0,0,0
+X,9900,0,0,0,0
+X,9920,0,0,0,0
+X,9940,0,0,0,0
+X,9960,0,0,0,0
+X,9980,0,0,0,0
+X,10000,0,0,0,0
+X,10020,0,0,0,0
+X,10040,0,0,0,0
+X,10060,0,0,0,0
+X,10080,0,0,0,0
+X,10100,0,0,0,0
+X,10120,0,0,0,0
+X,10140,0,0,0,0
+X,10160,0,0,0,0
+X,10180,0,0,0,0
+X,10200,0,0,0,0
+X,10220,0,0,0,0
+X,10240,0,0,0,0
+X,10260,0,0,0,0
+X,10280,0,0,0,0
+X,10300,0,0,0,0
+X,10320,0,0,0,0
+X,10340,0,0,0,0
+X,10360,0,0,0,0
+X,10380,0,0,0,0
+X,10400,0,0,0,0
+DONE X
+# X N base_pct=40 diff_pct=0
+# X par m_per_cnt_l_nm=63638 m_per_cnt_r_nm=63638 wheelbase_um=223250 hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+X,20,0,0,0,0
+X,40,0,0,0,0
+X,60,0,0,0,0
+X,80,0,0,0,0
+X,100,0,0,0,0
+X,120,0,0,0,0
+X,140,0,0,0,0
+X,160,0,0,0,0
+X,180,0,0,0,0
+X,200,0,0,0,0
+X,220,0,0,0,0
+X,240,0,0,0,0
+X,260,0,0,0,0
+X,280,0,0,0,0
+X,300,0,0,0,0
+X,320,0,0,0,0
+X,340,0,0,0,0
+X,360,0,0,0,0
+X,380,0,0,0,0
+X,400,0,0,0,0
+X,420,300,300,12,10
+X,440,300,300,30,27
+X,460,300,300,39,36
+X,480,300,300,44,43
+X,500,300,300,47,47
+X,520,300,300,49,51
+X,540,300,300,49,52
+X,560,300,300,51,55
+X,580,300,300,52,55
+X,600,300,300,53,58
+X,620,300,300,54,59
+X,640,300,300,56,60
+X,660,300,300,56,61
+X,680,300,300,56,62
+X,700,300,300,57,62
+X,720,300,300,57,63
+X,740,300,300,57,62
+X,760,300,300,57,63
+X,780,300,300,57,63
+X,800,300,300,57,63
+X,820,300,300,57,63
+X,840,300,300,57,64
+X,860,300,300,57,63
+X,880,300,300,57,63
+X,900,300,300,58,63
+X,920,300,300,57,63
+X,940,300,300,57,63
+X,960,300,300,58,63
+X,980,300,300,57,63
+X,1000,300,300,57,63
+X,1020,300,300,57,64
+X,1040,300,300,58,63
+X,1060,300,300,57,64
+X,1080,300,300,58,63
+X,1100,300,300,57,64
+X,1120,300,300,57,64
+X,1140,300,300,58,64
+X,1160,300,300,57,64
+X,1180,300,300,57,64
+X,1200,300,300,58,64
+X,1220,300,300,57,64
+X,1240,300,300,57,64
+X,1260,300,300,57,63
+X,1280,300,300,58,63
+X,1300,300,300,57,64
+X,1320,300,300,57,62
+X,1340,300,300,57,63
+X,1360,300,300,57,63
+X,1380,300,300,57,63
+X,1400,300,300,58,63
+X,1420,300,300,57,64
+X,1440,303,303,57,63
+X,1460,305,305,58,64
+X,1480,308,308,58,64
+X,1500,311,311,58,65
+X,1520,313,313,59,64
+X,1540,316,316,59,66
+X,1560,319,319,60,65
+X,1580,322,322,61,67
+X,1600,326,326,61,66
+X,1620,329,329,62,68
+X,1640,332,332,62,68
+X,1660,335,335,63,68
+X,1680,339,339,64,69
+X,1700,342,342,65,70
+X,1720,345,345,65,71
+X,1740,349,349,65,71
+X,1760,352,352,67,72
+X,1780,355,355,67,73
+X,1800,359,359,69,74
+X,1820,362,362,68,74
+X,1840,365,365,70,76
+X,1860,369,369,70,76
+X,1880,372,372,72,77
+X,1900,375,375,71,78
+X,1920,378,378,73,78
+X,1940,381,381,73,79
+X,1960,383,383,73,80
+X,1980,386,386,75,81
+X,2000,388,388,75,81
+X,2020,391,391,75,81
+X,2040,393,393,76,82
+X,2060,395,395,76,82
+X,2080,396,396,77,83
+X,2100,398,398,77,83
+X,2120,399,399,78,84
+X,2140,399,399,78,84
+X,2160,400,400,79,85
+X,2180,400,400,79,85
+X,2200,400,400,79,85
+X,2220,399,399,79,85
+X,2240,398,398,79,86
+X,2260,397,397,79,85
+X,2280,395,395,79,85
+X,2300,393,393,78,85
+X,2320,391,391,79,84
+X,2340,388,388,77,84
+X,2360,385,385,78,84
+X,2380,381,381,77,83
+X,2400,377,377,76,82
+X,2420,372,372,75,82
+X,2440,367,367,75,81
+X,2460,362,362,74,80
+X,2480,356,356,72,79
+X,2500,350,350,72,78
+X,2520,344,344,71,77
+X,2540,337,337,69,76
+X,2560,330,330,69,74
+X,2580,323,323,67,74
+X,2600,315,315,65,72
+X,2620,308,308,64,70
+X,2640,300,300,62,70
+X,2660,292,292,61,67
+X,2680,284,284,60,67
+X,2700,276,276,58,64
+X,2720,268,268,56,63
+X,2740,261,261,55,61
+X,2760,253,253,53,59
+X,2780,246,246,51,58
+X,2800,239,239,50,56
+X,2820,232,232,49,55
+X,2840,226,226,47,53
+X,2860,221,221,45,51
+X,2880,216,216,45,50
+X,2900,211,211,43,49
+X,2920,207,207,41,46
+X,2940,204,204,40,45
+X,2960,202,202,39,44
+X,2980,201,201,38,43
+X,3000,200,200,37,43
+X,3020,200,200,37,41
+X,3040,201,201,36,41
+X,3060,204,204,35,41
+X,3080,207,207,36,40
+X,3100,211,211,37,42
+X,3120,216,216,36,42
+X,3140,221,221,38,42
+X,3160,228,228,40,43
+X,3180,235,235,40,44
+X,3200,243,243,41,44
+X,3220,252,252,43,47
+X,3240,262,262,44,48
+X,3260,272,272,47,50
+X,3280,282,282,48,52
+X,3300,292,292,50,55
+X,3320,303,303,51,57
+X,3340,314,314,55,59
+X,3360,325,325,56,62
+X,3380,335,335,58,64
+X,3400,345,345,61,66
+X,3420,355,355,63,68
+X,3440,364,364,66,71
+X,3460,373,373,67,72
+X,3480,380,380,69,75
+X,3500,386,386,71,76
+X,3520,392,392,73,78
+X,3540,396,396,74,79
+X,3560,398,398,76,81
+X,3580,400,400,76,82
+X,3600,400,400,78,83
+X,3620,398,398,77,83
+X,3640,395,395,78,84
+X,3660,391,391,77,84
+X,3680,385,385,78,83
+X,3700,378,378,76,83
+X,3720,370,370,76,82
+X,3740,360,360,75,81
+X,3760,349,349,73,79
+X,3780,338,338,72,78
+X,3800,326,326,70,76
+X,3820,313,313,68,75
+X,3840,300,300,66,72
+X,3860,287,287,64,70
+X,3880,274,274,61,67
+X,3900,261,261,60,65
+X,3920,249,249,57,62
+X,3940,238,238,55,59
+X,3960,228,228,52,58
+X,3980,219,219,51,55
+X,4000,212,212,49,52
+X,4020,206,206,46,50
+X,4040,202,202,45,49
+X,4060,200,200,43,46
+X,4080,200,200,41,45
+X,4100,202,202,40,44
+X,4120,206,206,39,44
+X,4140,212,212,38,44
+X,4160,220,220,39,44
+X,4180,229,229,39,45
+X,4200,241,241,42,46
+X,4220,253,253,42,46
+X,4240,267,267,46,48
+X,4260,281,281,47,51
+X,4280,296,296,50,53
+X,4300,311,311,53,56
+X,4320,326,326,55,58
+X,4340,340,340,57,62
+X,4360,354,354,61,65
+X,4380,366,366,63,67
+X,4400,377,377,67,71
+X,4420,386,386,69,74
+X,4440,393,393,71,75
+X,4460,398,398,73,78
+X,4480,400,400,75,80
+X,4500,400,400,76,82
+X,4520,397,397,76,82
+X,4540,391,391,77,83
+X,4560,384,384,77,83
+X,4580,374,374,77,83
+X,4600,362,362,74,81
+X,4620,348,348,74,80
+X,4640,333,333,72,79
+X,4660,316,316,69,76
+X,4680,300,300,67,74
+X,4700,283,283,65,70
+X,4720,267,267,63,68
+X,4740,251,251,60,65
+X,4760,237,237,58,61
+X,4780,225,225,55,58
+X,4800,214,214,53,56
+X,4820,207,207,51,52
+X,4840,202,202,48,50
+X,4860,200,200,47,47
+X,4880,201,201,44,46
+X,4900,206,206,42,45
+X,4920,213,213,41,45
+X,4940,223,223,40,45
+X,4960,236,236,41,47
+X,4980,250,250,43,48
+X,5000,267,267,45,49
+X,5020,285,285,48,51
+X,5040,303,303,51,53
+X,5060,321,321,54,57
+X,5080,339,339,57,59
+X,5100,355,355,61,62
+X,5120,370,370,63,66
+X,5140,382,382,66,69
+X,5160,391,391,69,73
+X,5180,397,397,72,75
+X,5200,400,400,74,79
+X,5220,399,399,75,79
+X,5240,394,394,77,81
+X,5260,386,386,76,81
+X,5280,375,375,75,82
+X,5300,360,360,75,80
+X,5320,344,344,73,80
+X,5340,325,325,71,78
+X,5360,306,306,68,75
+X,5380,286,286,66,72
+X,5400,267,267,64,69
+X,5420,249,249,61,65
+X,5440,232,232,58,63
+X,5460,219,219,56,59
+X,5480,209,209,53,56
+X,5500,202,202,51,53
+X,5520,200,200,49,50
+X,5540,202,202,46,48
+X,5560,208,208,45,46
+X,5580,218,218,42,45
+X,5600,231,231,43,47
+X,5620,248,248,43,48
+X,5640,267,267,45,48
+X,5660,287,287,48,50
+X,5680,308,308,51,54
+X,5700,329,329,55,56
+X,5720,349,349,58,59
+X,5740,366,366,62,64
+X,5760,381,381,65,67
+X,5780,391,391,68,71
+X,5800,398,398,71,74
+X,5820,400,400,74,77
+X,5840,397,397,75,79
+X,5860,390,390,76,81
+X,5880,378,378,75,80
+X,5900,362,362,75,81
+X,5920,344,344,72,79
+X,5940,323,323,71,77
+X,5960,301,301,69,74
+X,5980,278,278,66,71
+X,6000,257,257,63,67
+X,6020,238,238,60,64
+X,6040,222,222,58,59
+X,6060,210,210,55,56
+X,6080,202,202,52,53
+X,6100,200,200,49,50
+X,6120,203,203,48,48
+X,6140,211,211,45,47
+X,6160,224,224,44,47
+X,6180,241,241,44,48
+X,6200,262,262,45,50
+X,6220,284,284,48,52
+X,6240,308,308,51,54
+X,6260,331,331,56,57
+X,6280,353,353,60,60
+X,6300,371,371,62,64
+X,6320,386,386,66,67
+X,6340,396,396,68,71
+X,6360,400,400,72,74
+X,6380,398,398,73,77
+X,6400,391,391,74,79
+X,6420,378,378,75,79
+X,6440,361,361,74,79
+X,6460,339,339,72,78
+X,6480,316,316,70,77
+X,6500,291,291,67,73
+X,6520,267,267,65,70
+X,6540,245,245,62,65
+X,6560,226,226,59,62
+X,6580,211,211,56,59
+X,6600,203,203,54,54
+X,6620,200,200,50,52
+X,6640,204,204,49,50
+X,6660,214,214,47,48
+X,6680,229,229,45,48
+X,6700,250,250,45,49
+X,6720,273,273,47,51
+X,6740,299,299,50,54
+X,6760,325,325,55,56
+X,6780,349,349,58,59
+X,6800,370,370,62,62
+X,6820,386,386,66,66
+X,6840,396,396,69,69
+X,6860,400,400,71,73
+X,6880,397,397,72,75
+X,6900,387,387,74,77
+X,6920,371,371,74,78
+X,6940,350,350,73,78
+X,6960,325,325,71,77
+X,6980,298,298,69,75
+X,7000,272,272,65,70
+X,7020,247,247,64,67
+X,7040,226,226,60,63
+X,7060,211,211,57,58
+X,7080,202,202,55,55
+X,7100,200,200,52,52
+X,7120,206,206,50,49
+X,7140,219,219,48,48
+X,7160,238,238,46,48
+X,7180,262,262,47,51
+X,7200,289,289,49,51
+X,7220,317,317,53,54
+X,7240,343,343,56,57
+X,7260,367,367,60,61
+X,7280,385,385,63,65
+X,7300,396,396,67,70
+X,7320,400,400,71,73
+X,7340,396,396,73,76
+X,7360,384,384,73,78
+X,7380,365,365,74,78
+X,7400,341,341,73,78
+X,7420,313,313,70,76
+X,7440,284,284,68,73
+X,7460,257,257,65,69
+X,7480,233,233,62,64
+X,7500,214,214,59,61
+X,7520,203,203,56,56
+X,7540,200,200,53,53
+X,7560,206,206,51,50
+X,7580,219,219,48,49
+X,7600,240,240,47,49
+X,7620,266,266,48,51
+X,7640,295,295,50,54
+X,7660,325,325,54,56
+X,7680,352,352,59,60
+X,7700,375,375,64,64
+X,7720,391,391,67,68
+X,7740,399,399,70,71
+X,7760,398,398,71,74
+X,7780,388,388,73,76
+X,7800,370,370,72,77
+X,7820,345,345,72,77
+X,7840,316,316,70,75
+X,7860,285,285,67,73
+X,7880,256,256,64,69
+X,7900,231,231,62,65
+X,7920,212,212,58,60
+X,7940,202,202,55,56
+X,7960,201,201,53,53
+X,7980,209,209,51,50
+X,8000,227,227,48,49
+X,8020,252,252,48,50
+X,8040,281,281,49,52
+X,8060,313,313,52,56
+X,8080,343,343,57,58
+X,8100,369,369,62,62
+X,8120,388,388,67,67
+X,8140,399,399,70,70
+X,8160,399,399,71,74
+X,8180,389,389,73,75
+X,8200,370,370,72,76
+X,8220,344,344,72,75
+X,8240,313,313,69,74
+X,8260,280,280,67,71
+X,8280,250,250,64,68
+X,8300,225,225,61,63
+X,8320,208,208,58,58
+X,8340,200,200,55,55
+X,8360,204,204,53,52
+X,8380,217,217,50,50
+X,8400,240,240,49,49
+X,8420,269,269,48,52
+X,8440,302,302,51,55
+X,8460,335,335,56,58
+X,8480,364,364,60,61
+X,8500,386,386,66,66
+X,8520,398,398,69,69
+X,8540,399,399,72,73
+X,8560,389,389,72,75
+X,8580,369,369,73,75
+X,8600,341,341,71,75
+X,8620,308,308,68,74
+X,8640,274,274,66,71
+X,8660,243,243,64,66
+X,8680,219,219,60,63
+X,8700,204,204,57,58
+X,8720,200,200,54,54
+X,8740,208,208,52,51
+X,8760,227,227,49,50
+X,8780,255,255,49,52
+X,8800,288,288,50,53
+X,8820,323,323,54,57
+X,8840,355,355,59,60
+X,8860,380,380,63,65
+X,8880,396,396,68,68
+X,8900,400,400,69,72
+X,8920,391,391,71,73
+X,8940,371,371,70,75
+X,8960,342,342,69,75
+X,8980,308,308,66,74
+X,9000,272,272,63,70
+X,9020,241,241,61,67
+X,9040,216,216,58,61
+X,9060,202,202,54,58
+X,9080,201,201,53,53
+X,9100,213,213,50,51
+X,9120,236,236,50,51
+X,9140,267,267,49,52
+X,9160,303,303,52,54
+X,9180,339,339,55,59
+X,9200,369,369,61,61
+X,9220,390,390,66,66
+X,9240,400,400,69,69
+X,9260,396,396,72,73
+X,9280,379,379,72,74
+X,9300,351,351,71,74
+X,9320,316,316,69,73
+X,9340,279,279,67,70
+X,9360,245,245,64,66
+X,9380,218,218,60,62
+X,9400,203,203,58,57
+X,9420,0,0,44,44
+X,9440,0,0,26,25
+X,9460,0,0,14,16
+X,9480,0,0,8,8
+X,9500,0,0,4,4
+X,9520,0,0,2,1
+X,9540,0,0,0,0
+X,9560,0,0,0,0
+X,9580,0,0,0,-1
+X,9600,0,0,0,-2
+X,9620,0,0,0,0
+X,9640,0,0,0,0
+X,9660,0,0,0,0
+X,9680,0,0,0,0
+X,9700,0,0,0,0
+X,9720,0,0,0,0
+X,9740,0,0,0,0
+X,9760,0,0,0,0
+X,9780,0,0,0,0
+X,9800,0,0,0,0
+X,9820,0,0,0,0
+X,9840,0,0,0,0
+X,9860,0,0,0,0
+X,9880,0,0,0,0
+X,9900,0,0,0,0
+X,9920,0,0,0,0
+X,9940,0,0,0,0
+X,9960,0,0,0,0
+X,9980,0,0,0,0
+X,10000,0,0,0,0
+X,10020,0,0,0,0
+X,10040,0,0,0,0
+X,10060,0,0,0,0
+X,10080,0,0,0,0
+X,10100,0,0,0,0
+X,10120,0,0,0,0
+X,10140,0,0,0,0
+X,10160,0,0,0,0
+X,10180,0,0,0,0
+X,10200,0,0,0,0
+X,10220,0,0,0,0
+X,10240,0,0,0,0
+X,10260,0,0,0,0
+X,10280,0,0,0,0
+X,10300,0,0,0,0
+X,10320,0,0,0,0
+X,10340,0,0,0,0
+X,10360,0,0,0,0
+X,10380,0,0,0,0
+X,10400,0,0,0,0
+DONE X
+# X L base_pct=30 diff_pct=10
+# X par m_per_cnt_l_nm=63638 m_per_cnt_r_nm=63638 wheelbase_um=223250 hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+X,20,0,0,0,0
+X,40,0,0,0,0
+X,60,0,0,0,0
+X,80,0,0,0,0
+X,100,0,0,0,0
+X,120,0,0,0,0
+X,140,0,0,0,0
+X,160,0,0,0,0
+X,180,0,0,0,0
+X,200,0,0,0,0
+X,220,0,0,0,0
+X,240,0,0,0,0
+X,260,0,0,0,0
+X,280,0,0,0,0
+X,300,0,0,0,0
+X,320,0,0,0,0
+X,340,0,0,0,0
+X,360,0,0,0,0
+X,380,0,0,0,0
+X,400,0,0,0,0
+X,420,300,300,11,11
+X,440,300,300,30,27
+X,460,300,300,39,38
+X,480,300,300,44,43
+X,500,300,300,47,48
+X,520,300,300,48,50
+X,540,300,300,50,52
+X,560,300,300,52,55
+X,580,300,300,54,55
+X,600,300,300,55,56
+X,620,300,300,56,58
+X,640,300,300,56,58
+X,660,300,300,57,59
+X,680,300,300,58,59
+X,700,300,300,57,60
+X,720,300,300,58,60
+X,740,300,300,58,61
+X,760,300,300,58,62
+X,780,300,300,58,62
+X,800,300,300,59,62
+X,820,300,300,58,62
+X,840,300,300,58,62
+X,860,300,300,58,62
+X,880,300,300,58,63
+X,900,300,300,59,62
+X,920,300,300,58,63
+X,940,300,300,59,62
+X,960,300,300,58,63
+X,980,300,300,59,63
+X,1000,300,300,58,62
+X,1020,300,300,59,63
+X,1040,300,300,58,62
+X,1060,300,300,59,62
+X,1080,300,300,58,63
+X,1100,300,300,58,62
+X,1120,300,300,58,63
+X,1140,300,300,59,63
+X,1160,300,300,58,63
+X,1180,300,300,58,63
+X,1200,300,300,57,63
+X,1220,300,300,58,63
+X,1240,300,300,57,63
+X,1260,300,300,58,63
+X,1280,300,300,57,64
+X,1300,300,300,57,63
+X,1320,300,300,57,63
+X,1340,300,300,57,64
+X,1360,300,300,58,63
+X,1380,300,300,57,64
+X,1400,300,300,57,64
+X,1420,200,400,56,66
+X,1440,200,400,52,72
+X,1460,200,400,49,74
+X,1480,200,400,47,76
+X,1500,200,400,45,77
+X,1520,200,400,43,78
+X,1540,200,400,42,80
+X,1560,200,400,42,80
+X,1580,200,400,40,81
+X,1600,200,400,41,81
+X,1620,200,400,39,82
+X,1640,200,400,38,83
+X,1660,200,400,38,81
+X,1680,200,400,37,83
+X,1700,200,400,37,83
+X,1720,200,400,36,83
+X,1740,200,400,37,84
+X,1760,200,400,36,84
+X,1780,200,400,36,84
+X,1800,200,400,35,84
+X,1820,200,400,36,84
+X,1840,200,400,35,84
+X,1860,200,400,36,84
+X,1880,200,400,35,84
+X,1900,200,400,35,84
+X,1920,200,400,35,85
+X,1940,200,400,35,84
+X,1960,200,400,35,85
+X,1980,200,400,34,84
+X,2000,200,400,35,85
+X,2020,200,400,35,85
+X,2040,200,400,34,85
+X,2060,200,400,35,85
+X,2080,200,400,35,85
+X,2100,200,400,34,86
+X,2120,200,400,35,85
+X,2140,200,400,35,85
+X,2160,200,400,34,85
+X,2180,200,400,35,85
+X,2200,200,400,34,86
+X,2220,400,200,43,78
+X,2240,400,200,58,68
+X,2260,400,200,65,60
+X,2280,400,200,68,56
+X,2300,400,200,71,53
+X,2320,400,200,73,50
+X,2340,400,200,73,47
+X,2360,400,200,74,47
+X,2380,400,200,74,45
+X,2400,400,200,74,44
+X,2420,400,200,73,44
+X,2440,400,200,74,43
+X,2460,400,200,75,43
+X,2480,400,200,75,43
+X,2500,400,200,76,43
+X,2520,400,200,77,42
+X,2540,400,200,77,42
+X,2560,400,200,77,43
+X,2580,400,200,78,42
+X,2600,400,200,77,42
+X,2620,400,200,78,42
+X,2640,400,200,78,42
+X,2660,400,200,78,42
+X,2680,400,200,78,41
+X,2700,400,200,77,41
+X,2720,400,200,78,42
+X,2740,400,200,78,41
+X,2760,400,200,79,42
+X,2780,400,200,78,41
+X,2800,400,200,79,42
+X,2820,400,200,78,41
+X,2840,400,200,79,42
+X,2860,400,200,79,42
+X,2880,400,200,79,41
+X,2900,400,200,79,42
+X,2920,400,200,79,41
+X,2940,400,200,79,42
+X,2960,400,200,79,42
+X,2980,400,200,79,41
+X,3000,400,200,79,41
+X,3020,300,300,78,45
+X,3040,300,300,73,51
+X,3060,300,300,71,54
+X,3080,300,300,69,55
+X,3100,300,300,65,57
+X,3120,300,300,64,57
+X,3140,300,300,63,58
+X,3160,300,300,61,60
+X,3180,300,300,60,59
+X,3200,300,300,61,61
+X,3220,300,300,60,60
+X,3240,300,300,60,61
+X,3260,300,300,61,62
+X,3280,300,300,59,61
+X,3300,300,300,60,62
+X,3320,300,300,59,61
+X,3340,300,300,59,62
+X,3360,300,300,58,63
+X,3380,300,300,59,62
+X,3400,300,300,59,63
+X,3420,300,300,59,63
+X,3440,300,300,58,62
+X,3460,300,300,59,63
+X,3480,300,300,58,62
+X,3500,300,300,59,63
+X,3520,300,300,58,63
+X,3540,300,300,59,63
+X,3560,300,300,58,63
+X,3580,300,300,58,62
+X,3600,300,300,58,63
+X,3620,300,300,59,64
+X,3640,300,300,58,63
+X,3660,300,300,58,63
+X,3680,300,300,58,64
+X,3700,300,300,58,64
+X,3720,300,300,58,63
+X,3740,300,300,57,64
+X,3760,300,300,58,64
+X,3780,300,300,57,64
+X,3800,300,300,58,64
+X,3820,300,300,57,64
+X,3840,300,300,57,63
+X,3860,300,300,57,64
+X,3880,300,300,58,63
+X,3900,300,300,57,63
+X,3920,300,300,57,63
+X,3940,300,300,58,64
+X,3960,300,300,57,63
+X,3980,300,300,58,64
+X,4000,300,300,57,64
+X,4020,300,300,58,64
+X,4040,300,300,57,64
+X,4060,300,300,58,64
+X,4080,300,300,57,64
+X,4100,300,300,58,64
+X,4120,300,300,58,64
+X,4140,300,300,58,64
+X,4160,300,300,57,64
+X,4180,300,300,58,64
+X,4200,300,300,57,65
+X,4220,300,300,58,64
+X,4240,300,300,57,64
+X,4260,300,300,58,64
+X,4280,300,300,57,63
+X,4300,300,300,57,64
+X,4320,300,300,58,64
+X,4340,300,300,57,63
+X,4360,300,300,57,64
+X,4380,300,300,57,64
+X,4400,300,300,58,63
+X,4420,300,300,57,64
+X,4440,300,300,57,64
+X,4460,300,300,58,65
+X,4480,300,300,57,64
+X,4500,300,300,58,64
+X,4520,0,0,45,51
+X,4540,0,0,25,29
+X,4560,0,0,13,18
+X,4580,0,0,7,10
+X,4600,0,0,3,6
+X,4620,0,0,3,3
+X,4640,0,0,1,3
+X,4660,0,0,0,0
+X,4680,0,0,0,0
+X,4700,0,0,0,0
+X,4720,0,0,0,-1
+X,4740,0,0,0,0
+X,4760,0,0,0,0
+X,4780,0,0,0,0
+X,4800,0,0,0,0
+X,4820,0,0,0,0
+X,4840,0,0,0,0
+X,4860,0,0,0,0
+X,4880,0,0,0,0
+X,4900,0,0,0,0
+X,4920,0,0,0,0
+X,4940,0,0,0,0
+X,4960,0,0,0,0
+X,4980,0,0,0,0
+X,5000,0,0,0,0
+X,5020,0,0,0,0
+X,5040,0,0,0,0
+X,5060,0,0,0,0
+X,5080,0,0,0,0
+X,5100,0,0,0,0
+X,5120,0,0,0,0
+X,5140,0,0,0,0
+X,5160,0,0,0,0
+X,5180,0,0,0,0
+X,5200,0,0,0,0
+X,5220,0,0,0,0
+X,5240,0,0,0,0
+X,5260,0,0,0,0
+X,5280,0,0,0,0
+X,5300,0,0,0,0
+X,5320,0,0,0,0
+X,5340,0,0,0,0
+X,5360,0,0,0,0
+X,5380,0,0,0,0
+X,5400,0,0,0,0
+X,5420,0,0,0,0
+X,5440,0,0,0,0
+X,5460,0,0,0,0
+X,5480,0,0,0,0
+X,5500,0,0,0,0
+DONE X
+# X D base_pct=30 diff_pct=10
+# X par m_per_cnt_l_nm=63638 m_per_cnt_r_nm=63638 wheelbase_um=223250 hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+
+X,640,300,300,55,59
+X,660,300,300,56,60
+X,680,300,300,57,61
+X,700,300,300,57,62
+X,720,300,300,57,62
+X,740,300,300,57,63
+X,760,300,300,58,62
+X,780,300,300,58,63
+X,800,300,300,57,63
+X,820,300,300,58,63
+X,840,300,300,58,63
+X,860,300,300,58,62
+X,880,300,300,58,63
+X,900,300,300,58,63
+X,920,300,300,58,62
+X,940,300,300,57,63
+X,960,300,300,58,63
+X,980,300,300,58,63
+X,1000,300,300,57,63
+X,1020,300,300,58,63
+X,1040,300,300,58,63
+X,1060,300,300,57,63
+X,1080,300,300,58,63
+X,1100,300,300,57,63
+X,1120,300,300,57,63
+X,1140,300,300,57,63
+X,1160,300,300,57,64
+X,1180,300,300,58,63
+X,1200,300,300,57,64
+X,1220,300,300,57,63
+X,1240,300,300,57,64
+X,1260,300,300,58,64
+X,1280,300,300,57,64
+X,1300,300,300,58,64
+X,1320,300,300,57,64
+X,1340,300,300,58,63
+X,1360,300,300,57,64
+X,1380,300,300,57,64
+X,1400,300,300,58,63
+X,1420,200,400,55,67
+X,1440,200,400,52,71
+X,1460,200,400,49,74
+X,1480,200,400,47,77
+X,1500,200,400,45,78
+X,1520,200,400,43,79
+X,1540,200,400,41,80
+X,1560,200,400,41,81
+X,1580,200,400,40,82
+X,1600,200,400,40,82
+X,1620,200,400,39,83
+X,1640,200,400,39,82
+X,1660,200,400,37,83
+X,1680,200,400,37,83
+X,1700,200,400,37,82
+X,1720,200,400,37,83
+X,1740,200,400,36,84
+X,1760,200,400,36,84
+X,1780,200,400,36,84
+X,1800,200,400,35,84
+X,1820,200,400,36,84
+X,1840,200,400,35,84
+X,1860,200,400,35,84
+X,1880,200,400,35,84
+X,1900,200,400,35,84
+X,1920,200,400,35,84
+X,1940,200,400,35,84
+X,1960,200,400,35,85
+X,1980,200,400,34,84
+X,2000,200,400,35,84
+X,2020,200,400,35,85
+X,2040,200,400,34,85
+X,2060,200,400,35,84
+X,2080,200,400,35,85
+X,2100,200,400,35,85
+X,2120,400,200,44,78
+X,2140,400,200,58,69
+X,2160,400,200,66,61
+X,2180,400,200,69,56
+X,2200,400,200,71,53
+X,2220,400,200,72,51
+X,2240,400,200,73,47
+X,2260,400,200,73,47
+X,2280,400,200,73,45
+X,2300,400,200,74,44
+X,2320,400,200,73,44
+X,2340,400,200,74,43
+X,2360,400,200,75,43
+X,2380,400,200,76,43
+X,2400,400,200,76,43
+X,2420,400,200,76,43
+X,2440,400,200,77,43
+X,2460,400,200,77,42
+X,2480,400,200,78,42
+X,2500,400,200,77,43
+X,2520,400,200,79,42
+X,2540,400,200,78,42
+X,2560,400,200,78,42
+X,2580,400,200,78,42
+X,2600,400,200,79,42
+X,2620,400,200,78,41
+X,2640,400,200,78,42
+X,2660,400,200,79,42
+X,2680,400,200,78,42
+X,2700,400,200,78,41
+X,2720,400,200,79,42
+X,2740,400,200,78,41
+X,2760,400,200,79,42
+X,2780,400,200,79,41
+X,2800,400,200,78,42
+X,2820,300,300,77,45
+X,2840,300,300,74,50
+X,2860,300,300,70,55
+X,2880,300,300,68,56
+X,2900,300,300,66,56
+X,2920,300,300,64,58
+X,2940,300,300,63,59
+X,2960,300,300,61,59
+X,2980,300,300,61,61
+X,3000,300,300,61,60
+X,3020,300,300,61,60
+X,3040,300,300,60,61
+X,3060,300,300,60,61
+X,3080,300,300,59,61
+X,3100,300,300,59,61
+X,3120,300,300,59,62
+X,3140,300,300,59,61
+X,3160,300,300,59,62
+X,3180,300,300,58,61
+X,3200,300,300,59,62
+X,3220,300,300,59,62
+X,3240,300,300,58,62
+X,3260,300,300,59,62
+X,3280,300,300,58,63
+X,3300,300,300,59,63
+X,3320,300,300,58,63
+X,3340,300,300,58,62
+X,3360,300,300,59,64
+X,3380,300,300,58,63
+X,3400,300,300,58,63
+X,3420,300,300,59,63
+X,3440,300,300,57,63
+X,3460,300,300,58,64
+X,3480,300,300,58,63
+X,3500,300,300,57,63
+X,3520,300,300,58,63
+X,3540,300,300,57,64
+X,3560,300,300,57,64
+X,3580,300,300,57,64
+X,3600,300,300,57,64
+X,3620,300,300,58,64
+X,3640,300,300,57,64
+X,3660,300,300,57,64
+X,3680,300,300,58,64
+X,3700,300,300,57,64
+X,3720,300,300,58,64
+X,3740,300,300,57,65
+X,3760,300,300,58,64
+X,3780,300,300,57,64
+X,3800,300,300,58,65
+X,3820,400,200,61,60
+X,3840,400,200,68,55
+X,3860,400,200,72,51
+X,3880,400,200,73,49
+X,3900,400,200,74,47
+X,3920,400,200,74,46
+X,3940,400,200,76,46
+X,3960,400,200,76,44
+X,3980,400,200,76,45
+X,4000,400,200,77,43
+X,4020,400,200,77,43
+X,4040,400,200,77,43
+X,4060,400,200,77,43
+X,4080,400,200,78,42
+X,4100,400,200,78,42
+X,4120,400,200,78,42
+X,4140,400,200,79,42
+X,4160,400,200,78,42
+X,4180,400,200,78,42
+X,4200,400,200,79,41
+X,4220,400,200,78,42
+X,4240,400,200,79,42
+X,4260,400,200,78,41
+X,4280,400,200,79,41
+X,4300,400,200,78,42
+X,4320,400,200,79,41
+X,4340,400,200,78,41
+X,4360,400,200,79,41
+X,4380,400,200,79,42
+X,4400,400,200,78,41
+X,4420,400,200,79,41
+X,4440,400,200,78,42
+X,4460,400,200,79,41
+X,4480,400,200,78,41
+X,4500,400,200,79,42
+X,4520,200,400,74,48
+X,4540,200,400,67,58
+X,4560,200,400,61,65
+X,4580,200,400,58,69
+X,4600,200,400,55,72
+X,4620,200,400,53,74
+X,4640,200,400,52,75
+X,4660,200,400,51,77
+X,4680,200,400,49,77
+X,4700,200,400,47,79
+X,4720,200,400,45,80
+X,4740,200,400,44,79
+X,4760,200,400,42,81
+X,4780,200,400,41,81
+X,4800,200,400,40,82
+X,4820,200,400,39,82
+X,4840,200,400,39,83
+X,4860,200,400,37,83
+X,4880,200,400,37,83
+X,4900,200,400,37,84
+X,4920,200,400,36,84
+X,4940,200,400,36,84
+X,4960,200,400,36,84
+X,4980,200,400,35,85
+X,5000,200,400,36,84
+X,5020,200,400,35,85
+X,5040,200,400,35,84
+X,5060,200,400,35,85
+X,5080,200,400,35,84
+X,5100,200,400,35,85
+X,5120,200,400,35,86
+X,5140,200,400,34,85
+X,5160,200,400,35,85
+X,5180,200,400,35,85
+X,5200,200,400,34,85
+X,5220,300,300,40,82
+X,5240,300,300,46,78
+X,5260,300,300,51,74
+X,5280,300,300,54,71
+X,5300,300,300,54,70
+X,5320,300,300,53,69
+X,5340,300,300,54,68
+X,5360,300,300,54,67
+X,5380,300,300,54,68
+X,5400,300,300,54,66
+X,5420,300,300,54,67
+X,5440,300,300,55,66
+X,5460,300,300,54,65
+X,5480,300,300,54,66
+X,5500,300,300,55,66
+X,5520,300,300,55,65
+X,5540,300,300,55,65
+X,5560,300,300,55,65
+X,5580,300,300,56,65
+X,5600,300,300,55,65
+X,5620,300,300,57,65
+X,5640,300,300,56,65
+X,5660,300,300,57,64
+X,5680,300,300,56,65
+X,5700,300,300,57,65
+X,5720,300,300,57,64
+X,5740,300,300,57,65
+X,5760,300,300,57,65
+X,5780,300,300,57,64
+X,5800,300,300,56,65
+X,5820,300,300,57,64
+X,5840,300,300,57,65
+X,5860,300,300,57,64
+X,5880,300,300,56,65
+X,5900,300,300,57,64
+X,5920,300,300,56,64
+X,5940,300,300,57,64
+X,5960,300,300,56,64
+X,5980,300,300,56,64
+X,6000,300,300,57,65
+X,6020,300,300,56,64
+X,6040,300,300,57,64
+X,6060,300,300,57,64
+X,6080,300,300,57,65
+X,6100,300,300,56,64
+X,6120,300,300,57,64
+X,6140,300,300,57,65
+X,6160,300,300,57,65
+X,6180,300,300,58,64
+X,6200,300,300,57,65
+X,6220,300,300,56,64
+X,6240,300,300,57,64
+X,6260,300,300,57,64
+X,6280,300,300,57,64
+X,6300,300,300,57,64
+X,6320,300,300,57,64
+X,6340,300,300,56,64
+X,6360,300,300,57,64
+X,6380,300,300,58,63
+X,6400,300,300,56,64
+X,6420,300,300,58,64
+X,6440,300,300,57,64
+X,6460,300,300,57,64
+X,6480,300,300,57,64
+X,6500,300,300,57,64
+X,6520,300,300,57,64
+X,6540,300,300,57,64
+X,6560,300,300,58,64
+X,6580,300,300,57,64
+X,6600,300,300,57,63
+X,6620,300,300,57,64
+X,6640,300,300,57,64
+X,6660,300,300,56,63
+X,6680,300,300,58,63
+X,6700,300,300,57,64
+X,6720,0,0,45,50
+X,6740,0,0,24,29
+X,6760,0,0,13,17
+X,6780,0,0,7,9
+X,6800,0,0,4,5
+X,6820,0,0,0,3
+X,6840,0,0,0,1
+X,6860,0,0,0,0
+X,6880,0,0,0,0
+X,6900,0,0,0,-1
+X,6920,0,0,-1,0
+X,6940,0,0,0,0
+X,6960,0,0,0,0
+X,6980,0,0,0,-1
+X,7000,0,0,0,0
+X,7020,0,0,0,0
+X,7040,0,0,0,0
+X,7060,0,0,0,0
+X,7080,0,0,0,0
+X,7100,0,0,0,0
+X,7120,0,0,0,0
+X,7140,0,0,0,0
+X,7160,0,0,0,0
+X,7180,0,0,0,0
+X,7200,0,0,0,0
+X,7220,0,0,0,0
+X,7240,0,0,0,0
+X,7260,0,0,0,0
+X,7280,0,0,0,0
+X,7300,0,0,0,0
+X,7320,0,0,0,0
+X,7340,0,0,0,0
+X,7360,0,0,0,0
+X,7380,0,0,0,0
+X,7400,0,0,0,0
+X,7420,0,0,0,0
+X,7440,0,0,0,0
+X,7460,0,0,0,0
+X,7480,0,0,0,0
+X,7500,0,0,0,0
+X,7520,0,0,0,0
+X,7540,0,0,0,0
+X,7560,0,0,0,0
+X,7580,0,0,0,0
+X,7600,0,0,0,0
+X,7620,0,0,0,0
+X,7640,0,0,0,0
+X,7660,0,0,0,0
+X,7680,0,0,0,0
+X,7700,0,0,0,0
+DONE X

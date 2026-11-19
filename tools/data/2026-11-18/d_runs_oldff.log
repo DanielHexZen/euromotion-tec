@@ -1,0 +1,69 @@
+> ?
+D<mm> drive, V<mm/s> speed, T<ms>[ <ms>] ramps, W<deg> turn, -100..100 open loop %
+PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params
+F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump
+S status, I info, EV events, FAULTS, CLEAR, MODE IDLE|BENCH
+> P
+ERR syntax, use P<id|name>=<value> or P<id|name>?
+> P115=0.05
+P115 whl_tau_m=5.00000e-02 s
+> P116=0.098
+P116 whl_ks_l=9.80000e-02 -
+> P117=1.275
+P117 whl_kv_l=1.27500e+00 1/(m/s)
+> P118=0.041
+P118 whl_ks_r=4.10000e-02 -
+> P119=1.361
+P119 whl_kv_r=1.36100e+00 1/(m/s)
+> P119=1.361
+P119 whl_kv_r=1.36100e+00 1/(m/s)
+> P120=0.141
+P120 whl_ksb_l=1.41000e-01 -
+> P121=0.169
+P121 whl_ksb_r=1.69000e-01 -
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.4 sync_max=3.6 t=8360
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.4 sync_max=2.7 t=8360
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1999.0 sync_max=2.7 t=8300
+
+HELLO MR2006B fw 0.1-phase0 f7fe0a2-dirty Debug reset=0x02 calib=0
+> k
+100 mot_d_max=1.00000e+00 -
+101 mot_d_min=0.0 -
+102 mot_slew_ol=2.00000e+00 1/s
+110 whl_kp_v=4.50000e-01 1/(m/s)
+111 whl_ki_v=8.98000e+00 1/m
+112 whl_i_max=3.00000e-01 -
+113 whl_kp_x=2.00000e+00 1/s
+114 whl_v_corr_max=1.00000e-01 m/s
+115 whl_tau_m=4.97500e-02 s
+116 whl_ks_l=5.24000e-02 -
+117 whl_kv_l=1.36050e+00 1/(m/s)
+118 whl_ks_r=6.12000e-02 -
+119 whl_kv_r=1.30770e+00 1/(m/s)
+120 whl_ksb_l=1.10000e-01 -
+121 whl_ksb_r=1.35000e-01 -
+122 whl_v_moving=8.00000e-03 m/s
+123 whl_v_stopped=3.00000e-03 m/s
+124 whl_v_zero=2.00000e-03 m/s
+125 whl_speed_alpha=5.00000e-01 -
+126 whl_fault_time=6.00000e-01 s
+127 whl_track_max=4.00000e-02 m
+128 whl_ff_norm_en=0.0 bool
+129 whl_ff_u_ref=1.20000e+01 V
+150 drv_pos_tol=2.00000e-03 m
+151 drv_v_settle=2.00000e-02 m/s
+152 drv_settle_timeout=1.00000e+00 s
+153 drv_k_sync=3.00000e+00 1/s
+154 drv_v_max=4.50000e-01 m/s
+157 drv_a_stop=5.00000e-01 m/s2
+161 drv_v_nom=3.00000e-01 m/s
+162 drv_t_acc=1.00000e+00 s
+163 drv_t_dec=1.00000e+00 s
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
