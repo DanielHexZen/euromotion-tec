@@ -8,7 +8,22 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 
 ## Status
 
-**Not started.** Nothing has been measured. Every table below is empty and every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+**Section 6 done by the calibration-firmware route (2026-11-18, `CALIB_README.md`), sections 4, 5, 7 open.** Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+
+Calibration firmware (`APP_CALIB 1`, built on `129e42f` + uncommitted `X` tests): `C`, `B`, `K` on blocks (`tools/data/2026-11-18/calib_blocks.log`), `G`, `L`, `X` S/P/N/L/D on the floor (`calib_floor.log`, copy in `tools/data/assessment1/`). `calib_host.py check` OK, `eval` over both logs:
+
+| Parameter | ID | L | R | Source |
+|---|---|---|---|---|
+| `whl_ks` | 116 / 118 | 0.0524 (se 0.0039) | 0.0612 (se 0.0097) | `G` floor, 27 / 25 points, R² 0.996 / 0.980 |
+| `whl_kv` 1/(m/s) | 117 / 119 | 1.3605 (se 0.016) | 1.3077 (se 0.039) | `G` floor, nominal `odo_m_per_cnt` |
+| `whl_ksb` | 120 / 121 | 0.110 (fwd 12 %, rev 10 %) | 0.135 (fwd 12 %, rev 15 %) | `B` **on blocks** (unloaded: likely below the floor value) |
+| `whl_tau_m` s | 115 | 0.042–0.044 | 0.054–0.063 | `K` on blocks, 6 runs (40 % ×4, 25 % ×2); mean of both wheels 0.04975 |
+
+Entered as compiled defaults in `par_table.h` (`t_whl_law` now pins the hand-computed values with `par_set`). Not yet checked on the vehicle (§6.3: `D2000` ×3, `D300`). `Kv` scales with `odo_m_per_cnt`: if §4 changes it by a factor k, divide `Kv` by k. `L` (report only): latency 40–80 ms. Same duty: the right wheel runs 8–15 % faster, open loop the vehicle drifts left.
+
+**§6.3 check (2026-11-18, `d_runs_newff.log`, `d_runs_oldff.log`), same floor as H3.** New defaults: `D300` ×10, `D2000` ×12, `D5000` ×10, all `DONE` 1.4–2.0 mm short (design, `drv_pos_tol`), `sync_max` 0.8–1.3 mm (H3 with the 9 Oct values: 2.3–3.8 mm), no `TIMEOUT`/`FAULT`. Tape: `D300` 296–300, `D2000` 2015–2025 mm with 15–80 mm drift right, `D5000` 5030–5070 mm with 130–480 mm drift right (H3: 5000.7 mm, ≤ 250 mm). Counter-check with the 9 Oct values set live: `D2000` ×3 tape 2010–2020 mm, drift 30–100 mm right, `sync_max` 2.7–3.6 mm. The ground error is the same with both sets, so it is not the feedforward: the mechanics changed (both wheels re-tightened before these runs, the left one was loose on its hex). The new defaults stay; §4 and §5 are redone on the current mechanics. Align the casters (push the vehicle ~10 cm forward) before every run: the drift scatter at equal encoder counts points to caster swivel.
+
+**§4 (2026-11-18, `straight.csv`, `straight.log`, `straight.txt`).** 5 × `D2000` + 3 × `D5000`, tape at the hub of each wheel, counts from the `DONE` values (`--done`, `p` was not read per run). `odo_m_per_cnt` = 6.35444e-5 m, sd 0.147 %, −0.15 % vs nominal; per wheel L 6.37241e-5, R 6.33647e-5, k_r/k_l = 0.9944 (the right wheel rolls 0.56 % less per count: the drift to the right, for §5). The earlier +1 % (single tape point on the vehicle, not the hubs) was the measuring method. `Kv` correction for the new scale: × 1/0.9985, below its standard error, not applied. Check after `P200=6.35444e-05` (`straight_check.log`), 3 × `D2000`, tape − `DONE`: L +1.7 / −2.2 / +6.0 mm, R −2.1 / −6.3 / −7.1 mm; mean of both wheels −0.2 / −4.3 / −0.6 mm. The mean scale is right; the per-wheel 3 mm limit fails on R (mean −5.2 mm, the expected −0.28 % of the L/R diameter difference) and once on L: left for §5 (`odo_scale_l/r`).
 
 ## 1. What this procedure covers
 

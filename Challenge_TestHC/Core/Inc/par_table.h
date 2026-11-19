@@ -17,13 +17,13 @@
     X(112, whl_i_max,        0.30f,     "-",       0.0f,    1.0f,   PAR_L) \
     X(113, whl_kp_x,         2.0f,      "1/s",     0.0f,    10.0f,  PAR_L) \
     X(114, whl_v_corr_max,   0.10f,     "m/s",     0.0f,    0.3f,   PAR_L) \
-    X(115, whl_tau_m,        0.050f,    "s",       0.0f,    0.5f,   PAR_L) \
-    X(116, whl_ks_l,         0.098f,    "-",       0.0f,    0.5f,   PAR_L) \
-    X(117, whl_kv_l,         1.275f,    "1/(m/s)", 0.5f,    3.0f,   PAR_L) \
-    X(118, whl_ks_r,         0.041f,    "-",       0.0f,    0.5f,   PAR_L) \
-    X(119, whl_kv_r,         1.361f,    "1/(m/s)", 0.5f,    3.0f,   PAR_L) \
-    X(120, whl_ksb_l,        0.141f,    "-",       0.0f,    0.6f,   PAR_L) \
-    X(121, whl_ksb_r,        0.169f,    "-",       0.0f,    0.6f,   PAR_L) \
+    X(115, whl_tau_m,        0.04975f,   "s",       0.0f,    0.5f,   PAR_L) \
+    X(116, whl_ks_l,         0.0524f,   "-",       0.0f,    0.5f,   PAR_L) \
+    X(117, whl_kv_l,         1.3605f,   "1/(m/s)", 0.5f,    3.0f,   PAR_L) \
+    X(118, whl_ks_r,         0.0612f,   "-",       0.0f,    0.5f,   PAR_L) \
+    X(119, whl_kv_r,         1.3077f,   "1/(m/s)", 0.5f,    3.0f,   PAR_L) \
+    X(120, whl_ksb_l,        0.1100f,   "-",       0.0f,    0.6f,   PAR_L) \
+    X(121, whl_ksb_r,        0.1350f,   "-",       0.0f,    0.6f,   PAR_L) \
     X(122, whl_v_moving,     0.008f,    "m/s",     0.002f,  0.05f,  PAR_L) \
     X(123, whl_v_stopped,    0.003f,    "m/s",     0.001f,  0.02f,  PAR_L) \
     X(124, whl_v_zero,       0.002f,    "m/s",     0.0f,    0.01f,  PAR_L) \

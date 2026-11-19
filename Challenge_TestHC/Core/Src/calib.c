@@ -2,7 +2,12 @@
  * Console on USART2 (115200) mirrored on USART1 (HC-12). Lines starting with '#' are comments or
  * CSV headers. G and B also print the vehicle console's status line and `> <duty>` echoes, so
  * tools/ffit.py steady|breakaway reads the log unchanged (capture it like a phase-1 log).
- * Units on the wire: counts, mm, mm/s, duty in percent; every header names its unit. */
+ * Units on the wire: counts, mm, mm/s, duty in percent; every header names its unit.
+ * K and X record one line per 20 ms tick (duty applied in the interval, counts of that interval) and
+ * dump it paced after the run. X<p> [base_pct] [diff_pct] is a family of open-loop excitation
+ * tests for system identification, run on the floor: S step staircase, P PRBS, N chirp (longitudinal),
+ * L single and D double lane change (lateral, diff = differential duty). Header and units: see X
+ * lines in start(); tools read them in Matlab/assessment1/run_assessment1.m. */
 #include "app_config.h"
 
 #if APP_CALIB
@@ -34,6 +39,39 @@
 #define B_MAX_PCT     34                            /* below STALL_DUTY: B ends, it does not fault */
 #define K_DEFAULT_PCT 40
 #define K_N           100U                          /* 2 s at 50 Hz */
+/* X excitation tests, [DECIDE] procedure values. Every duration is a multiple of 20 ms. */
+#define X_T(ms)       ((uint16_t)((ms) * HZ / 1000U))
+#define X_PRE_MS      400U                          /* zero duty before the profile (pre-trigger) */
+#define X_POST_MS     1000U                         /* zero duty after it (decay) */
+#define X_BASE_PCT    40                            /* XS, XP, XN default */
+#define XL_BASE_PCT   30                            /* XL, XD default */
+#define XL_DIFF_PCT   10
+#define X_DIFF_MAX    30
+#define XS_HOLD_MS    1500U                         /* 5 stages: 0.5, 1, 0.5, 1, 0 times base */
+#define XS_TOT_MS     (5U * XS_HOLD_MS)
+#define XP_LEAD_MS    1000U                         /* at 0.75 base */
+#define XP_DUR_MS     8000U
+#define XP_BIT_TICKS  4U                            /* 80 ms per PRBS bit */
+#define XP_SEED       0x5AU                         /* 7-bit LFSR x^7 + x^6 + 1, nonzero */
+#define XP_TOT_MS     (XP_LEAD_MS + XP_DUR_MS)
+#define XN_LEAD_MS    1000U
+#define XN_DUR_MS     8000U
+#define XN_F0_HZ      0.2f
+#define XN_F1_HZ      3.0f
+#define XN_TOT_MS     (XN_LEAD_MS + XN_DUR_MS)
+#define XL_LEAD_MS    1000U                         /* lane change: diff 0, +d, -d, 0 */
+#define XL_T_MS       800U
+#define XL_END_MS     1500U
+#define XL_TOT_MS     (XL_LEAD_MS + 2U * XL_T_MS + XL_END_MS)
+#define XD_LEAD_MS    1000U                         /* double lane change: 0, +d, -d, 0, -d, +d, 0 */
+#define XD_T_MS       700U
+#define XD_MID_MS     1000U
+#define XD_END_MS     1500U
+#define XD_TOT_MS     (XD_LEAD_MS + 4U * XD_T_MS + XD_MID_MS + XD_END_MS)
+#define MAX2(a, b)    (((a) > (b)) ? (a) : (b))
+#define X_N           X_T(X_PRE_MS + MAX2(MAX2(XS_TOT_MS, XP_TOT_MS), MAX2(MAX2(XN_TOT_MS, XL_TOT_MS), XD_TOT_MS)) + X_POST_MS)
+#define REC_N         MAX2(K_N, X_N)                /* 520 records at 50 Hz */
+_Static_assert(REC_N <= 1000U, "record buffer");
 #define TXN           1024U
 #define RXN           64U
 
@@ -63,11 +101,24 @@ static uint8_t s_stall[2];
 static bool s_ok;
 static int32_t s_prev[2], s_d[2], s_sum[2], s_late[2], s_fwd_cnt, s_fwd_lat;
 static float s_u[2], s_vh[2];
-static struct { int16_t d[2]; int16_t u_milli; } s_rec[K_N];
+static struct { int16_t d[2]; int16_t u_milli[2]; } s_rec[REC_N];
 static uint16_t s_dump, s_kn;
 static bool s_dump_on;
+static char s_dump_cmd;                             /* 'K' or 'X': what the dump prints */
+static char s_xp;                                   /* X profile letter */
+static float s_xbase, s_xdiff, s_xlvl, s_phase;     /* duty fractions, PRBS level, chirp phase */
+static uint16_t s_xn, s_xprof;                      /* X run and profile length in ticks */
+static uint8_t s_lfsr;
 
 static const char WHEEL[2] = { 'L', 'R' };
+
+typedef struct { uint16_t ms; float v; } xseg_t;    /* v: fraction of base (XS) or of diff (XL, XD) */
+static const xseg_t XS_SEG[] = { { XS_HOLD_MS, 0.5f }, { XS_HOLD_MS, 1.0f }, { XS_HOLD_MS, 0.5f },
+                                 { XS_HOLD_MS, 1.0f }, { XS_HOLD_MS, 0.0f } };
+static const xseg_t XL_SEG[] = { { XL_LEAD_MS, 0.0f }, { XL_T_MS, 1.0f }, { XL_T_MS, -1.0f }, { XL_END_MS, 0.0f } };
+static const xseg_t XD_SEG[] = { { XD_LEAD_MS, 0.0f }, { XD_T_MS, 1.0f }, { XD_T_MS, -1.0f }, { XD_MID_MS, 0.0f },
+                                 { XD_T_MS, -1.0f }, { XD_T_MS, 1.0f }, { XD_END_MS, 0.0f } };
+#define SEG_N(g) ((uint32_t)(sizeof(g) / sizeof((g)[0])))
 
 /* ---- output: one ring, one read index per UART (the radio is the slow one) ----------- */
 static uint32_t tx_free(void)
@@ -79,7 +130,7 @@ static uint32_t tx_free(void)
 __attribute__((format(printf, 1, 2)))
 static void out(const char *f, ...)
 {
-    char b[112];
+    char b[160];                                    /* longest line: the C header, 136 chars */
     va_list ap;
     va_start(ap, f);
     int n = vsnprintf(b, sizeof b, f, ap);
@@ -174,6 +225,56 @@ static void fault(uint32_t w)
     out("FAULT STALL_OR_SIGN wheel %c\r\n", WHEEL[w]);
 }
 
+static bool is_rec(void) { return (s_cmd == 'K') || (s_cmd == 'X'); }
+
+static float xseg(const xseg_t *g, uint32_t n, uint32_t t)
+{
+    for (uint32_t i = 0U; i < n; i++) {
+        const uint32_t w = X_T(g[i].ms);
+        if (t < w) { return g[i].v; }
+        t -= w;
+    }
+    return 0.0f;
+}
+
+/* Duty of the interval that starts at tick n (called for every n in order: PRBS and chirp keep state).
+ * The clamped value is what is applied and what is recorded. */
+static void x_duty(uint16_t n)
+{
+    float b = 0.0f, d = 0.0f;
+    const uint32_t pre = X_T(X_PRE_MS);
+    if (n >= pre && (uint32_t)n - pre < s_xprof) {
+        const uint32_t t = (uint32_t)n - pre;
+        switch (s_xp) {
+        case 'S': b = s_xbase * xseg(XS_SEG, SEG_N(XS_SEG), t); break;
+        case 'P': {
+            const uint32_t lead = X_T(XP_LEAD_MS);
+            if (t < lead) { s_xlvl = 0.75f; } else if ((t - lead) % XP_BIT_TICKS == 0U) {
+                const uint8_t fb = (uint8_t)(((s_lfsr >> 6) ^ (s_lfsr >> 5)) & 1U);
+                s_lfsr = (uint8_t)(((s_lfsr << 1) | fb) & 0x7FU);
+                s_xlvl = ((s_lfsr & 1U) != 0U) ? 1.0f : 0.5f;
+            }
+            b = s_xbase * s_xlvl;
+            break;
+        }
+        case 'N': {
+            const uint32_t lead = X_T(XN_LEAD_MS);
+            b = s_xbase * 0.75f;
+            if (t >= lead) {
+                const float f = XN_F0_HZ + (XN_F1_HZ - XN_F0_HZ) * (float)(t - lead) * CTRL_DT_S / ((float)XN_DUR_MS / 1000.0f);
+                b = s_xbase * (0.75f + 0.25f * sinf(s_phase));
+                s_phase += TWO_PI_F * f * CTRL_DT_S;
+            }
+            break;
+        }
+        case 'L': b = s_xbase; d = s_xdiff * xseg(XL_SEG, SEG_N(XL_SEG), t); break;
+        default:  b = s_xbase; d = s_xdiff * xseg(XD_SEG, SEG_N(XD_SEG), t); break;
+        }
+    }
+    s_u[0] = clampf(b - d, -DUTY_MAX, DUTY_MAX);
+    s_u[1] = clampf(b + d, -DUTY_MAX, DUTY_MAX);
+}
+
 /* ---- test sequencer: a test is a list of steps (duty, hold, rest), generated one at a time ---- */
 static bool next_step(void)
 {
@@ -205,6 +306,12 @@ static bool next_step(void)
         s_step.rest = 0U;
         s_step.slew = false;                        /* a real step, for tau_m */
         break;
+    case 'X':                                       /* one step; the duty comes from x_duty() */
+        if (k >= 1U) { return false; }
+        s_step.hold = s_xn;
+        s_step.rest = 0U;
+        s_step.slew = false;
+        break;
     default:                                        /* 'L' */
         if (k >= 4U) { return false; }
         s_step.u[k >> 1] = sg * L_DUTY;
@@ -221,7 +328,7 @@ static void begin_step(void)
     s_t = 0U;
     s_first[0] = s_first[1] = 0U;
     s_sum[0] = s_sum[1] = s_late[0] = s_late[1] = 0;
-    if (s_cmd == 'K') { return; }
+    if (is_rec()) { return; }
     const long l = lroundf(s_step.u[0] * 100.0f), r = lroundf(s_step.u[1] * 100.0f);
     if (l == r) { out("> %ld\r\n", l); } else { out("> PWM %ld %ld\r\n", l, r); }
 }
@@ -230,7 +337,7 @@ static void finish(void)
 {
     const char c = s_cmd;
     stop_all();
-    if (c == 'K') { s_dump = 0U; s_dump_on = true; return; }
+    if (c == 'K' || c == 'X') { s_dump = 0U; s_dump_cmd = c; s_dump_on = true; return; }
     out("DONE %c%s\r\n", c, (c != 'C') ? "" : (s_ok ? " PASS" : " FAIL"));
 }
 
@@ -319,10 +426,11 @@ static void tick(void)
                 s_stall[i] = 0U;
             }
         }
-        if (s_cmd == 'K' && s_kn < K_N) {
+        if (is_rec() && s_kn < REC_N) {
             s_rec[s_kn].d[0] = (int16_t)s_d[0];
             s_rec[s_kn].d[1] = (int16_t)s_d[1];
-            s_rec[s_kn].u_milli = (int16_t)lroundf(s_u[0] * 1000.0f);
+            s_rec[s_kn].u_milli[0] = (int16_t)lroundf(s_u[0] * 1000.0f);
+            s_rec[s_kn].u_milli[1] = (int16_t)lroundf(s_u[1] * 1000.0f);
             s_kn++;
         }
         if (++s_t >= s_step.hold) {
@@ -339,13 +447,17 @@ static void tick(void)
     if (s_ph == PH_IDLE) { return; }
 
     const bool drive = (s_ph == PH_DRIVE);
-    const float slew = par()->mot_slew_ol * CTRL_DT_S;
-    for (uint32_t i = 0U; i < 2U; i++) {
-        const float tgt = drive ? s_step.u[i] : 0.0f;
-        s_u[i] = (drive && s_step.slew) ? s_u[i] + clampf(tgt - s_u[i], -slew, slew) : tgt;
+    if (s_cmd == 'X') {
+        x_duty(s_t);
+    } else {
+        const float slew = par()->mot_slew_ol * CTRL_DT_S;
+        for (uint32_t i = 0U; i < 2U; i++) {
+            const float tgt = drive ? s_step.u[i] : 0.0f;
+            s_u[i] = (drive && s_step.slew) ? s_u[i] + clampf(tgt - s_u[i], -slew, slew) : tgt;
+        }
     }
     apply();
-    if (s_cmd != 'K' && ++s_pt >= 15U) {            /* 0.3 s, the period ffit.py assumes */
+    if (!is_rec() && ++s_pt >= 15U) {            /* 0.3 s, the period ffit.py assumes */
         s_pt = 0U;
         print_status(drive ? "OPEN" : "HOLD");
     }
@@ -367,6 +479,12 @@ static void start(char c)
     case 'G': out("# G duty_pct,v_l_mm_s,v_r_mm_s (mean of the second half of each step; ffit.py steady reads the status lines)\r\n"); break;
     case 'B': out("# B wheel,dir,breakaway_duty_pct (first 1 pct step with at least 10 counts; ffit.py breakaway reads the status lines)\r\n"); break;
     case 'K': out("# K t_ms,duty_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duty applied in that interval; step at 200 ms, off at 1400 ms)\r\n"); break;
+    case 'X':
+        out("# X %c base_pct=%ld diff_pct=%ld\r\n", s_xp, lroundf(s_xbase * 100.0f), lroundf(s_xdiff * 100.0f));
+        out("# X par m_per_cnt_l_nm=%ld m_per_cnt_r_nm=%ld wheelbase_um=%ld hz=%ld\r\n", lroundf(m_per_cnt(0U) * 1e9f),
+            lroundf(m_per_cnt(1U) * 1e9f), lroundf(par()->odo_wheelbase * 1e6f), (long)HZ);
+        out("# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)\r\n");
+        break;
     default:  out("# L wheel,fwd_cnt,rev_cnt,fwd_latency_ms,rev_latency_ms (motor-side counts and time to the first count in the commanded direction; see calib.c)\r\n"); break;
     }
     mot_enable(true);
@@ -376,6 +494,7 @@ static void start(char c)
 static void help(void)
 {
     out("# C sign check | G steady steps | B breakaway | K [pct] step response (default 40)\r\n");
+    out("# X<p> [base_pct] [diff_pct] excitation, floor, 4 m free: S step, P PRBS, N chirp, L lane change, D double (L,D: diff)\r\n");
     out("# L reversal latency | odo raw counts | r reset counts | s stop | U,A not available\r\n");
 }
 
@@ -398,6 +517,27 @@ static void exec(void)
     case 'K': {
         long p = strtol(&s_line[1], NULL, 10);
         s_kpct = (uint16_t)((p <= 0) ? K_DEFAULT_PCT : ((p > lroundf(DUTY_MAX * 100.0f)) ? lroundf(DUTY_MAX * 100.0f) : p));
+        start(c);
+        break;
+    }
+    case 'X': {
+        const char p = s_line[1];
+        if (p == '\0' || strchr("SPNLD", p) == NULL) { out("ERR unknown, ? for help\r\n"); break; }
+        const bool lat = (p == 'L') || (p == 'D');
+        const long bmax = lroundf(DUTY_MAX * 100.0f);
+        char *e1, *e2;
+        const long b = strtol(&s_line[2], &e1, 10);
+        const long d = strtol(e1, &e2, 10);
+        const long bp = (b <= 0) ? (lat ? XL_BASE_PCT : X_BASE_PCT) : ((b > bmax) ? bmax : b);
+        const long dp = !lat ? 0 : ((e2 == e1) ? XL_DIFF_PCT : ((d < 0) ? 0 : ((d > X_DIFF_MAX) ? X_DIFF_MAX : d)));
+        s_xp = p;
+        s_xbase = (float)bp / 100.0f;
+        s_xdiff = (float)dp / 100.0f;
+        s_lfsr = XP_SEED;
+        s_xlvl = 0.75f;
+        s_phase = 0.0f;
+        s_xprof = X_T((p == 'S') ? XS_TOT_MS : ((p == 'P') ? XP_TOT_MS : ((p == 'N') ? XN_TOT_MS : ((p == 'L') ? XL_TOT_MS : XD_TOT_MS))));
+        s_xn = (uint16_t)(X_T(X_PRE_MS) + s_xprof + X_T(X_POST_MS));
         start(c);
         break;
     }
@@ -452,13 +592,18 @@ void Calib_Loop(void)
         tick();
     }
     if (s_dump_on && tx_free() >= 48U) {            /* paced: the radio (19200 Bd 8N1, 1920 B/s) drains 192 bytes per 100 ms */
-        if (s_dump < K_N) {
+        if (s_dump < s_kn) {
             const uint16_t k = (uint16_t)s_dump++;
-            out("K,%ld,%d,%d,%d\r\n", (long)(((int32_t)k + 1) * 1000 / (int32_t)HZ), s_rec[k].u_milli, s_rec[k].d[0], s_rec[k].d[1]);
+            const long t_ms = (long)(((int32_t)k + 1) * 1000 / (int32_t)HZ);
+            if (s_dump_cmd == 'K') {
+                out("K,%ld,%d,%d,%d\r\n", t_ms, s_rec[k].u_milli[0], s_rec[k].d[0], s_rec[k].d[1]);
+            } else {
+                out("X,%ld,%d,%d,%d,%d\r\n", t_ms, s_rec[k].u_milli[0], s_rec[k].u_milli[1], s_rec[k].d[0], s_rec[k].d[1]);
+            }
         } else {
             s_dump_on = false;
             s_cmd = 0;
-            out("DONE K\r\n");
+            out("DONE %c\r\n", s_dump_cmd);
         }
     }
     tx_kick();
