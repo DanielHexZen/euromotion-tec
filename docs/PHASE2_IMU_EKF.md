@@ -9,13 +9,13 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and 
 | Item | State |
 |---|---|
 | Host code | `att`, `ekf`, `imu_yaw` (pure); `t_att`, `t_ekf_static/slip/gate/sf_q/jacobians/backshift/line/pred`, `t_imu_yaw` |
-| Vehicle code | `imu`, `imu_lsm6ds3` (SPI1 DMA, TIM2 capture), IWDG (`sys_wdg_*`), `F_CSS` callback, console `IMU`/`EKF`, `W` with correction turns (D-54); parameters 400-404, 410-411, 500-522, 905 |
+| Vehicle code | `imu`, `imu_lsm6ds3` (SPI1 DMA, TIM2 capture), IWDG (`sys_wdg_*`), `F_CSS` callback, console `IMU`/`EKF`, `W` with correction turns (D-57); parameters 400-404, 410-411, 500-522, 905 |
 | Host tests | passed, 56764 checks, 0 failed (`make -C test`) |
 | Build | `Core/Src` compiles with arm-none-eabi-gcc 13.2 at `-Og`/`-O2`, `FEAT_IMU` 0 and 1, 0 warnings. Not the CubeIDE build |
-| Vehicle | nothing flashed; `FEAT_IMU` defaults to 0. EKF, `att_init` and IWDG run in every build (D-61): this branch is phase-2 firmware, phase-1 calibration keeps `phase0`/main until H6 passes |
+| Vehicle | nothing flashed; `FEAT_IMU` defaults to 0. EKF, `att_init` and IWDG run in every build (D-64): this branch is phase-2 firmware, phase-1 calibration keeps `phase0`/main until H6 passes |
 | H7, H8 (stationary part) | not done |
 
-Decisions: spec D-54 to D-62. Open items (spec OQ-11):
+Decisions: spec D-57 to D-65. Open items (spec OQ-11):
 - Capture sets 0/1 deferred (needs `tlm`, 48 KB buffer, phase-4 protocol).
 - REQ-IMU-07 "EKF q_θ x100 on saturation" not wired (`ekf_odo_t` has no saturation flag).
 - Spec §14 `t_att` "rejects 0.3 g lateral" contradicts `att_acc_gate` 0.1 (0.3 g lateral gives |a| = 1.044 g, passes the gate); the test uses 0.5 g, spec to decide.
