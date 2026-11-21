@@ -83,6 +83,21 @@
     X(520, ekf_p0_s,         0.005f,    "-",       1.0e-4f, 0.1f,   PAR_S) \
     X(521, ekf_sf_corr,      6.2832f,   "rad",     0.1f,    100.0f, PAR_L) \
     X(522, ekf_slip_T,       0.04f,     "s",       0.02f,   0.5f,   PAR_L) \
+    /* 10.4 sensors (D-63: G1-G4 not fitted, gnd runs on S2) */ \
+    X(603, vl_timeout,       0.2f,      "s",       0.05f,   1.0f,   PAR_L) \
+    X(614, gnd_d_drop,       0.03f,     "m",       0.01f,   0.1f,   PAR_L) \
+    X(615, gnd_d_up,         0.02f,     "m",       0.01f,   0.1f,   PAR_L) \
+    X(616, gnd_sd_grass,     0.008f,    "m",       0.001f,  0.05f,  PAR_L) \
+    X(617, gnd_sig_grass,    0.0f,      "kcps",    0.0f,    100.0f, PAR_L) \
+    X(618, gnd_sd_n,         5.0f,      "-",       3.0f,    15.0f,  PAR_S) \
+    X(619, gnd_n_deb,        2.0f,      "-",       1.0f,    5.0f,   PAR_L) \
+    X(632, fwd_t_lat,        0.10f,     "s",       0.02f,   0.5f,   PAR_L) \
+    X(633, fwd_a_brake,      0.5f,      "m/s2",    0.1f,    3.0f,   PAR_L) \
+    X(634, fwd_margin,       0.15f,     "m",       0.05f,   0.5f,   PAR_L) \
+    X(635, fwd_slow_range,   1.0f,      "m",       0.3f,    2.0f,   PAR_L) \
+    X(636, fwd_v_slow,       0.25f,     "m/s",     0.05f,   0.45f,  PAR_L) \
+    X(670, lat_tilt,         0.332f,    "rad",     0.0f,    0.7f,   PAR_S) \
+    X(671, lat_h,            0.07f,     "m",       0.03f,   0.4f,   PAR_S) \
     /* 10.5 communication */ \
     X(904, con_deadman_s,    2.0f,      "s",       0.5f,    10.0f,  PAR_L) \
     X(905, wdg_enable,       1.0f,      "bool",    0.0f,    1.0f,   PAR_S)

@@ -22,6 +22,8 @@ void t_ekf_backshift(void);
 void t_ekf_line(void);
 void t_ekf_pred(void);
 void t_imu_yaw(void);
+void t_gnd(void);
+void t_fwd(void);
 
 int main(void)
 {
@@ -38,6 +40,8 @@ int main(void)
         { "t_ekf_line", t_ekf_line },
         { "t_ekf_pred", t_ekf_pred },
         { "t_imu_yaw", t_imu_yaw },
+        { "t_gnd", t_gnd },
+        { "t_fwd", t_fwd },
     };
     for (unsigned i = 0; i < sizeof T / sizeof T[0]; i++) {
         printf("%s\n", T[i].name);

@@ -1,8 +1,8 @@
 # MR2006B Vehicle Firmware — Implementation Specification
 
 > **Status:** Draft for review
-> **Version:** 1.9 (phase-2 code written, D-54 to D-62; 2026-11-18)
-> **Last Updated:** 2026-11-18 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
+> **Version:** 1.12
+> **Last Updated:** 2026-11-21 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
 > **Companion documents:** `MR2006B_Vehicle_Technical_Reference.tex/.pdf` (physics, models, rationale — *why*), `PHASE0_COMMISSIONING.md` (phase-0 gate and status), `PHASE1_CALIBRATION.md` (phase-1 procedure, D-31), `PHASE2_IMU_EKF.md` (IMU wiring, phase-2 status and bench checklist), `Matlab/ekf_design/` (EKF reference model, D-30), `BENCH_README.md` (bench firmware), `MR2006B_CubeMX_Konfiguration.xlsx` (current `.ioc` state, in `Challenge_TestHC/`), `CALIB_README.md` (calibration firmware, optional route, D-47), `CONCEPT_REV_F_CHANGES.md`. Not in the repository (checked with `git ls-files`, 2026-11-10): `CONCEPT.md` Rev. E, `TOOLCHAIN.md`, `MR2006B_Pinout.xlsx`
@@ -286,17 +286,17 @@ Pins marked **new** are not in the current `.ioc`. XSHUT assignments follow `MR2
 | PB3 / PB4 / PB5 | CN10-31 / -27 / -29 | IMU SPI | SPI1 SCK/MISO/MOSI | — | none | IMU `[PHASE 2]` |
 | PA4 | CN7-32 | `IMU_CS` | GPIO out PP, very high speed | **high** | none | IMU CS `[PHASE 2]` |
 | PA1 | CN7-30 | IMU DRDY | TIM2_CH2 input capture, rising | — | none | IMU INT1 `[PHASE 2]` |
-| PB8 / PB9 | CN10-3 / -5 | ground bus | I2C1 SCL/SDA, 400 kHz | — | ext. 2.2–4.7 kΩ | G1–G4 `[PHASE 3]` |
-| PB10 / PC12 | CN10-25 / CN7-3 | horizontal bus | I2C2 SCL/SDA, 400 kHz | — | ext. 2.2–4.7 kΩ | F1, F2, S1, S2 `[PHASE 3]` — PC12 as I2C2_SDA is accepted by CubeMX 6.18.1 (`GPIO_AF4_I2C2` in the generated msp), so the former `[VERIFY]` is resolved; the all-on-I2C1 fallback is not needed |
-| PC0 | CN7-38 | `XSHUT_G1` | GPIO out PP | low | none | ground left outer |
-| PC1 | CN7-36 | `XSHUT_G2` | GPIO out PP | low | none | ground left inner |
-| PC2 | CN7-35 | `XSHUT_G3` | GPIO out PP | low | none | ground right inner |
-| PC3 | CN7-37 | `XSHUT_G4` | GPIO out PP | low | none | ground right outer |
+| PB8 / PB9 | CN10-3 / -5 | ground bus | I2C1 SCL/SDA, 400 kHz | — | ext. 2.2–4.7 kΩ | G1–G4 `[PHASE 3]` — **not fitted (D-63)**: bus stays in the `.ioc`, unused |
+| PB10 / PC12 | CN10-25 / CN7-3 | horizontal bus | I2C2 SCL/SDA, 400 kHz | — | ext. 2.2–4.7 kΩ | F1, F2, S2, L1 `[PHASE 3]` (D-63) — PC12 as I2C2_SDA is accepted by CubeMX 6.18.1 (`GPIO_AF4_I2C2` in the generated msp), so the former `[VERIFY]` is resolved; the all-on-I2C1 fallback is not needed |
+| PC0 | CN7-38 | `XSHUT_G1` | GPIO out PP | low | none | ground left outer — not fitted (D-63), stays low |
+| PC1 | CN7-36 | `XSHUT_G2` | GPIO out PP | low | none | ground left inner — not fitted (D-63), stays low |
+| PC2 | CN7-35 | `XSHUT_G3` | GPIO out PP | low | none | ground right inner — not fitted (D-63), stays low |
+| PC3 | CN7-37 | `XSHUT_G4` | GPIO out PP | low | none | ground right outer — not fitted (D-63), stays low |
 | PB14 | CN10-28 | `XSHUT_F1` | GPIO out PP | low | none | forward left |
 | PB15 | CN10-26 | `XSHUT_F2` | GPIO out PP | low | none | forward right |
-| PB0 | CN7-34 | `XSHUT_S1` | GPIO out PP | low | none | lateral left |
+| PB0 | CN7-34 | `XSHUT_S1` | GPIO out PP | low | none | lateral left — used by **L1** (D-63); label kept |
 | PB1 | CN10-24 | `XSHUT_S2` | GPIO out PP | low | none | lateral right |
-| PA15 | CN7-17 | `VL_S1_INT` **new** | GPIO EXTI15, falling | — | pull-up | S1 GPIO1 (data ready) `[PHASE 5]` |
+| PA15 | CN7-17 | `VL_S1_INT` **new** | GPIO EXTI15, falling | — | pull-up | S1 GPIO1 (data ready) `[PHASE 5]` — used by **L1** (D-63) |
 | PA12 | CN10-12 | `VL_S2_INT` **new** | GPIO EXTI12, falling | — | pull-up | S2 GPIO1 (data ready) `[PHASE 5]` |
 | PA0 | CN7-28 | battery voltage | ADC1_IN0, 480 cycles | — | none | divider 47 k / 10 k, 100 nF at the node |
 | PC4 / PC5 | CN10-34 / -6 | reserve analog | ADC1_IN14/IN15 | — | — | unused |
@@ -940,18 +940,18 @@ float att_roll(const att_t *a);   float att_pitch(const att_t *a);
 
 #### 7.13.1 Sensor table
 
-`const vl_cfg_t VL_CFG[8]` in `vl.c` (REQ-VL-01):
+`const vl_cfg_t VL_CFG[8]` in `vl.c` (REQ-VL-01). **Fitted sensors (D-63, 2026-11-21): F1, F2, S2, optionally L1.** G1–G4 are not fitted and S1 is replaced by L1; the rows stay so the IDs do not change. A not-fitted sensor is marked absent at init (§7.13.2 step 2).
 
 | ID | Name | Bus | XSHUT | 7-bit addr | Role | Mount (body, m) | View | Mode | ROI | Data ready |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 0 | G1 | I2C1 | PC0 | 0x30 | ground left outer | `x = gnd_x, y = +gnd_y_out` | down | short | 4×4 | polled |
-| 1 | G2 | I2C1 | PC1 | 0x31 | ground left inner | `x = gnd_x, y = +gnd_y_in` | down | short | 4×4 | polled |
-| 2 | G3 | I2C1 | PC2 | 0x32 | ground right inner | `x = gnd_x, y = −gnd_y_in` | down | short | 4×4 | polled |
-| 3 | G4 | I2C1 | PC3 | 0x33 | ground right outer | `x = gnd_x, y = −gnd_y_out` | down | short | 4×4 | polled |
+| 0 | G1 | I2C1 | PC0 | 0x30 | **not fitted (D-63)** ground left outer | `x = gnd_x, y = +gnd_y_out` | down | short | 4×4 | polled |
+| 1 | G2 | I2C1 | PC1 | 0x31 | **not fitted (D-63)** ground left inner | `x = gnd_x, y = +gnd_y_in` | down | short | 4×4 | polled |
+| 2 | G3 | I2C1 | PC2 | 0x32 | **not fitted (D-63)** ground right inner | `x = gnd_x, y = −gnd_y_in` | down | short | 4×4 | polled |
+| 3 | G4 | I2C1 | PC3 | 0x33 | **not fitted (D-63)** ground right outer | `x = gnd_x, y = −gnd_y_out` | down | short | 4×4 | polled |
 | 4 | F1 | I2C2 | PB14 | 0x34 | forward left | `x = fwd_x, y = +fwd_y` | +x | short | 16×16 | polled |
 | 5 | F2 | I2C2 | PB15 | 0x35 | forward right | `x = fwd_x, y = −fwd_y` | +x | short | 16×16 | polled |
-| 6 | S1 | I2C2 | PB0 | 0x36 | lateral left | `x = lat_x, y = +lat_y` | +y, down by `lat_tilt` (§7.13.4) | short | 4×4 + baffle | EXTI PA15 |
-| 7 | S2 | I2C2 | PB1 | 0x37 | lateral right | `x = lat_x, y = −lat_y` | −y, down by `lat_tilt` (§7.13.4) | short | 4×4 + baffle | EXTI PA12 |
+| 6 | L1 | I2C2 | PB0 | 0x36 | landmarks, optional (D-63; replaces S1) | on top: `x = lm_x, y = lm_y`, height `lm_h` `[MEASURE]` | horizontal, yaw `lm_yaw` ≈ 45° from +x towards the path `[MEASURE]` | long `[DECIDE]` | 4×4 + baffle | EXTI PA15 |
+| 7 | S2 | I2C2 | PB1 | 0x37 | lateral right; also the only ground sensor (D-63) | `x = lat_x, y = −lat_y` | −y, down by `lat_tilt` (§7.13.4) | short | 4×4 + baffle | EXTI PA12 |
 
 Mounting positions are parameters (§10, group GEO) `[MEASURE]` on the finished chassis. Ground sensor lateral offsets default to 0.15 m (inner) and 0.25 m (outer) from the centre line, `[DECIDE]` D-4.
 
@@ -1026,6 +1026,8 @@ Smaller angles reach further but smear the edge over a longer footprint; larger 
 
 ### 7.14 `gnd` — ground classification and edge events (pure) `[PHASE 3]`
 
+**D-63:** G1–G4 are not fitted. `gnd` classifies S2 only, with `h := r·sin θ_eff` (θ_eff = `lat_tilt` + φ) and `h0 := lat_h` as in REQ-LAT-07; the table below and the debounce are unchanged. Side states: right only, S2 `PATH` → `GND_FAR`, S2 not `PATH` (except `UNKNOWN`) → `GND_NOMINAL`; left is always `GND_UNKNOWN`. `GND_TOO_CLOSE` and therefore the sensor interlock (REQ-GND-02) cannot be derived from one footprint: replacement open, OQ-12. Edge events (REQ-GND-03) come from S2.
+
 **Per sensor, at every new result:**
 
 1. Height corrected for tilt: `h = range · cos φ · cos ϑ`.
@@ -1067,6 +1069,8 @@ bool gnd_pop_edge_event(gnd_t *g, gnd_edge_ev_t *ev);  /* {sensor id, t_us, from
 - REQ-GND-04 A stale inner sensor in `AUTO` → controlled stop (`F_GND_STALE`). Without it the interlock is blind.
 
 ### 7.15 `lat` — lateral landmarks (pure) `[PHASE 5]`
+
+**D-63:** S1 is not fitted; landmarks come from L1 (on top, horizontal, yaw `lm_yaw` ≈ 45°). The face fit and the post notch below assume a view perpendicular to the track; with L1 the geometry changes (OQ-12) and is specified before phase 5.
 
 Consumes S1/S2 results, the encoder distance `s_enc`, the roll angle from `att` and the EKF pose history. Active only inside the along-track windows of landmarks that `map` lists for the current segment (§7.18).
 
@@ -1836,6 +1840,10 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 671 | `lat_h` | 0.07 | m | 0.03–0.4 | S | D | optical centre of S1/S2 above the path `[MEASURE]` |
 | 672 | `lat_beta` | 0.131 | rad | 0.05–0.25 | S | D | half field of view of the S ROI (4×4 ≈ 15° → 7.5°) `[VERIFY]` UM2510 |
 | 673 | `lat_cls_en` | 1 | bool | 0/1 | L | D | publish the ground class of S1/S2 (capture and console only, REQ-LAT-07) |
+| 680 | `lm_x` | 0.0 | m | −0.3–0.3 | S | D | L1 position (D-63) `[MEASURE]`; added to `par_table.h` with `lat` (phase 5) |
+| 681 | `lm_y` | 0.0 | m | −0.3–0.3 | S | D | `[MEASURE]` |
+| 682 | `lm_h` | 0.20 | m | 0.05–0.5 | S | D | height of L1 above the path `[MEASURE]` |
+| 683 | `lm_yaw` | −0.785 | rad | −π–π | S | D | L1 view direction from +x, CCW positive; ≈ 45° towards the path `[MEASURE]` (sign depends on the side of the path, OQ-12) |
 
 ### 10.5 Guidance, evasion, mission, communication (700–999)
 
@@ -2072,7 +2080,7 @@ The EKF is designed and verified first in MATLAB/Simulink under `Matlab/ekf_desi
 | H6 | Calibration chain | floor, vehicle firmware with the normal console and the host tools `tools/straight_scale.py`, `umbmark.py`, `ffit.py` (`PHASE1_CALIBRATION.md`, D-31): straight-line scale, UMBmark 5 runs CW and 5 CCW, feedforward steps (steady state and breakaway), `D5000` × 3. Deferred: `whl_tau_m` (needs 50 Hz capture, phase 2), `odo_backlash_l/r` (phase 5), `whl_ff_u_ref` and `whl_ff_norm_en` (battery divider not wired) | UMBmark return error < 10 mm after correction (every single run); `D5000` × 3 end within 2 mm; defaults committed with the logs | 1 |
 | H7 | IMU | bench | DRDY capture rate = ODR ± 0.1 %; Allan variance logged; 10-turn spin residual < 0.5° after `imu_gz_scale` | 2 |
 | H8 | EKF stationary + pushed | bench, floor | bias converges; hand-pushed 10 m straight: estimate within 10 cm | 2 (week 10) |
-| H9 | Ground sensors outdoors | course, noon + afternoon | classes correct on paving/edging/grass/kerb ≥ 99 % of samples; thresholds recorded | 3 |
+| H9 | Ground sensors outdoors (S2 only, D-63) | course, noon + afternoon | classes correct on paving/edging/grass/kerb ≥ 99 % of samples; thresholds recorded | 3 |
 | H9b | Lateral tilt test | test strip or course edge (path, grass, edging), S sensor on a wedge at h = 7 cm | For each θ ∈ {13°, 15°, 19°} and each edge distance D ∈ {15, 20, 25, 30, 40} cm: 1000 samples at rest, once with G1/G4 active (crosstalk, log status and ambient); the same at ±2° roll on a wedge; a post and a wall inside the footprint. Record range, status, signal, spread, class. Pass: on flat path `LATCAL` within ±5 % of `lat_h / sin θ`; class PATH / GRASS / EDGE_UP correct ≥ 95 % when the edge lies between `D_near` and `D_far`; with roll compensation z changes by < 1 cm at ±2°; no false class on bare path. Result: choose the `lat_tilt` default and the maximum usable edge distance, record them in the log | 3 |
 | H10 | Reflex | floor, box obstacle | stops before contact at 0.1, 0.3, 0.45 m/s; stopping distance logged | 3 |
 | H11 | Telemetry | 15 min, radio at 19200 Bd (both HC-12 modules `AT+B19200`); on failure repeated at 9600 Bd | < 1 % frame loss at ≤ 30 m; link map recorded along the course. Passing at 19200 Bd is the condition for the switch (D-35); otherwise 9600 Bd stays | 4 (week 10) |
@@ -2102,7 +2110,7 @@ A failed gate is a finding, not a delay to hide. Weeks refer to the 16-week cour
 | **0 — Restructure** | 6–7 | CubeMX target state §4 except phase-tagged peripherals (TIM6 1 kHz, TIM2 1 MHz, TIM1 ARR 8999, build flags). Modules `sys_*`, `par`, `units`, `mot`, `enc` (DIFF), `prof`, `whl`, `drv` (MOVE, TURN_ENC, OPEN, HOLD), `bat`, `com_uart` (IT both ports), `con` with all legacy commands, `app`, `app_isr`. Fault handlers. `test/` with `t_prof`, `t_whl_law`, `t_drv_move`, `t_par`, `t_crc`. | H1, H2, H3, H4, H5. The `D` regression matches the old firmware. Host tests green. |
 | **1 — Calibrate** | 7 | Follow `PHASE1_CALIBRATION.md` with the vehicle firmware and its console (D-31): straight-line scale (`odo_m_per_cnt`), UMBmark (`odo_scale_l/r`, `odo_wheelbase`), feedforward (`whl_ks_*`, `whl_kv_*`, `whl_ksb_*`) with the host tools. Enter results as defaults. Deferred: `whl_tau_m` (phase 2), `odo_backlash_l/r` (phase 5), feedforward normalisation (battery divider). | H6. Parameter defaults updated and committed with the calibration logs. |
 | **2 — IMU and EKF** | 7–9 | `imu` (LSM6DS3 backend), `att`, `ekf` (prediction, ZUPT, encoder fallback; one step per `S_CTRL` period at 50 Hz, D-30), TIM2 capture, SPI DMA, IWDG, capture buffer (sets 0, 1; **deferred**, needs `tlm`, the 48 KB buffer and the phase-4 protocol, OQ-11). Console `IMU`, `EKF`, `W` with gyro. | H7, H8 (stationary part). `t_att`, `t_ekf_*` green. **Week-8 milestone:** IMU and encoders logged with timestamps. |
-| **3 — Sensing and guidance** | 8–11 | `vl`, `gnd`, `fwd` (reflex, governor), edge updates in `ekf`, `map` + `course_rect10`, `nav` (follow, final, turn), `msn` (AUTO without evasion, RECOVER), `drv` VEL mode. Lateral tilt test of S1/S2 (§7.13.4). SIL simulation. | H9, H9b, H10, SIL pass on `rect10`, `t_gnd`, `t_fwd`, `t_map`, `t_nav_*`, `t_msn`, `t_lat_tilt` green. **Week-8 milestone** extended by ToF logging. |
+| **3 — Sensing and guidance** | 8–11 | `vl`, `gnd`, `fwd` (reflex, governor), edge updates in `ekf`, `map` + `course_rect10`, `nav` (follow, final, turn), `msn` (AUTO without evasion, RECOVER), `drv` VEL mode. Lateral tilt test of S2 (§7.13.4; sensor set D-63). SIL simulation. | H9, H9b, H10, SIL pass on `rect10`, `t_gnd`, `t_fwd`, `t_map`, `t_nav_*`, `t_msn`, `t_lat_tilt` green. **Week-8 milestone** extended by ToF logging. |
 | **4 — Telemetry** | 9–10 | `proto`, `tlm` (FAST, SLOW, EVENT), USART1 DMA, port modes, `HELLO`, radio timing. Ground station logging (separate spec). | H11. `t_cobs`, `t_proto_msgs` green. **Week-10 milestone.** |
 | **5 — Course aiding** | 10–12 | Course survey → `course_jardin.yaml`. `lat` (face, post), landmark updates, backlash model, optional `EST_MT`. Replay tool. | H8 (pushed), H12 (rectangle ≤ 30 cm, week 13 at the latest). `t_lat`, `t_enc_est` green. |
 | **6 — Obstacles and manual** | 12–14 | `evd`, `fwd` ROI profile, `AUTO_EVADE`; `MANUAL` via `DRIVE` with heartbeat. | H13. `t_evd` green. **Week-14 milestone.** |
@@ -2231,8 +2239,9 @@ All HAL callbacks (`HAL_TIM_PeriodElapsedCallback`, `HAL_TIM_IC_CaptureCallback`
 | OQ-7 | Is waypoint accuracy taken per waypoint, as a mean, or as the worst case? Affects `nav_final_dist` and the hold logic only marginally, but decides tuning priorities. | professor (Q-12) | phase 7 |
 | OQ-8 | Does the start-heading jig exist? Without it the world frame is defined by placement accuracy (≈ 1°). | team | phase 3 |
 | OQ-9 | Will a mechanical E-stop be wired into the EN lines? | team | phase 0 (wiring) |
-| OQ-10 | A second, **horizontal** lateral sensor per side (S3/S4, mounted at 25–35 cm for bench faces and posts up to `lat_r_max`) in addition to the tilted S1/S2? The tilted beam reaches only `D_far` (34–73 cm at the test angles) and at 7 cm sees only legs of benches. Costs two more VL53L1X (XSHUT pins, I2C2 addresses, `VL_CFG[10]`, polled). `[DECIDE]` after H9b | team | phase 3 (after H9b), before phase 5 |
+| OQ-10 | A second, **horizontal** lateral sensor per side (S3/S4, mounted at 25–35 cm for bench faces and posts up to `lat_r_max`) in addition to the tilted S1/S2? The tilted beam reaches only `D_far` (34–73 cm at the test angles) and at 7 cm sees only legs of benches. Costs two more VL53L1X (XSHUT pins, I2C2 addresses, `VL_CFG[10]`, polled). `[DECIDE]` after H9b **Superseded by D-63:** one landmark sensor L1 on top, horizontal, ≈ 45°; no S3/S4. | team | phase 3 (after H9b), before phase 5 |
 | OQ-11 | Phase-2 code leftovers: (1) capture sets 0/1 deferred (`tlm`, 48 KB buffer, phase-4 protocol); (2) REQ-IMU-07 "q_θ ×100 on saturation" not wired; (3) §14 `t_att` "rejects 0.3 g" contradicts `att_acc_gate` 0.1 (decide gate or test); (4) `IMU`/`EKF` console commands print one snapshot, "(1 s)" unclear; (5) no roll/pitch mounting-offset parameter (`att` assumes the board level); (6) `[VERIFY]` at first power-up: §7.11.1 register values, `DRDY_PULSE_CFG_G`, CTRL4_C `I2C_disable` (not set), temperature raw/16 + 25 °C, WHO_AM_I 0x69 vs 0x6A, `IMU_AXIS_MAP` identity `[MEASURE]`. See `PHASE2_IMU_EKF.md` | team | phase 2 bench |
+| OQ-12 | Consequences of the reduced sensor set (D-63): (1) replacement for the ground interlock REQ-GND-02 (left side blind, right side one footprint), e.g. EKF cross-track limit or S2 slant range; (2) observation point and σ of S2 edge events for `ekf_update_edge` (footprint centre at `D_ax`? from H9b) and the path-line offset of D-15; (3) L1 geometry for `lat` (45° view: face fit, post notch, reach); (4) L1 distance mode and ROI; (5) found by `t_gnd`: a height step raises the spread `σ_h`, so every transition passes through `GRASS` for up to `gnd_sd_n` samples. Events into an edge class keep the time of the step, events back to `PATH` come ≈ 100 ms (≈ 3 cm at 0.3 m/s) late and with `from = GRASS`. Applies to G1–G4 as well | team | (1), (2) phase 3 before H12; (3), (4) before phase 5 |
 
 ### 18.2 Decisions taken in this specification
 
@@ -2302,6 +2311,7 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-60 | **EKF health check also after the predict step:** non-finite state or P_xx > 25 m² → degraded → `F_EKF` | a diverged prediction would otherwise reach guidance for one period | check after the update only |
 | D-61 | **The EKF step, `att_init` and the IWDG run in every build, also `FEAT_IMU` 0** (encoder-heading mode, `dpsi` = NAN); `FEAT_IMU` defaults to 0, no `FEAT_EKF` switch. Consequence: firmware from this branch is phase-2 firmware; phase-1 calibration runs keep using the firmware at tag `phase0`/main until H6 passes | without IMU the EKF is the encoder fallback of §7.17; a second switch adds a build variant nobody tests | add `FEAT_EKF` |
 | D-62 | **`imu_gz_scale` is applied to ω_z before the temperature term** | the scale comes from the 10-turn spin of the raw rate (H7); the temperature term is an additive bias and must not be scaled | scale after the sum |
+| D-63 | **Reduced ToF sensor set (team, 2026-11-21): F1, F2 (front), S2 (right, tilted down by `lat_tilt`), optionally L1 (on top of the vehicle, horizontal, yaw ≈ 45° from +x towards the path) for landmarks. G1–G4 and S1 are not fitted.** All fitted sensors on I2C2. L1 takes the slot of S1 (ID 6, XSHUT PB0, EXTI PA15, 0x36). I2C1 and `XSHUT_G1..4` stay in the `.ioc` unused, so no CubeMX regeneration. `gnd` classifies S2 only (§7.14 note): right side state, edge events from S2; no sensor interlock (OQ-12). H9 applies to S2 | the vehicle carries five VL53L1X, two of them spare; the team mounts F1, F2 and S2, L1 is optional | fit G1–G4 on I2C1 as in versions ≤ 1.11 |
 
 ---
 
@@ -2396,3 +2406,5 @@ If the calibration firmware is used (D-31, D-47), its results map as follows; wi
 | 1.8 | 2026-11-12 | Dani / Claude | Facts corrected after commit `f126577`: complete `.ioc` target state of §4 (CubeMX 6.18.1), PC12 as I2C2_SDA resolved (§4.3), O-10 done, `.ioc` state note in §4; calibration firmware supplied (D-47; §3.3, §3.4, §7.27 TIM6 timing instead of DWT, §17.1, §19.3); D-48 CSS deferred to the GUI, D-49 IWDG init call not generated, D-50 labels kept; D-27 and D-31 wording corrected |
 | 1.9 | 2026-11-12 | Dani / Claude | CSS and USART1 19200 Bd were set in the CubeMX GUI before `f126577`: D-48 rewritten (CSS on, callback pending), new D-51 (19200 Bd ahead of H11), §4 note, §4.1, §4.4 |
 | 1.10 | 2026-11-17 | Dani / Claude | HC-12 modules at 19200 Bd (team report): §4.4, §8.3, equipment table and D-51 state the current rate, 9600 Bd stays the D-35 fallback. New D-52: `Drivers` folder `-Wno-unused-parameter`; new D-53: H3 `sync_max` excess on reversal/turn accepted for phase 0; Debug/Release optimisation corrected to `-Og`/`-O2` in CubeIDE. |
+| 1.11 | 2026-11-18 | Dani / Claude | Phase-2 code written: D-54 to D-62, OQ-11, pointers in §7.11, §7.17, §9, §10, §14, §15 (`PHASE2_IMU_EKF.md`) |
+| 1.12 | 2026-11-21 | Dani / Claude | D-63 reduced ToF sensor set (F1, F2, S2, optional L1; no G1–G4, no S1): §4.3, §7.13.1, notes in §7.14 and §7.15, H9, §15; OQ-10 superseded, new OQ-12 (`PHASE3_SENSORS.md`) |
