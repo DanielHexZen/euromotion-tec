@@ -8,7 +8,9 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 
 ## Status
 
-**Section 6 done by the calibration-firmware route (2026-11-18, `CALIB_README.md`), sections 4, 5, 7 open.** Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+**Sections 4, 5, 6 done (2026-11-18/19), section 7 (H6) not passed: casters (spec D-55).** Defaults compiled: 115–121 (feedforward), 200–203 (odometry).
+
+**Closed for now (2026-11-20), to be repeated:** UMBmark (§5) and the H6 verification (§7) are redone after the caster service (clean, check swivel play), 10 runs measured to the mm and the casters aligned before every run. Until then the compiled values above are the working calibration. Phase 2 (IMU, EKF) starts before H6, see spec D-56. Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
 
 Calibration firmware (`APP_CALIB 1`, built on `129e42f` + uncommitted `X` tests): `C`, `B`, `K` on blocks (`tools/data/2026-11-18/calib_blocks.log`), `G`, `L`, `X` S/P/N/L/D on the floor (`calib_floor.log`, copy in `tools/data/assessment1/`). `calib_host.py check` OK, `eval` over both logs:
 
@@ -24,6 +26,10 @@ Entered as compiled defaults in `par_table.h` (`t_whl_law` now pins the hand-com
 **§6.3 check (2026-11-18, `d_runs_newff.log`, `d_runs_oldff.log`), same floor as H3.** New defaults: `D300` ×10, `D2000` ×12, `D5000` ×10, all `DONE` 1.4–2.0 mm short (design, `drv_pos_tol`), `sync_max` 0.8–1.3 mm (H3 with the 9 Oct values: 2.3–3.8 mm), no `TIMEOUT`/`FAULT`. Tape: `D300` 296–300, `D2000` 2015–2025 mm with 15–80 mm drift right, `D5000` 5030–5070 mm with 130–480 mm drift right (H3: 5000.7 mm, ≤ 250 mm). Counter-check with the 9 Oct values set live: `D2000` ×3 tape 2010–2020 mm, drift 30–100 mm right, `sync_max` 2.7–3.6 mm. The ground error is the same with both sets, so it is not the feedforward: the mechanics changed (both wheels re-tightened before these runs, the left one was loose on its hex). The new defaults stay; §4 and §5 are redone on the current mechanics. Align the casters (push the vehicle ~10 cm forward) before every run: the drift scatter at equal encoder counts points to caster swivel.
 
 **§4 (2026-11-18, `straight.csv`, `straight.log`, `straight.txt`).** 5 × `D2000` + 3 × `D5000`, tape at the hub of each wheel, counts from the `DONE` values (`--done`, `p` was not read per run). `odo_m_per_cnt` = 6.35444e-5 m, sd 0.147 %, −0.15 % vs nominal; per wheel L 6.37241e-5, R 6.33647e-5, k_r/k_l = 0.9944 (the right wheel rolls 0.56 % less per count: the drift to the right, for §5). The earlier +1 % (single tape point on the vehicle, not the hubs) was the measuring method. `Kv` correction for the new scale: × 1/0.9985, below its standard error, not applied. Check after `P200=6.35444e-05` (`straight_check.log`), 3 × `D2000`, tape − `DONE`: L +1.7 / −2.2 / +6.0 mm, R −2.1 / −6.3 / −7.1 mm; mean of both wheels −0.2 / −4.3 / −0.6 mm. The mean scale is right; the per-wheel 3 mm limit fails on R (mean −5.2 mm, the expected −0.28 % of the L/R diameter difference) and once on L: left for §5 (`odo_scale_l/r`).
+
+**§5 UMBmark (2026-11-19, lecture room, tiled floor; `tools/data/2026-11-19/`).** Track measured 223.25 mm. 12 runs + 1 aborted; run 1 (corrected corner) and run 12 (W90 + W180 instead of W-90) excluded. `umbmark.py --turn-done-mm 173.72`, runs 2–11: E_b 0.944, E_d 0.996, residual 34 mm (`umb_before_measurements.md`). The corner error falls over the session (4.7 → 1.7° per corner, from the per-run heading). Rotation check 2 × `W360` / 2 × `W-360`: 1.43° per 90°, P203 0.21926 (`umb_verify.md`). P203 from the rotation, P201 1.00189 / P202 0.99811 from UMBmark (spec D-55).
+
+**§7 verification (partial, 4 runs, estimates):** 20–50 mm without a caster event, about 300 mm in the run where a caster hung after turn 1 (before: 115–1000 mm). H6 open: caster service, then 10 runs measured to the mm.
 
 ## 1. What this procedure covers
 

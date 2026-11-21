@@ -42,10 +42,10 @@
     X(162, drv_t_acc,        1.0f,      "s",       0.05f,   5.0f,   PAR_L) \
     X(163, drv_t_dec,        1.0f,      "s",       0.05f,   5.0f,   PAR_L) \
     /* 10.2 odometry and battery */ \
-    X(200, odo_m_per_cnt,    6.3638e-5f,"m",       5.0e-5f, 8.0e-5f,PAR_S) \
-    X(201, odo_scale_l,      1.0f,      "-",       0.95f,   1.05f,  PAR_S) \
-    X(202, odo_scale_r,      1.0f,      "-",       0.95f,   1.05f,  PAR_S) \
-    X(203, odo_wheelbase,    0.22325f,  "m",       0.15f,   0.35f,  PAR_S) \
+    X(200, odo_m_per_cnt,    6.35444e-5f,"m",       5.0e-5f, 8.0e-5f,PAR_S) \
+    X(201, odo_scale_l,      1.00189f,  "-",       0.95f,   1.05f,  PAR_S) \
+    X(202, odo_scale_r,      0.99811f,  "-",       0.95f,   1.05f,  PAR_S) \
+    X(203, odo_wheelbase,    0.21926f,  "m",       0.15f,   0.35f,  PAR_S) \
     X(300, bat_ratio,        5.7f,      "-",       4.0f,    8.0f,   PAR_S) \
     X(301, bat_tau,          0.2f,      "s",       0.05f,   5.0f,   PAR_L) \
     X(302, bat_warn_v,       10.5f,     "V",       9.5f,    12.0f,  PAR_L) \
