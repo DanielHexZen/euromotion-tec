@@ -799,8 +799,8 @@ transmitting at full power; only four are fitted, so this is conservative) $\app
 $(5-3.3)\,\text{V}\times\qty{0.46}{A}\approx\qty{0.78}{W}$ --- hot on a small
 SOT-223 module. The observed overheating with the HC-12 attached (which also
 pulled down the Nucleo's 3.3\,V and disturbed the ST-Link) is open item O-4.
-\DECIDE\ Feed the HC-12 from \qty{5}{V} (its supply range allows it; verify that
-its TXD level stays STM32-compatible), or split the sensor rail across two LDOs.
+Decided 2026-11-21: the vehicle HC-12 is fed from the \qty{5}{V} branch (buck converter);
+the module regulates its logic internally, so TXD/RXD/SET stay at \qty{3.3}{V} (PB6/PB7 are 5\,V tolerant anyway).
 
 \paragraph{Commissioning order of the harness.} (1) build complete without
 battery or loads; (2) continuity: XT60+ to star point, XT60$-$ to star point, no
@@ -2385,7 +2385,7 @@ script).
 \item \textbf{Module.} SI4463 transceiver with an STM8 controller running vendor
 firmware; transparent UART; half-duplex. Channel $n$ at
 $f=433.4+(n-1)\cdot0.4$\,MHz; both modules on CH001, FU3, 19200\,Bd (\code{AT+B19200}; 9600\,Bd is the fallback if the range test fails). Transmit
-power P4 (+8\,dBm) for bench tests, AT+P8 (+20\,dBm) for the course.
+power P4 (+8\,dBm) for bench tests, AT+P8 (+20\,dBm) for the course. State 2026-11-21: both modules CH001, FU3, 19200\,Bd, P8; a trial on CH003 gave no link and was not pursued.
 \item \textbf{Configuration.} SET low (PC9 on the vehicle), wait
 $\approx\qty{40}{ms}$, send the AT command in one piece (script, not
 \code{screen}), release SET, wait $\approx\qty{80}{ms}$. Baud, channel and FU mode
@@ -2822,7 +2822,7 @@ Numbering follows the sheet ``Offene Punkte'' of the CubeMX workbook.
 O-1 & TIM6 period 199 & 119 gives 83\,Hz against \code{CTRL\_PERIOD\_S}\,=\,0.02; add a start-up printout of the measured rate & \tb{blocking}\\
 O-2 & End of move with $K_s$ intercept & wheel may stop short (static friction); breakaway switching or higher $K_i$; verify \code{D300}/\code{D1000} within 2\,mm & \tw{high}\\
 O-3 & Battery operation without USB & HSE BYPASS depends on ST-Link MCO (\cref{sec:clock}); fallback crystal at X3 & \tw{high}\\
-O-4 & Hot AMS1117 & measure its input, supply HC-12 separately & \tw{high}\\
+O-4 & Hot AMS1117 & closed 2026-11-21: HC-12 on the 5\,V branch & \tw{high}\\
 O-5 & \code{V\_NOM\_MAX} 800 $\to$ 500 & drive saturates above $\approx\qty{650}{mm/s}$ & \tk{medium}\\
 O-6 & \code{EVT\_TIMEOUT} & settle timeout currently reports DONE & \tk{medium}\\
 O-7 & Per-wheel mm/count & L/R from UMBmark; raise $D$ to $\approx\qty{73.0}{mm}$ if per-wheel counts are used & \tk{medium}\\
@@ -2855,7 +2855,7 @@ D-1 & IMU & LSM6DS3 --- decided (availability; firmware spec D-42); plain LSM6DS
 D-2 & Radio & keep HC-12 / XBee 3 Pro (certified, own MCU) & week 10/14\\
 D-3 & Caster type and size & after F-1 & chassis\\
 D-4 & Ground-sensor mounting height and offsets & 100--200\,mm, offsets 15/25\,cm & spot size, thresholds\\
-D-5 & HC-12 supply & 5\,V branch (recommended) or second LDO & O-4\\
+D-5 & HC-12 supply & 5\,V branch (done 2026-11-21) & O-4\\
 D-6 & Hardware E-stop in series with EN & recommended, firmware-independent & safety\\
 D-7 & PWM frequency & keep 20\,kHz unless $U_{min}$ is large & low-speed resolution\\
 D-8 & Wheel loop rate & 50\,Hz now; 200\,Hz only with an M/T estimator & path bandwidth\\

@@ -8,6 +8,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest                                  # 31 tests, ~25 s, no hardware
 .venv/bin/python -m groundstation sim                       # prints a pty path
 .venv/bin/python -m groundstation run --port <path|/dev/cu.usbmodemXXXX> [--baud 115200]   # radio (FT232RL): --baud 19200, 9600 if D-35 fallback
+# HC-12 modules (2026-11-21, spec D-71): both AT+B19200, AT+C001, FU3, AT+P8; vehicle module on 5 V
 .venv/bin/python -m groundstation report sessions/<folder>  # exit code 2 if flagged
 .venv/bin/python tools/gen_protocol.py                      # protocol.yaml -> generated/link_msgs.[ch]
 ```
