@@ -1,7 +1,7 @@
 # MR2006B Vehicle Firmware — Implementation Specification
 
 > **Status:** Draft for review
-> **Version:** 1.12 (phase-2 code merged with phase 1, D-57 to D-65; 2026-11-20)
+> **Version:** 1.14 (phase-2 commissioning, D-66 to D-69; 2026-11-20)
 > **Last Updated:** 2026-11-18 (course week 10 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
@@ -1669,7 +1669,7 @@ Line-based, CR or LF terminated, case-sensitive. Values in **legacy units** (mm,
 | `Y<K_sync (mm/s)/mm>` | any | L/R synchronisation, 0 = off |
 | `-100` … `100` | `IDLE`/`BENCH` | open-loop duty both wheels in %, dead-man 2 s |
 | **New** | | |
-| `W<deg>` | `IDLE`/`BENCH` | turn in place, CCW positive: gyro-controlled if IMU present, else encoder (implemented as encoder turn plus correction turns on the gyro residual, D-57) |
+| `W<deg>` | `IDLE`/`BENCH` | turn in place, CCW positive: gyro-controlled if IMU present, else encoder (implemented as encoder turn plus up to 2 correction turns on the gyro residual ≥ 1.0°, 0.3 s ramp, D-57, D-68) |
 | `PWM <l %> <r %>` | `IDLE`/`BENCH` | open-loop duty per wheel, dead-man 2 s |
 | `M <v mm/s> <w mrad/s>` | `IDLE`/`MANUAL` | manual velocity; enters `MANUAL`; console dead-man 2 s |
 | `MODE IDLE\|BENCH\|MANUAL\|AUTO` | per §7.21.2 | mode request |
@@ -1777,7 +1777,7 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 505 | `ekf_q_bg` | 1.0e-10 | (rad/s)²/s | 1e-14–1e-6 | L | E | `[MEASURE]` Allan variance |
 | 506 | `ekf_q_s` | 1.0e-9 | 1/s | 0–1e-5 | L | E | |
 | 507 | `ekf_q_th_enc` | 1.0e-4 | rad²/m | 1e-6–1e-2 | L | E | encoder-heading mode |
-| 508 | `ekf_zupt_floor` | 3.5e-5 | rad/s | 0–1e-3 | L | D | |
+| 508 | `ekf_zupt_floor` | 2.0e-4 | rad/s | 0–1e-3 | L | D | 0.011 °/s, vehicle test 2026-11-20 (D-69); was 3.5e-5. `[MEASURE]` Allan variance (H7) |
 | 509 | `ekf_zupt_T` | 1.0 | s | 0.2–5 | L | D | |
 | 510 | `ekf_still_s` | 0.2 | s | 0.05–2 | L | D | |
 | 511 | `ekf_gate1` | 9.0 | – | 1–100 | L | D | χ²₁ 99.7 % |
@@ -1788,7 +1788,7 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 516 | `ekf_bg_conv` | 3.5e-4 | rad/s | 1e-5–1e-2 | L | D | 0.02 °/s |
 | 517 | `ekf_p0_xy` | 0.01 | m | 1e-3–1 | S | D | σ |
 | 518 | `ekf_p0_th` | 0.0087 | rad | 1e-3–0.5 | S | D | 0.5° |
-| 519 | `ekf_p0_bg` | 0.0087 | rad/s | 1e-4–0.1 | S | D | 0.5 °/s |
+| 519 | `ekf_p0_bg` | 0.087 | rad/s | 1e-4–0.1 | S | D | 5 °/s (D-66); was 0.5 °/s |
 | 520 | `ekf_p0_s` | 0.005 | – | 1e-4–0.1 | S | D | |
 | 521 | `ekf_sf_corr` | 6.2832 | rad | 0.1–100 | L | E | correlation angle of the gyro scale-factor noise, §7.17.2, D-38; `[DECIDE]` 2π: exact for one net revolution, conservative below, overconfident by √(Θ/2π) beyond; adequate while the net turning between heading fixes stays ≤ 2π |
 | 522 | `ekf_slip_T` | 0.04 | s | 0.02–0.5 | L | D | minimum duration of the slip residual, §7.17.2, D-43 |
@@ -2222,7 +2222,7 @@ All HAL callbacks (`HAL_TIM_PeriodElapsedCallback`, `HAL_TIM_IC_CaptureCallback`
 
 | # | Question | Owner | Needed by |
 |---|---|---|---|
-| OQ-1 | **Decided (D-42): LSM6DS3.** Variant: plain LSM6DS3 (confirmed 2026-11-11). Still open: the breakout board `[VERIFY]`. Determines the register values of §7.11.1. | team | phase 2 (week 7) |
+| OQ-1 | **Decided (D-42): LSM6DS3.** Variant: plain LSM6DS3 (confirmed 2026-11-11). **Closed 2026-11-20:** the mounted breakout board reads WHO_AM_I 0x69 over SPI1. Determines the register values of §7.11.1. | team | phase 2 (week 7) |
 | OQ-2 | Ground-sensor mounting: height `gnd_h0`, lateral offsets `gnd_y_in/out`, distance ahead of the axle `gnd_x`. | team | phase 3 |
 | OQ-3 | Course survey: segment geometry, boundary types and corridor widths, landmark positions, ramp and step (F-1 … F-14 of the technical reference). | team | phase 5 (geometry earlier for wheel size) |
 | OQ-4 | Radio: **decided (D-35): 19200 Bd, pending the range test H11 at 19200**, 9600 Bd as fallback. Still open: replace the HC-12 with a certified module? Only §8.3 timing numbers change. | team / professor (Q-8) | phase 4 |
@@ -2296,7 +2296,7 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-52 | **`-Wno-unused-parameter` for the `Drivers` folder only** (2026-11-17, commit `8c4a225`). Debug and Release build `Core/Src` with `-Wall -Wextra -Wdouble-promotion -Wshadow` (§4, REQ-ARC-04). The generated HAL file `stm32f4xx_hal_flash_ex.c` gives three `-Wunused-parameter` warnings (`Banks`) under `-Wextra`; generated code is never hand-edited (CLAUDE.md), so the warning is switched off as a folder setting of `Drivers` in both configurations. User code keeps every warning. Same commission: CubeIDE had no optimisation level for Debug (`-O0`) and `-Os` for Release; set to `-Og`/`-O2` as in §4 (`a17bfac`); the `-O0` builds failed REQ-NFR-01 (tick ISR 2.6 µs, 1.2–1.3 µs after the fix) |
 | D-51 | **USART1 runs at 19200 Bd before H11.** Set in the CubeMX GUI by the team before commit `f126577` (deviation from D-35, which switches only after H11 passes). Both HC-12 modules need `AT+B19200` (SET low); the radio checks of phase 0 (HELLO, `p`, `I`, `s` over radio, replug) were made at 9600 and are repeated at 19200 (status 2026-11-17: both modules reconfigured to `AT+B19200`, radio link at 19200 tested per team report; `I` with 5 lines over radio still open in H2). If H11 fails at 19200, the `.ioc` goes back to 9600 (D-35 fallback) | team decision; all §8.3 airtimes halve | stay at 9600 until H11 |
 | D-50 | **CubeMX labels are kept as they are:** PA5 `LD2 [Green Led]` (spec `LED`), PC9 `HC12_Set` (spec `HC12_SET`), PA0 `hadc1`. Code uses `LD2_Pin` and the generated names; the spec tables name the logical signal, §4.3 notes the label | renaming in the `.ioc` changes generated defines the phase-0 code already uses, with no gain | rename in CubeMX and in the code together |
-| D-57 | **`W<deg>` with IMU: encoder turn (`drv_turn_enc`), then up to 2 correction turns** while the residual `target − Σdψ` ≥ 0.5° (`#define` in `app.c`, `[DECIDE]`) | §9 says "gyro-controlled" but §7.9 has no gyro turn mode; reuses the proven encoder turn and still ends on the gyro | add a gyro turn mode to `drv` (§7.9) |
+| D-57 | **`W<deg>` with IMU: encoder turn (`drv_turn_enc`), then up to 2 correction turns** while the residual `target − Σdψ` ≥ 1.0° (was 0.5°), each with a 0.3 s ramp (D-68; `#define`s in `app.c`, `[DECIDE]`) | §9 says "gyro-controlled" but §7.9 has no gyro turn mode; reuses the proven encoder turn and still ends on the gyro | add a gyro turn mode to `drv` (§7.9) |
 | D-58 | **`imu_yaw.c/h` split out of `imu.c`** as a pure file (no HAL) | `t_imu_yaw` runs on the host (REQ-IMU-05, D-40); `imu.c` keeps the SPI/DRDY code | merge back, drop the host test |
 | D-59 | **IMU timeout measured from the last DRDY capture, raised as `F_IMU_TIMEOUT` with R1 override** (no AUTO mode yet; R3 would stop BENCH moves). `main` re-kicks one SPI read every `imu_timeout` to restart a latched DRDY (REQ-IMU-06) | the §11 table wants R3 only in `AUTO`; without the re-kick one lost edge would stop the stream for good | R3 once `AUTO` exists |
 | D-60 | **Console `r` (`enc_zero`) skips one EKF step** | the count jump would otherwise enter the prediction as motion | none |
@@ -2305,6 +2305,10 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-63 | **EKF health check also after the predict step:** non-finite state or P_xx > 25 m² → degraded → `F_EKF` | a diverged prediction would otherwise reach guidance for one period | check after the update only |
 | D-64 | **The EKF step, `att_init` and the IWDG run in every build, also `FEAT_IMU` 0** (encoder-heading mode, `dpsi` = NAN); `FEAT_IMU` defaults to 0, no `FEAT_EKF` switch. Consequence: firmware from this branch is phase-2 firmware; phase-1 calibration runs keep using the firmware at tag `phase0`/main until H6 passes | without IMU the EKF is the encoder fallback of §7.17; a second switch adds a build variant nobody tests | add `FEAT_EKF` |
 | D-65 | **`imu_gz_scale` is applied to ω_z before the temperature term** | the scale comes from the 10-turn spin of the raw rate (H7); the temperature term is an additive bias and must not be scaled | scale after the sum |
+| D-66 | **Gyro bias on the real LSM6DS3: `ekf_p0_bg` 0.5 → 5 °/s, and `W` subtracts the EKF bias** (2026-11-20). At rest the board reads 5.3 / −4.6 / −2.4 °/s (x/y/z), inside the datasheet zero-rate offset (±10 °/s) but 5σ of the old initial σ: every ZUPT failed the 3σ gate (d² ≈ 22 > 9), the bias stayed 0, the EKF heading drifted 2.4 °/s and `W90` over-corrected by about 6°. With 5 °/s the first ZUPT is accepted and the bias is learnt in about 1 s (`t_ekf_static`, 2.6 °/s case). The `W` correction (D-57) summed the raw gyro; it now subtracts `x[3]`. `t_ekf_sf_q` pins the old σ so that it still isolates the scale-factor term | the initial σ must cover the sensor's offset spread | none; an IMU with a small offset works with either value |
+| D-67 | **IMU settle time and ZUPT bias reopen** (2026-11-20). On the vehicle the first ZUPT after every boot (cold and warm reset) learnt −5.6 / −6.8 °/s while the raw z rate was −2.75 / −2.33 °/s; with σ_bg then at 0.006 °/s every later ZUPT failed the gate. Probable cause: the gyro turn-on transient after configure (LSM6DS3 about 70 ms) inside the first 1 s window. (1) `imu.c` drops all samples of the first 0.5 s after `imu_init` (no attitude, no yaw integral; the EKF runs in encoder mode meanwhile). (2) `ekf.c`: after `EKF_ZUPT_REOPEN` = 5 rejected ZUPTs in a row the bias row/column of P is cleared and σ_bg reset to `ekf_p0_bg`; counter `n_bg_reopen`. Test `t_ekf_static` (wrong first window, true −2.4 °/s: reopened once, relearnt) | a wrongly learnt bias must not lock the EKF out; the reopen also covers a bias step from temperature | none |
+| D-68 | **`W` correction turns: tolerance 1.0° and a 0.3 s ramp** (2026-11-20, team decision). With 0.5° almost every `W90` ran both corrections and still ended 0.6° off: the drive ends a move once each wheel is within `drv_pos_tol` (2 mm), which is 1.05° of turn at half the wheelbase (109.6 mm), so a correction below about 1° ends without real motion. Each correction also used the full `drv_t_acc` profile (about 2 s per correction, seen as a late second jerk). `TURN_TOL_RAD` 1.0°, `TURN_FIX_T_ACC_S` 0.3 s for the corrections; the main turn keeps `drv_t_acc`. Corrections between 1.0° and 1.05° are still at the limit of the drive | the angle tolerance must not be finer than what the drive can execute | 0.5° and `drv_t_acc` |
+| D-69 | **Gyro x/y bias in the attitude filter; `ekf_zupt_floor` 2·10⁻⁴ rad/s** (2026-11-20). (1) `att.c` integrated the raw gyro: at rest the x/y bias (5.3 / −4.7 °/s) times `att_tau` gave roll 6.7° / pitch −5.1° on a level floor. Through the yaw projection `(w_y sin φ + w_z cos φ)/cos θ` that wrong roll added −0.55 °/s to the yaw rate (learnt into `b_g`: −3.0 °/s against a raw −2.4) and scaled ω_z by cos 6.7° = 0.993 (0.6° on 90°). The 0.5 s start-up window now also averages gyro x and y; that bias is subtracted afterwards and the yaw projection uses the corrected y rate (`t_att`, bias case). The z bias stays with the EKF. (2) With `ekf_zupt_floor` 3.5·10⁻⁵ about 40 % of the ZUPTs at rest were rejected (σ_bg 0.002 °/s against real window scatter); with 2·10⁻⁴ set live: one reopen (D-67), then 44 accepted and 0 rejected. Provisional until the Allan variance of H7 | the vehicle stands at boot (D-37); the floor must cover the real scatter of a 1 s window | none |
 
 ---
 
@@ -2401,3 +2405,5 @@ If the calibration firmware is used (D-31, D-47), its results map as follows; wi
 | 1.10 | 2026-11-17 | Dani / Claude | HC-12 modules at 19200 Bd (team report): §4.4, §8.3, equipment table and D-51 state the current rate, 9600 Bd stays the D-35 fallback. New D-52: `Drivers` folder `-Wno-unused-parameter`; new D-53: H3 `sync_max` excess on reversal/turn accepted for phase 0; Debug/Release optimisation corrected to `-Og`/`-O2` in CubeIDE. |
 | 1.11 | 2026-11-18 | Dani / Claude | New D-54: calibration firmware `X` excitation tests for system identification (vehicle firmware unchanged). |
 | 1.12 | 2026-11-20 | Dani / Claude | Phase 1 closed for now: odometry defaults 200–203 from straight-line scale, UMBmark and a rotation test (D-55), H6 open on caster slip; phase 2 starts before H6 (D-56). Phase-2 code (IMU, attitude, EKF, IWDG, CSS callback) merged: its decisions renumbered from D-54…D-62 to D-57…D-65 |
+| 1.13 | 2026-11-20 | Dani / Claude | Phase-2 commissioning on the vehicle: OQ-1 closed (WHO_AM_I 0x69); D-66 (`ekf_p0_bg` 5 °/s, `W` subtracts the EKF bias), D-67 (IMU settle 0.5 s, ZUPT bias reopen), D-68 (`W` correction tolerance 1.0°, 0.3 s ramp). |
+| 1.14 | 2026-11-20 | Dani / Claude | D-69: attitude filter subtracts the gyro x/y bias of the start-up window, yaw projection uses the corrected y rate; `ekf_zupt_floor` 2·10⁻⁴ rad/s. |

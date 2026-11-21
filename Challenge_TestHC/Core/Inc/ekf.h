@@ -5,6 +5,7 @@
 #include "units.h"
 
 #define EKF_HIST_N 64U          /* pose ring, 1.28 s at 50 Hz (§7.17.1) */
+#define EKF_ZUPT_REOPEN 5U      /* rejected ZUPTs in a row before sigma_bg is reset to ekf_p0_bg (D-67) */
 
 /* update types: index of the counters in ekf_out_t */
 enum { EKF_U_ZUPT = 0, EKF_U_EDGE, EKF_U_FACE, EKF_U_HEADING, EKF_U_POINT, EKF_U_N };
@@ -36,6 +37,8 @@ typedef struct {
     uint32_t nochg_us, z_T_us;              /* integer microseconds (D-41)                    */
     float    z_sum, w_meas;
     uint16_t slip_cnt;
+    uint8_t  zupt_rej_run;                  /* consecutive rejected ZUPTs (D-67)              */
+    uint32_t n_bg_reopen;                   /* times sigma_bg was reset to ekf_p0_bg (D-67)    */
     uint32_t slip_episodes;
     uint32_t n_acc[EKF_U_N], n_rej[EKF_U_N], n_fault;
     float    nis_sum[EKF_U_N];

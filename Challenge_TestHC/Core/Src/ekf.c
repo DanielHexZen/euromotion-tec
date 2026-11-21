@@ -164,7 +164,16 @@ void ekf_predict(ekf_t *e, const ekf_odo_t *u)
     for (int i = 0; i < 3; i++) { e->hist_p[e->hist_head][i] = e->x[i] - e->corr[i]; }
     if (e->hist_n < EKF_HIST_N) { e->hist_n++; }
 
-    if (zupt_due) { (void)ekf_update_zupt(e, z_rate, zt); }
+    if (zupt_due) {
+        if (ekf_update_zupt(e, z_rate, zt) == ST_OK) {
+            e->zupt_rej_run = 0U;
+        } else if (++e->zupt_rej_run >= EKF_ZUPT_REOPEN) {   /* bias learnt wrong: reopen it (D-67) */
+            for (int i = 0; i < 5; i++) { e->P[3][i] = 0.0f; e->P[i][3] = 0.0f; }
+            e->P[3][3] = sqf(p->ekf_p0_bg);
+            e->zupt_rej_run = 0U;
+            e->n_bg_reopen++;
+        }
+    }
     if (!e->still || zupt_due) { e->z_sum = 0.0f; e->z_T_us = 0U; }
 }
 
