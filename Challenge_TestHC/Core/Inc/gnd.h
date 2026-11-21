@@ -1,4 +1,4 @@
-/* gnd.h — ground classification and edge events (spec §7.14, D-63: S2 only). Pure. */
+/* gnd.h — ground classification and edge events (spec §7.14, D-70: S2 only). Pure. */
 #ifndef GND_H
 #define GND_H
 
@@ -25,13 +25,13 @@ typedef struct {
 } gnd_sensor_t;
 
 typedef struct {
-    gnd_sensor_t  s;             /* S2, the only ground sensor (D-63) */
+    gnd_sensor_t  s;             /* S2, the only ground sensor (D-70) */
     gnd_edge_ev_t ev[GND_EV_N];
     uint8_t       ev_head, ev_tail;
 } gnd_t;
 
 void gnd_init(gnd_t *g);
-/* roll, pitch in rad (att). Results of sensors other than S2 are ignored (D-63). */
+/* roll, pitch in rad (att). Results of sensors other than S2 are ignored (D-70). */
 void gnd_on_meas(gnd_t *g, uint8_t id, const vl_meas_t *m, float roll, float pitch);
 void gnd_step(gnd_t *g, uint32_t now_us);              /* staleness                      */
 gnd_class_t gnd_class(const gnd_t *g, uint8_t id);

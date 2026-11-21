@@ -1,4 +1,4 @@
-/* gnd.c — spec §7.14 (REQ-GND-01..03) with the reduced sensor set of D-63: the classifier runs
+/* gnd.c — spec §7.14 (REQ-GND-01..03) with the reduced sensor set of D-70: the classifier runs
  * on S2 with h = r·sin(lat_tilt + roll) and h0 = lat_h (REQ-LAT-07). */
 #include "gnd.h"
 
@@ -91,11 +91,11 @@ gnd_class_t gnd_class(const gnd_t *g, uint8_t id) { return (id == VL_S2) ? g->s.
 
 gnd_side_t gnd_side(const gnd_t *g, uint8_t side)
 {
-    if (side != GND_RIGHT || g->s.cls == GND_CL_UNKNOWN) { return GND_UNKNOWN; }   /* left has no sensor (D-63) */
+    if (side != GND_RIGHT || g->s.cls == GND_CL_UNKNOWN) { return GND_UNKNOWN; }   /* left has no sensor (D-70) */
     return (g->s.cls == GND_CL_PATH) ? GND_FAR : GND_NOMINAL;
 }
 
-/* shortcut: one footprint cannot tell NOMINAL from TOO_CLOSE (D-63), so no sensor interlock;
+/* shortcut: one footprint cannot tell NOMINAL from TOO_CLOSE (D-70), so no sensor interlock;
  * replace with the decision of OQ-12 before AUTO runs on the course. */
 bool gnd_interlock(const gnd_t *g) { (void)g; return false; }
 

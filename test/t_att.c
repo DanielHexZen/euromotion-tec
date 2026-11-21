@@ -30,6 +30,21 @@ void t_att(void)
     CHECK(fabsf(att_roll(&at)) < 0.5f * DEG2RAD_F);
     CHECK(fabsf(att_pitch(&at)) < 0.5f * DEG2RAD_F);
 
+    REQ("REQ-ATT-01: gyro bias 5.3 / -4.7 / -2.4 deg/s at rest (LSM6DS3, 2026-11-20): roll, pitch < 0.5 deg after 2 s and 30 s (D-69)");
+    {
+        float a[3];
+        const float wb[3] = { 5.3f * DEG2RAD_F, -4.7f * DEG2RAD_F, -2.4f * DEG2RAD_F };
+        acc_of(0.0f, 0.0f, 0.0f, a);
+        att_init(&at);
+        for (float t = 0.0f; t < 2.0f; t += DT) { att_update(&at, wb, a, DT); }
+        CHECK(fabsf(att_roll(&at)) < 0.5f * DEG2RAD_F);
+        CHECK(fabsf(att_pitch(&at)) < 0.5f * DEG2RAD_F);
+        CHECK_NEAR(att_bias_y(&at), wb[1], 1.0e-5);
+        for (float t = 0.0f; t < 30.0f; t += DT) { att_update(&at, wb, a, DT); }
+        CHECK(fabsf(att_roll(&at)) < 0.5f * DEG2RAD_F);
+        CHECK(fabsf(att_pitch(&at)) < 0.5f * DEG2RAD_F);
+    }
+
     REQ("REQ-ATT-01: 6 deg ramp, pitch within 0.5 deg after 3 s (and roll 4 deg)");
     att_init(&at);
     run(&at, 4.0f * DEG2RAD_F, 6.0f * DEG2RAD_F, 0.0f, 0.0f, 3.0f);

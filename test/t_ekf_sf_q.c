@@ -6,6 +6,8 @@ static float turn(uint32_t dt_us, float sf)
     ekfsim_t s;
     sim_init(&s);
     (void)par_set(504, sf);
+    CHECK(par_set(519, 0.0087f) == ST_OK);   /* bias already learnt (ZUPT at rest): isolate the sf term */
+    ekf_init(&s.e);
     const float dt = (float)dt_us * 1.0e-6f, b = par()->odo_wheelbase;
     float left = 0.5f * PI_F;
     while (left > 1.0e-6f) {

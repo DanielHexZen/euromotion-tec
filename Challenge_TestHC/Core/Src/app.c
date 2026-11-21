@@ -34,8 +34,10 @@
 #define TICK_HZ_TOL_X10    10U       /* 0.1 % of 1000.0 Hz, REQ-SCH-02 */
 #define LED_FAULT_DIV      1U
 #define LED_IDLE_DIV       5U
-#define TURN_TOL_RAD       (0.5f * DEG2RAD_F)   /* W: residual that is not corrected any more [DECIDE] */
+#define TURN_TOL_RAD       (1.0f * DEG2RAD_F)   /* W: residual not corrected any more; >= drive resolution:
+                                                  * drv_pos_tol 2 mm on half the wheelbase = 1.05 deg (D-68) */
 #define TURN_FIX_MAX       2U                   /* W: correction turns after the encoder turn  [DECIDE] */
+#define TURN_FIX_T_ACC_S   0.3f                 /* W: ramp of a correction turn; the main turn uses drv_t_acc (D-68) */
 
 app_state_t g_app;
 
@@ -211,7 +213,7 @@ static void ekf_step(const enc_reading_t *r)
         float p0, p1;
         if (imu_alive() && imu_yaw_integral_at(t0, &p0) == ST_OK && imu_yaw_integral_at(r->t_us, &p1) == ST_OK) {
             u.dpsi = p1 - p0;
-            g_app.turn_acc_rad += u.dpsi;
+            g_app.turn_acc_rad += u.dpsi - g_app.ekf.x[3] * u.dt;   /* minus the EKF gyro bias (ZUPT) */
         }
 #endif
         const uint32_t c = sys_cycles();
@@ -234,7 +236,7 @@ static bool turn_correct(drv_event_t ev, drv_mode_t mode)
     const float res = g_app.turn_target_rad - g_app.turn_acc_rad;
     if (fabsf(res) >= TURN_TOL_RAD && g_app.turn_fix < TURN_FIX_MAX) {
         const par_t *q = par();
-        if (drv_turn_enc(&g_app.drv, res, app_turn_w(q), q->drv_t_acc) == ST_OK) { g_app.turn_fix++; return true; }
+        if (drv_turn_enc(&g_app.drv, res, app_turn_w(q), TURN_FIX_T_ACC_S) == ST_OK) { g_app.turn_fix++; return true; }
     }
     g_app.turn_gyro = false;
     for (uint32_t i = 0U; i < (uint32_t)COM_N; i++) {

@@ -61,9 +61,10 @@ static void straight(float dist_m)
     const drv_event_t ev = rig_run(&r, 90.0);
     CHECK(ev == DRV_EV_DONE);
     const drv_status_t s = drv_status(&r.d);
-    const double mpc = (double)par()->odo_m_per_cnt;
+    const double mpc[2] = { (double)(par()->odo_m_per_cnt * par()->odo_scale_l),
+                            (double)(par()->odo_m_per_cnt * par()->odo_scale_r) };
     for (int i = 0; i < 2; i++) {
-        const double enc = (double)sim_counts(&r.plant, i) * mpc;     /* encoder frame */
+        const double enc = (double)sim_counts(&r.plant, i) * mpc[i];  /* encoder frame, as drv.c */
         CHECK_NEAR(enc, (double)dist_m, 0.002);
         CHECK_NEAR(s.d_m[i], (double)dist_m, 0.002);
     }

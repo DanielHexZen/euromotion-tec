@@ -5,10 +5,10 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 **Always use the `/ponytail` skill** for work in this repository.
 
 ## Current state
-Phase 0 is closed: all gates passed 2026-11-17 (H1, H2, H3 with deviation D-53, H3b Release build, H5), H4 by user report; git tag `phase0`. Open leftover: H4 "EN lines 0 V at boot" not measured (measure PB12/PB13 after reset before phase 1 floor runs). Details: `docs/PHASE0_COMMISSIONING.md` Status section.
-Phase 1 (calibration, gate H6) is in progress: follows `docs/PHASE1_CALIBRATION.md` with the normal firmware and console (spec D-31). Done: host tools `tools/straight_scale.py`, `umbmark.py`, `ffit.py` exist, `--selftest` passes. No floor measurement recorded yet in `PHASE1_CALIBRATION.md`. Next (vehicle track): UMBmark (`odo_scale_l/r`, `odo_wheelbase`), then remaining steps of `PHASE1_CALIBRATION.md` (straight-line scale, feedforward, verification, defaults committed with logs). `calib.c`/`calib.h` exist (spec D-47), optional.
-Phase 2 (IMU LSM6DS3 and EKF): host and vehicle code written on branch `phase2-imu-ekf` (2026-11-18, spec D-54 to D-62), `make -C test` green; not flashed, `FEAT_IMU` 0. This branch is phase-2 firmware (EKF and IWDG run in every build, D-61): phase-1 runs keep using `phase0`/main until H6. Breakout board being delivered (OQ-1); first power-up checklist and open items in `docs/PHASE2_IMU_EKF.md`. Vehicle enable waits for H6.
-Phase 3 (ToF sensors, guidance): sensor set reduced, spec D-63 (F1, F2, S2 tilted right, optional L1 on top; no G1–G4, no S1), open points OQ-12. Host code `gnd` (S2 only), `fwd` with `t_gnd`, `t_fwd`; `vl.c` waits for the ST ULD; `map`, `nav`, `msn` not started. Wiring and status in `docs/PHASE3_SENSORS.md`.
+Phase 0 is closed (tag `phase0`; H2 scope check, EN at boot and the runaway EN check done 2026-11-18). Details: `docs/PHASE0_COMMISSIONING.md` Status section.
+Phase 1 is closed for now (2026-11-20): feedforward and odometry defaults are compiled; H6 failed on caster slip (spec D-55), UMBmark and H6 are repeated after the caster service (`docs/PHASE1_CALIBRATION.md` Status).
+Phase 2 (IMU LSM6DS3 and EKF) is in commissioning on branch `phase2-imu-ekf` (code 2026-11-18, spec D-57 to D-65; commissioning fixes D-66 to D-69), started before H6 (spec D-56). EKF and IWDG run in every build (D-64). First power-up checklist and open items in `docs/PHASE2_IMU_EKF.md`.
+Phase 3 (ToF sensors, guidance): sensor set reduced, spec D-70 (F1, F2, S2 tilted right, optional L1 on top; no G1–G4, no S1), open points OQ-12. Host code `gnd` (S2 only), `fwd` with `t_gnd`, `t_fwd`; `vl.c` waits for the ST ULD; `map`, `nav`, `msn` not started. Wiring and status in `docs/PHASE3_SENSORS.md`.
 Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle track stays gated.
 
 ## Sources of truth

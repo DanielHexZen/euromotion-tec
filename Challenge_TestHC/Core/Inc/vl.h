@@ -5,7 +5,7 @@
 
 #include "units.h"
 
-/* IDs of VL_CFG (§7.13.1). D-63: G1-G4 not fitted, L1 takes the slot of S1. */
+/* IDs of VL_CFG (§7.13.1). D-70: G1-G4 not fitted, L1 takes the slot of S1. */
 enum { VL_G1, VL_G2, VL_G3, VL_G4, VL_F1, VL_F2, VL_L1, VL_S2, VL_N };
 
 #define VL_ST_VALID       0U

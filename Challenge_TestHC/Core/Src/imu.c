@@ -14,6 +14,7 @@
 #define COS_MIN   0.05f          /* 1 / cos(theta) cap: a ground vehicle never pitches to 87 deg */
 #define SAT_RUN   3U             /* REQ-IMU-07 */
 #define T_REF_C   25.0f          /* REQ-IMU-03 */
+#define SETTLE_US 500000U        /* samples of the first 0.5 s after configure are dropped (D-67) */
 
 typedef struct { uint32_t t_us; uint8_t rx[IMU_READ_BYTES]; } raw_t;
 
@@ -27,7 +28,7 @@ static volatile uint32_t s_rx_us, s_rx_n;    /* last real DRDY edge (ISR); timeo
 static volatile uint32_t s_drop;
 
 static imu_yaw_t s_yaw;
-static uint32_t  s_prev_us, s_kick_us, s_sat_run, s_sat_n, s_n;
+static uint32_t  s_prev_us, s_kick_us, s_init_us, s_sat_run, s_sat_n, s_n;
 static bool      s_have_prev, s_timed_out;
 static float     s_temp_c = T_REF_C, s_w[3], s_acc[3];
 
@@ -84,6 +85,7 @@ st_t imu_init(SPI_HandleTypeDef *hspi1, TIM_HandleTypeDef *htim2)
     s_be = &IMU_LSM6DS3;
     s_rx_us = sys_time_us();
     s_kick_us = s_rx_us;
+    s_init_us = s_rx_us;
     if (HAL_TIM_IC_Start_IT(htim2, TIM_CHANNEL_2) != HAL_OK) { return ST_BUS; }
     s_present = true;
     kick();                                               /* clears a DRDY that rose before the capture ran */
@@ -93,6 +95,7 @@ st_t imu_init(SPI_HandleTypeDef *hspi1, TIM_HandleTypeDef *htim2)
 /* ---- main side ------------------------------------------------------------------------ */
 static void process(const raw_t *r, att_t *att, const par_t *q)
 {
+    if ((uint32_t)(r->t_us - s_init_us) < SETTLE_US) { return; }   /* gyro turn-on transient (D-67) */
     int16_t g[3], a[3], tr;
     s_be->decode(r->rx, g, a, &tr);
 
@@ -124,7 +127,7 @@ static void process(const raw_t *r, att_t *att, const par_t *q)
     att_update(att, s_w, s_acc, dt);
 
     const float phi = att_roll(att), th = att_pitch(att);
-    const float rate = (s_w[1] * sinf(phi) + s_w[2] * cosf(phi)) / fmaxf(cosf(th), COS_MIN);
+    const float rate = ((s_w[1] - att_bias_y(att)) * sinf(phi) + s_w[2] * cosf(phi)) / fmaxf(cosf(th), COS_MIN);
     if (!isfinite(rate)) { sys_fault_raise(F_NUMERIC, 0); return; }                  /* REQ-COD-10 */
     imu_yaw_push(&s_yaw, r->t_us, rate);
     s_n++;

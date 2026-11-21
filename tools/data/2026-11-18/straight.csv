@@ -1,0 +1,19 @@
+# PHASE1 §4, 2026-11-18, fw f7fe0a2-dirty Debug, new FF defaults, odo_m_per_cnt 6.3638e-5, scales 1.0/1.0
+# counts not read with p per run: DONE values (straight.log), use --done
+# tape_l_mm,tape_r_mm,done_l_mm,done_r_mm   lateral drift right (not used)
+# D2000 1, 30 mm
+2007,1994,1998.1,1998.4
+# D2000 2, 22 mm
+2005,1989,1998.0,1997.8
+# D2000 3, 40 mm
+2002,1990,1998.2,1998.3
+# D2000 4, 55 mm
+1999,1984,1998.1,1998.5
+# D2000 5, 30 mm
+1996,1988,1998.0,1998.5
+# D5000 1, 200 mm
+5006,4980,4998.1,4998.0
+# D5000 2, 160 mm
+5000,4979,4998.3,4998.0
+# D5000 3, 120 mm
+4996,4980,4998.0,4998.4

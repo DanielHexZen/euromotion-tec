@@ -2,7 +2,7 @@
 
 Optional second route to the feedforward numbers (`FIRMWARE_SPEC.md` §7.27, REQ-CAL-01…03, Appendix 19.2). Phase 1 normally runs with the **vehicle firmware** and its console (`PHASE1_CALIBRATION.md`, D-31). Use this firmware when you need `whl_tau_m` (K) or a 50 Hz step record, or want G/B steps without typing duty commands by hand.
 
-**Status: not yet run on hardware.** The formats below come from reading `Core/Src/calib.c`; `tools/calib_host.py selftest` checks the parser against them, nothing more. Treat the first run as a commissioning test, not a calibration.
+**Status: first run on the vehicle 2026-11-18** (`C`, `B`, `K` on blocks; `G`, `L`, `X` S/P/N/L/D on the floor; logs in `tools/data/2026-11-18/`). `check` passed, all records complete.
 
 ## 1. Build
 
@@ -29,12 +29,41 @@ Console: USB (USART2, 115200 8N1), mirrored on the HC-12 (USART1). Prefer USB: t
 | `G` | steady steps 15, 20, 30, 40, 50, 60 %, fwd and rev, 6 s each | ~90 s | `G,<signed duty %>,<v_l mm/s>,<v_r mm/s>` (mean of the second half of the step), `DONE G`. |
 | `B` | breakaway: from 8 % in 1 % steps up to 34 %, each wheel, fwd and rev, until ≥ 10 counts | up to ~5 min | `B,<L\|R>,<fwd\|rev>,<duty %>` or `NONE`, `DONE B`. |
 | `K [pct]` | step response, default 40 %, max 60 % | 2 s run, then a dump of a few s | `K,<t_ms>,<duty_milli>,<dcnt_l>,<dcnt_r>` × 100 (counts per 20 ms), step at 200 ms, off at 1400 ms; `DONE K`. |
+| `X<p> [base_pct] [diff_pct]` | system-identification excitation on the floor, both wheels, open loop (`p` = `S`, `P`, `N`, `L`, `D`, below) | 0.4 s + profile + 1 s, then a dump of ~10 s | `X,<t_ms>,<ul_milli>,<ur_milli>,<dcnt_l>,<dcnt_r>` per 20 ms, three `# X` header lines, `DONE X`. |
 | `L` | reversal latency, 25 %, each wheel | ~6 s | `L,<L\|R>,<fwd_cnt>,<rev_cnt>,<fwd_latency_ms>,<rev_latency_ms>`, `DONE L`. |
 | `odo` | raw counts since `r` | – | `odo,<cnt_l>,<cnt_r>` |
 | `r`, `s`, `?` | reset counters (not while a test runs), stop, help | – | `Counters reset`, `STOP` |
 | `U`, `A` | not available | – | `ERR not available` |
 
 G and B also print the vehicle console's status line (`L=… R=… CALIB OPEN`) every 0.3 s and echo `> <duty>`, so `tools/ffit.py steady|breakaway` can read the same log. `calib_host.py` uses the `G,`/`B,` lines instead.
+
+### X excitation tests (system identification)
+
+Direct duty, no slew, so the recorded excitation is the applied one. Per wheel `uL = base − diff`, `uR = base + diff` (positive `diff` turns left), clamped to 60 %. Each run: 0.4 s zero duty, the profile, 1.0 s zero duty, all recorded (50 Hz). `s` aborts; the stall guard stays on. Defaults in brackets, timings are `[DECIDE]` defines in `calib.c`.
+
+| `p` | Profile | Default |
+|---|---|---|
+| `S` | step staircase, base × 0.5, 1, 0.5, 1, 0, 1.5 s each | base 40 |
+| `P` | PRBS between 0.5 and 1.0 × base, 7-bit LFSR (x^7+x^6+1), 80 ms per bit, 8 s, after 1 s at 0.75 × base | base 40 |
+| `N` | chirp base × (0.75 + 0.25 sin), 0.2 → 3.0 Hz linear over 8 s, after 1 s at 0.75 × base | base 40 |
+| `L` | lane change: base constant, diff 1.0 s 0, 0.8 s +d, 0.8 s −d, 1.5 s 0 | base 30, diff 10 |
+| `D` | double lane change: diff 1.0 s 0, 0.7 s +d, 0.7 s −d, 1.0 s 0, 0.7 s −d, 0.7 s +d, 1.5 s 0 | base 30, diff 10 |
+
+`base` 1…60 %, `diff` 0…30 % (only `L`, `D`; ignored and printed as 0 otherwise). Out of range is clamped, 0 or missing means the default.
+
+**Safety.** Floor only, **≥ 4 m free run-out ahead**, one person on `s`. The vehicle drives both wheels at up to 60 % for up to 9 s.
+
+**Log format.**
+
+```
+# X <p> base_pct=<n> diff_pct=<n>
+# X par m_per_cnt_l_nm=<nm> m_per_cnt_r_nm=<nm> wheelbase_um=<um> hz=50
+# X t_ms,ul_milli,ur_milli,dcnt_l,dcnt_r (counts per 20 ms ending at t_ms, duties applied in that interval)
+X,<t_ms>,<ul_milli>,<ur_milli>,<dcnt_l>,<dcnt_r>
+DONE X
+```
+
+Same record semantics as K: the duty in a line is the one applied during the interval whose counts are in that line. `Matlab/assessment1/run_assessment1.m` evaluates the logs stored under `tools/data/assessment1/` (one screen log per run or per session is fine). The record buffer holds 520 lines (K and X share it).
 
 ## 4. Capture a log
 
@@ -74,8 +103,8 @@ Check afterwards with a closed-loop run (`D2000`): both wheels end inside the H3
 
 ## 7. Known limits
 
-- **Not yet run on hardware.** Parser and fits are verified on synthetic logs only; real-data limits (noise, stick-slip, radio drops) are unknown.
-- `U` and `A` are not available: `whl_ff_u_ref` (129) and `whl_ff_norm_en` (128) cannot be measured (battery divider not wired).
+- First hardware run 2026-11-18 over the radio: no dropped lines. Until 2026-11-18 `out()` cut lines above 111 characters, so every header longer than that swallowed the first data line (one `K` record at t = 20 ms with duty 0, results unaffected); fixed (160-byte buffer).
+- `U` and `A` are not available: `whl_ff_u_ref` (129) and `whl_ff_norm_en` (128) cannot be measured here. The battery divider is wired since 2026-11-17, but only the vehicle firmware samples it (`S`).
 - **L does not measure gear backlash.** The encoders are on the motor shaft, so lash between motor and wheel is invisible; the test reports counts and the time to the first count after a reversal (20 ms steps), which is drive-train dead time at best. `odo_backlash_l/r` (204, 205) stay at 0 and are not derived (phase 5, §7.6.3).
 - **K is quantised to 20 ms** (integer counts per interval). A τ of 50 ms spans 2.5 samples: expect ±10 ms scatter, and any dead time (driver, slew, stiction) biases τ upwards. Run K several times and at two duty levels; use the mean and keep the spread.
 - G speeds are the mean of the second half of a 6 s step with 3.2 mm/s per count at 50 Hz resolution; low steps (15 %) may not roll and are dropped. Fit sees only forward-rolling wheels in the air or on the floor, not the loaded vehicle.

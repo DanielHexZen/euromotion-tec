@@ -25,7 +25,7 @@ void t_gnd(void)
     (void)par_init();
     const float h0 = par()->lat_h;
 
-    REQ("REQ-GND-01: S2 classes from height and spread (D-63, REQ-LAT-07)");
+    REQ("REQ-GND-01: S2 classes from height and spread (D-70, REQ-LAT-07)");
     gnd_init(&g);
     uint32_t t = feed(&g, h0, 0U, 5U);
     CHECK(gnd_class(&g, VL_S2) == GND_CL_PATH);
@@ -89,7 +89,7 @@ void t_gnd(void)
     }
     CHECK(gnd_class(&g, VL_S2) == GND_CL_PATH);
 
-    REQ("REQ-GND-02 / D-63: right side state from S2, left unknown, no sensor interlock (OQ-12)");
+    REQ("REQ-GND-02 / D-70: right side state from S2, left unknown, no sensor interlock (OQ-12)");
     gnd_init(&g);
     t = feed(&g, h0, 0U, 5U);
     CHECK(gnd_side(&g, GND_RIGHT) == GND_FAR);

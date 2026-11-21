@@ -1,6 +1,6 @@
 # Phase 2 — IMU and EKF
 
-Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and `t_ekf_*` green. Vehicle work starts only after H6 (phase 1); host-track work (`att`, `ekf`, tests) may run ahead (D-29).
+Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and `t_ekf_*` green. Vehicle work starts before H6 by team decision (spec D-56: H6 failed only on caster slip, phase 1 closed for now); host-track work (`att`, `ekf`, tests) may run ahead (D-29).
 
 ## Status
 
@@ -9,13 +9,15 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and 
 | Item | State |
 |---|---|
 | Host code | `att`, `ekf`, `imu_yaw` (pure); `t_att`, `t_ekf_static/slip/gate/sf_q/jacobians/backshift/line/pred`, `t_imu_yaw` |
-| Vehicle code | `imu`, `imu_lsm6ds3` (SPI1 DMA, TIM2 capture), IWDG (`sys_wdg_*`), `F_CSS` callback, console `IMU`/`EKF`, `W` with correction turns (D-54); parameters 400-404, 410-411, 500-522, 905 |
-| Host tests | passed, 56764 checks, 0 failed (`make -C test`) |
-| Build | `Core/Src` compiles with arm-none-eabi-gcc 13.2 at `-Og`/`-O2`, `FEAT_IMU` 0 and 1, 0 warnings. Not the CubeIDE build |
-| Vehicle | nothing flashed; `FEAT_IMU` defaults to 0. EKF, `att_init` and IWDG run in every build (D-61): this branch is phase-2 firmware, phase-1 calibration keeps `phase0`/main until H6 passes |
+| Vehicle code | `imu`, `imu_lsm6ds3` (SPI1 DMA, TIM2 capture), IWDG (`sys_wdg_*`), `F_CSS` callback, console `IMU`/`EKF`, `W` with correction turns (D-57: at most 2, residual ≥ 1.0°, 0.3 s ramp, D-68); parameters 400-404, 410-411, 500-522, 905 |
+| Host tests | passed after merging phase 1 (2026-11-20): 56876 checks, 0 failed (`make -C test`) |
+| Build | `Core/Src` builds and links with the CubeIDE arm-none-eabi-gcc 14.3 at `-Og`, `FEAT_IMU` 0 and 1 and `APP_CALIB` 1, 0 warnings (2026-11-20). Not yet built in CubeIDE |
+| Vehicle | nothing flashed; `FEAT_IMU` defaults to 0. EKF, `att_init` and IWDG run in every build (D-64): this branch carries the phase-1 defaults (115–121, 200–203) since the merge of 2026-11-20 |
 | H7, H8 (stationary part) | not done |
 
-Decisions: spec D-54 to D-62. Open items (spec OQ-11):
+**Watchdog (IWDG, D-64) — read before the first flash of this branch.** It starts at the end of `app_init()` in every vehicle build (not in `APP_CALIB`) and cannot be stopped until the next reset. Timeout prescaler 32 × reload 100 on the LSI ≈ 100 ms (LSI 17–47 kHz: 68–188 ms). It is refreshed only while the main loop runs at least every 5 ms and `S_CTRL` completed within the last 30 ms; one late iteration skips one refresh, about 100 ms without refresh resets the part (boot then prints `reset by watchdog`, fault `F_WDG_RESET`). `sys_wdg_start()` sets `DBGMCU` IWDG freeze, so a breakpoint or a halt in the debugger does not reset the board. `wdg_enable` (905) is read once at start: `P905=0` in RAM has no effect, disabling needs a rebuild with default 0. NMI (HSE loss) and fault paths that spin rely on the IWDG to reset after it has started.
+
+Decisions: spec D-57 to D-65 (code), D-66 to D-69 (commissioning). Open items (spec OQ-11):
 - Capture sets 0/1 deferred (needs `tlm`, 48 KB buffer, phase-4 protocol).
 - REQ-IMU-07 "EKF q_θ x100 on saturation" not wired (`ekf_odo_t` has no saturation flag).
 - Spec §14 `t_att` "rejects 0.3 g lateral" contradicts `att_acc_gate` 0.1 (0.3 g lateral gives |a| = 1.044 g, passes the gate); the test uses 0.5 g, spec to decide.
@@ -51,15 +53,17 @@ Wires short (≤ 15 cm, SPI mode 3 at about 5.6 MHz), GND wire next to SCL. Moun
 ## 3. First power-up checks
 
 - [ ] Before connecting to the Nucleo: 3V3 to GND not shorted; SCX/SDX level measured (pulled or floating).
-- [ ] WHO_AM_I (0x0F) read over SPI: 0x69 → plain LSM6DS3, as the spec assumes. 0x6A → LSM6DS3TR-C: deviation entry in spec §18.2 and re-check every §7.11.1 register before `imu_lsm6ds3.c` is used.
-- [ ] Record the result here and close OQ-1 in the spec.
+- [x] WHO_AM_I (0x0F) read over SPI: 0x69 → plain LSM6DS3, as the spec assumes. 0x6A → LSM6DS3TR-C: deviation entry in spec §18.2 and re-check every §7.11.1 register before `imu_lsm6ds3.c` is used. *(2026-11-20: **0x69**, read in the debugger at `imu_lsm6ds3.c:53`; plain LSM6DS3)*
+- [x] Record the result here and close OQ-1 in the spec.
 
-## 4. First power-up on the bench (after H6)
+## 4. First power-up on the bench (before H6, D-56)
 
 In order; stop at the first failure.
-1. [ ] Section 3 checks done (wiring, WHO_AM_I read standalone).
-2. [ ] Build with `FEAT_IMU` = 1 (CubeIDE Debug, 0 warnings), flash.
-3. [ ] Boot log shows the imu step OK (WHO_AM_I accepted).
+1. [x] Section 3 checks done (wiring, WHO_AM_I read standalone).
+   *Before, with `FEAT_IMU` 0 on `83eb182` (2026-11-20): boot OK, `I` S_CTRL max 71 µs, overruns 0, period 20000.0 µs, cpu 0.6 %; `EKF` STILL, step 61 µs; reset cause PIN, no watchdog reset.*
+2. [x] Build with `FEAT_IMU` = 1 (CubeIDE Debug, 0 warnings), flash.
+3. [x] Boot log shows the imu step OK (WHO_AM_I accepted). *(2026-11-20, `83eb182-dirty` Debug: `8 imu OK`)*
 4. [ ] `IMU` at rest: z about 9.81 m/s2, gyro rates near 0; sample count rises at about 833/s with no drops.
+   *2026-11-20 (`83eb182-dirty`): alive, drop 0, sat 0, T 20 °C, about 808 samples/s (manual 10 s timing, exact rate in H7). Gyro at rest 5.3 / −4.6 / −2.4 °/s (x/y/z): EKF bias stayed 0 because every ZUPT was rejected → fixed by D-66, to be re-checked. After D-66 the first ZUPT after boot learnt −5.6 °/s (cold) and −6.8 °/s (warm reset) against a raw −2.75 / −2.33 °/s and locked the filter out again; `W90` then over-estimated (95.2 of 90) and turned back: fixed by D-67 (IMU settle 0.5 s, bias reopen after 5 rejected ZUPTs), to be re-checked. After D-67 (2026-11-20): `W90` twice → gyro 90.6 of 90.0°, two fine corrections, the second about 2 s later (full ramp); ZUPT acc 36 rej 27 with σ_bg 0.002 °/s (`ekf_zupt_floor` too optimistic, live test with `P508` pending, value from the Allan variance in H7). D-68: correction tolerance 1.0°, 0.3 s ramp. After D-68 (2026-11-20): first ZUPT after boot −2.61 °/s against a raw −2.42 (D-67 settle works); `P508=2e-4` live: one reopen, then 44 accepted, 0 rejected. Learnt bias −3.0 against raw −2.4: the wrong roll (gyro x/y bias in `att`) leaks w_y into the yaw rate → D-69. UMBmark with the gyro turns (`W90`, team report): 3 runs, return error below 100 mm each (values not recorded). On `2a7f495` (D-68, D-69 flashed; `tools/data/2026-11-20/phase2_imu.log`): at rest roll 1.17° / pitch −0.09° (was 6.7° / −5.1°), bg −2.42 °/s against a raw z −2.28 (was −3.0), ZUPT 11 rejected right after boot then only accepted (acc 6 → 21); `W90` gyro 89.8 / 89.9 of 90.0; `W360` 360.9 and 360.4 of 360.0, the correction turn now 0.62 s. Visually good, a small residual remains (not measured; 10-turn spin in H7 gives `imu_gz_scale`). Note for H6: with `FEAT_IMU` 1 the `W` turns are gyro-corrected, so a UMBmark no longer tests the encoder odometry alone; repeat H6 with a `FEAT_IMU` 0 build. Axis signs by hand: nose up → pitch negative, left side up → roll positive (FLU, `IMU_AXIS_MAP` identity is right); `W90` gyro sign right. Finding: roll/pitch at rest 6.2° / −5.0° are the x/y gyro bias times `att_tau` (att.c integrated the gyro without bias), not the mounting; fixed by D-69. Hard-fault record `msp 0x20000BB0` with PC 0x20000000 appears after every flash and is gone after a plain reset: the ST-LINK flash loader running from SRAM, not the application.*
 5. [ ] H7: DRDY rate = ODR +/- 0.1 %, Allan variance logged, 10-turn spin residual < 0.5 deg after `imu_gz_scale`.
 6. [ ] H8 stationary part: bias converges (`ekf_bg_conv`), `EKF` command shows it; record the logs under `tools/data/<date>/`.
