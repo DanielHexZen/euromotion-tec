@@ -1,0 +1,17 @@
+8 runs
+run   m_per_cnt (mean of both wheels)   deviation from mean
+  1   6.37097e-05                    +0.260 %
+  2   6.36093e-05                    +0.102 %
+  3   6.35663e-05                    +0.034 %
+  4   6.34215e-05                    -0.194 %
+  5   6.34390e-05                    -0.166 %
+  6   6.35737e-05                    +0.046 %
+  7   6.35279e-05                    -0.026 %
+  8   6.35081e-05                    -0.057 %
+mean odo_m_per_cnt = 6.35444e-05 m   run-to-run sd 0.147 %   standard error 0.052 %
+vs the nominal 6.3638e-05 m (spec 7.6.2): -0.15 %
+per wheel: left 6.37241e-05 m/count, right 6.33647e-05 m/count, k_r/k_l = 0.9944 (cross-check of UMBmark E_d only)
+
+Type into the console with the vehicle stationary (then P200? to read back):
+P200=6.35444e-05
+For the compiled default: odo_m_per_cnt 6.35444e-05f

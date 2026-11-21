@@ -1,0 +1,148 @@
+\begin{tikzpicture}[x=0.95cm,y=0.95cm,
+  font=\scriptsize,
+  wpow/.style={draw=red!70!black,very thick,line cap=round},
+  wlog/.style={draw=blue!70!black,thick},
+  wsig/.style={draw=black,line width=0.5pt},
+  wl/.style={font=\tiny,fill=white,inner sep=0.4pt},
+  pn/.style={font=\tiny,inner sep=0pt},
+  bx/.style={draw=black!70,rounded corners=1pt,line width=0.5pt,align=center,inner sep=1.5pt},
+  bsys/.style={bx,fill=green!12},
+  bhw/.style={bx,fill=orange!18},
+  bpw/.style={bx,fill=black!6},
+  tgp/.style={font=\tiny\bfseries,red!70!black,inner sep=0.5pt},
+  tgl/.style={font=\tiny\bfseries,blue!70!black,inner sep=0.5pt}]
+
+\draw[bx,fill=orange!18,draw=black!70] (5.6,2.0) rectangle (10.0,9.25);
+\node[rotate=90,align=center] at (7.8,5.6) {\textbf{NUCLEO-F446RE}\\[-1pt]\tiny STM32F446RE};
+\node[pn,anchor=west] at (5.68,8.9) {PA2/PA3 (on-board)};
+\draw[wsig] (5.6,8.9) -- (3.0,8.9) node[wl,pos=.5] {USART2 VCP};
+\node[pn,anchor=west] at (5.68,7.7) {PB6 \,CN10-17};
+\draw[wsig] (5.6,7.7) -- (4.2,7.7) node[wl,pos=.5] {USART1\_TX};
+\node[pn,anchor=west] at (5.68,7.4) {PB7 \,CN7-21 (PU)};
+\draw[wsig] (5.6,7.4) -- (4.2,7.4) node[wl,pos=.5] {USART1\_RX};
+\node[pn,anchor=west] at (5.68,7.0) {PC9 \,CN10-1};
+\draw[wsig] (5.6,7.0) -- (4.2,7.0) node[wl,pos=.5] {SET};
+\node[pn,anchor=west] at (5.68,4.2) {PA0 \,CN7-28};
+\draw[wsig] (5.6,4.2) -- (2.6,4.2) node[wl,pos=.5] {ADC1\_IN0};
+\node[pn,anchor=west] at (5.68,3.2) {PC8 \,CN10-2};
+\draw[wsig] (5.6,3.2) -- (4.6,3.2) node[wl,pos=.5] {PROBE};
+\node[bhw,anchor=north west,minimum width=2.8cm] (stl) at (0.2,9.3) {ST-LINK/V2-1 (on board)\\[-1pt]\tiny USB to PC, SWD PA13/PA14};
+\node[bhw,minimum width=1.8cm,minimum height=1.9cm] (hc) at (3.3,7.4) {};
+\node[align=center] at (3.3,8.0) {\textbf{HC-12}\\[-1pt]\tiny 19200\,Bd};
+\node[pn,anchor=east] at (4.1,7.7) {RXD};
+\node[pn,anchor=east] at (4.1,7.4) {TXD};
+\node[pn,anchor=east] at (4.1,7.0) {SET};
+\node[pn,anchor=south] at (2.8,6.5) {VCC};
+\draw[wlog] (2.8,6.45) -- (2.8,6.25); \node[tgl,anchor=north] at (2.8,6.25) {3V3};
+\node[pn,anchor=south] at (3.4,6.5) {GND};
+\draw[wlog] (3.4,6.45) -- (3.4,6.25); \node[tgl,anchor=north] at (3.4,6.25) {GND};
+\node[bpw,minimum width=2.4cm,minimum height=1.0cm,align=center] (div) at (1.4,4.2) {47\,k$\Omega$ / 10\,k$\Omega$\\[-1pt]\tiny $+$100\,nF at node};
+\draw[wpow] (1.4,4.7) -- (1.4,4.95); \node[tgp,anchor=south] at (1.4,4.95) {+Vbat};
+\draw[fill=white,draw=black] (4.5,3.2) circle (0.07); \node[pn,anchor=east] at (4.4,3.2) {scope TP};
+\draw[bx,fill=green!12] (11.5,6.5) rectangle (14.5,8.4);
+\node[anchor=north] at (13.0,8.360000000000001) {\textbf{BTS7960 L (IBT-2)}};
+\node[pn,anchor=west] at (11.56,7.85) {RPWM};
+\node[pn,anchor=west] at (11.56,7.55) {LPWM};
+\node[pn,anchor=west] at (11.56,7.15) {R\_EN+L\_EN};
+\draw[bx,fill=green!12] (11.5,3.4) rectangle (14.5,5.3);
+\node[anchor=south] at (13.0,3.44) {\textbf{BTS7960 R (IBT-2)}};
+\node[pn,anchor=west] at (11.56,4.75) {RPWM};
+\node[pn,anchor=west] at (11.56,4.45) {LPWM};
+\node[pn,anchor=west] at (11.56,4.05) {R\_EN+L\_EN};
+\node[pn,anchor=east] at (9.92,8.95) {PA6 \,CN10-13};
+\node[pn,anchor=east] at (9.92,8.65) {PA7 \,CN10-15};
+\node[pn,anchor=east] at (9.92,7.85) {PA8 \,CN10-23};
+\node[pn,anchor=east] at (9.92,7.55) {PA9 \,CN10-21};
+\node[pn,anchor=east] at (9.92,7.15) {PB12 \,CN10-16};
+\node[pn,anchor=east] at (9.92,4.75) {PA10 \,CN10-33};
+\node[pn,anchor=east] at (9.92,4.45) {PA11 \,CN10-14};
+\node[pn,anchor=east] at (9.92,4.05) {PB13 \,CN10-30};
+\node[pn,anchor=east] at (9.92,3.1) {PC6 \,CN10-4};
+\node[pn,anchor=east] at (9.92,2.8) {PC7 \,CN10-19};
+\draw[wsig] (10.0,7.85) -- (11.5,7.85) node[wl,pos=.45] {TIM1\_CH1};
+\draw[wsig] (10.0,7.55) -- (11.5,7.55) node[wl,pos=.45] {TIM1\_CH2};
+\draw[wsig] (10.0,4.75) -- (11.5,4.75) node[wl,pos=.45] {TIM1\_CH3};
+\draw[wsig] (10.0,4.45) -- (11.5,4.45) node[wl,pos=.45] {TIM1\_CH4};
+\draw[wsig] (10.0,7.15) -- (11.5,7.15) node[wl,pos=.3] {EN\_L};
+\draw[wsig] (10.75,7.15) -- (10.75,7.0); \draw[fill=white,draw=black,line width=0.5pt] (10.69,7.0) rectangle (10.81,6.75);
+\draw[wsig] (10.75,6.75) -- (10.75,6.65); \draw[wsig] (10.68,6.65) -- (10.82,6.65); \draw[wsig] (10.71,6.6000000000000005) -- (10.79,6.6000000000000005);
+\node[pn,anchor=west] at (10.84,6.87) {10\,k$\Omega$};
+\draw[wsig] (10.0,4.05) -- (11.5,4.05) node[wl,pos=.3] {EN\_R};
+\draw[wsig] (10.75,4.05) -- (10.75,3.9); \draw[fill=white,draw=black,line width=0.5pt] (10.69,3.9) rectangle (10.81,3.65);
+\draw[wsig] (10.75,3.65) -- (10.75,3.55); \draw[wsig] (10.68,3.55) -- (10.82,3.55); \draw[wsig] (10.71,3.5) -- (10.79,3.5);
+\node[pn,anchor=west] at (10.84,3.7699999999999996) {10\,k$\Omega$};
+\draw[bx,fill=orange!18] (15.8,6.5) rectangle (18.2,8.4);
+\node[align=center] at (17.0,7.45) {\textbf{Motor L}\\[-1pt]\tiny JGB37-3530\\[-1pt]\tiny 12\,V, Hall enc.};
+\draw[wpow] (14.5,7.9) -- (15.8,7.9);
+\node[pn,anchor=east] at (14.45,7.9) {M+};
+\node[pn,anchor=west] at (15.85,7.9) {M+};
+\draw[wpow] (14.5,7.5) -- (15.8,7.5);
+\node[pn,anchor=east] at (14.45,7.5) {M$-$};
+\node[pn,anchor=west] at (15.85,7.5) {M$-$};
+\draw[wsig] (10.0,8.95) -- (17.2,8.95) -- (17.2,8.4) node[pn,anchor=south west,inner sep=1pt,pos=0.0] {};
+\draw[wsig] (10.0,8.65) -- (16.5,8.65) -- (16.5,8.4);
+\node[wl] at (12.0,8.95) {A \,TIM3\_CH1};
+\node[wl] at (13.2,8.65) {B \,TIM3\_CH2};
+\node[pn,anchor=east] at (18.15,7.65) {V+};
+\draw[wlog] (18.2,7.65) -- (18.45,7.65); \node[tgl,anchor=west] at (18.45,7.65) {3V3};
+\node[pn,anchor=east] at (18.15,7.25) {GND};
+\draw[wlog] (18.2,7.25) -- (18.45,7.25); \node[tgl,anchor=west] at (18.45,7.25) {GND};
+\draw[bx,fill=orange!18] (15.8,3.4) rectangle (18.2,5.3);
+\node[align=center] at (17.0,4.35) {\textbf{Motor R}\\[-1pt]\tiny JGB37-3530\\[-1pt]\tiny 12\,V, Hall enc.};
+\draw[wpow] (14.5,4.75) -- (15.8,4.75);
+\node[pn,anchor=east] at (14.45,4.75) {M+};
+\node[pn,anchor=west] at (15.85,4.75) {M+};
+\draw[wpow] (14.5,4.35) -- (15.8,4.35);
+\node[pn,anchor=east] at (14.45,4.35) {M$-$};
+\node[pn,anchor=west] at (15.85,4.35) {M$-$};
+\draw[wsig] (10.0,3.1) -- (16.5,3.1) -- (16.5,3.4) node[pn,anchor=south west,inner sep=1pt,pos=0.0] {};
+\draw[wsig] (10.0,2.8) -- (17.2,2.8) -- (17.2,3.4);
+\node[wl] at (12.0,3.1) {A \,TIM8\_CH1};
+\node[wl] at (13.2,2.8) {B \,TIM8\_CH2};
+\node[pn,anchor=east] at (18.15,4.55) {V+};
+\draw[wlog] (18.2,4.55) -- (18.45,4.55); \node[tgl,anchor=west] at (18.45,4.55) {3V3};
+\node[pn,anchor=east] at (18.15,4.1499999999999995) {GND};
+\draw[wlog] (18.2,4.1499999999999995) -- (18.45,4.1499999999999995); \node[tgl,anchor=west] at (18.45,4.1499999999999995) {GND};
+\node[pn,anchor=south] at (11.9,6.54) {B+};
+\draw[wpow] (11.9,6.5) -- (11.9,6.2);
+\node[tgp,anchor=north] at (11.9,6.2) {+Vbat};
+\node[pn,anchor=south] at (12.5,6.54) {B$-$};
+\draw[wpow] (12.5,6.5) -- (12.5,6.2);
+\node[tgp,anchor=north] at (12.5,6.2) {GND};
+\node[pn,anchor=south] at (13.1,6.54) {VCC};
+\draw[wlog] (13.1,6.5) -- (13.1,6.2);
+\node[tgl,anchor=north] at (13.1,6.2) {3V3};
+\node[pn,anchor=south] at (13.7,6.54) {GND};
+\draw[wlog] (13.7,6.5) -- (13.7,6.2);
+\node[tgl,anchor=north] at (13.7,6.2) {GND};
+\node[pn,anchor=north] at (11.9,5.26) {B+};
+\draw[wpow] (11.9,5.3) -- (11.9,5.6);
+\node[tgp,anchor=south] at (11.9,5.6) {+Vbat};
+\node[pn,anchor=north] at (12.5,5.26) {B$-$};
+\draw[wpow] (12.5,5.3) -- (12.5,5.6);
+\node[tgp,anchor=south] at (12.5,5.6) {GND};
+\node[pn,anchor=north] at (13.1,5.26) {VCC};
+\draw[wlog] (13.1,5.3) -- (13.1,5.6);
+\node[tgl,anchor=south] at (13.1,5.6) {3V3};
+\node[pn,anchor=north] at (13.7,5.26) {GND};
+\draw[wlog] (13.7,5.3) -- (13.7,5.6);
+\node[tgl,anchor=south] at (13.7,5.6) {GND};
+\node[bpw,minimum width=1.7cm,minimum height=1.2cm,anchor=south west] at (0.0,0.0) {3S LiPo\\[-1pt]\tiny 9.9--12.6\,V};
+\node[bpw,minimum width=0.8999999999999999cm,minimum height=1.2cm,anchor=south west] at (2.0,0.0) {XT60};
+\node[bhw,minimum width=1.2000000000000002cm,minimum height=1.2cm,anchor=south west] at (5.7,0.0) {\textbf{Star}\\[-1pt]\textbf{point}};
+\node[bpw,minimum width=1.6000000000000014cm,minimum height=1.2cm,anchor=south west] at (8.7,0.0) {Buck XY-3606\\[-1pt]\tiny 5\,V fixed};
+\node[bpw,minimum width=1.799999999999999cm,minimum height=1.2cm,anchor=south west] at (10.8,0.0) {AMS1117\\[-1pt]\tiny 3.3\,V sensor rail};
+\draw[wpow,-{Stealth[length=3pt]}] (1.7,0.6) -- (2.0,0.6);
+\draw[wpow,-{Stealth[length=3pt]}] (2.9,0.6) -- (5.7,0.6);
+\draw[wpow,-{Stealth[length=3pt]}] (6.9,0.6) -- (8.7,0.6);
+\draw[wlog,-{Stealth[length=3pt]}] (10.3,0.6) -- (10.8,0.6);
+\draw[wlog,-{Stealth[length=3pt]}] (9.5,1.2) -- (9.5,2.0);
+\node[pn,anchor=east,blue!70!black] at (9.92,1.75) {E5V (JP5)};
+\draw[wlog] (12.6,0.6) -- (12.95,0.6); \node[tgl,anchor=west] at (12.95,0.6) {3V3};
+\draw[wpow] (5.95,1.2) -- (5.95,1.45); \node[tgp,anchor=south] at (5.95,1.45) {+Vbat};
+\draw[wpow] (6.7,1.2) -- (6.7,1.45); \node[tgp,anchor=south] at (6.7,1.45) {GND};
+\draw[wsig] (14.4,1.0) -- (14.9,1.0); \node[pn,anchor=west] at (15.0,1.0) {signal};
+\draw[wpow] (14.4,0.65) -- (14.9,0.65); \node[pn,anchor=west] at (15.0,0.65) {battery / motor power};
+\draw[wlog] (14.4,0.3) -- (14.9,0.3); \node[pn,anchor=west] at (15.0,0.3) {logic supply (E5V, 3.3\,V rail)};
+\node[pn,anchor=west,align=left] at (14.4,-0.1) {Tags of equal name are connected;\\[-1pt] +Vbat/GND at the star point.};
+\end{tikzpicture}

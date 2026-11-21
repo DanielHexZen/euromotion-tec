@@ -6,14 +6,14 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 
 ## Status (2026-11-17; H2 and the new-firmware H3 series measured on `a17bfac`)
 
-**Phase 0 gates passed on 2026-11-17** (H1, H2, H3 with D-53, H3b, H5, §7; H4 by user report, EN 0 V at boot not measured, see §8). `#if 0` blocks deleted (`d9fe3fc`). Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been flashed**. Commit `f126577` (2026-11-12) adds the complete spec §4 `.ioc` target state (CubeMX 6.18.1) and the calibration firmware `calib.c`/`calib.h` (spec D-47, `CALIB_README.md`); all of `Core/Src` compiles and links with the CubeIDE `arm-none-eabi-gcc` 14.3 at `-Og`/`-O2`, `APP_CALIB` 0 and 1, 0 warnings (see below). Not yet built in CubeIDE.
+**Phase 0 gates passed on 2026-11-17** (H1, H2, H3 with D-53, H3b, H5, §7; H4 by user report, EN 0 V at boot measured 2026-11-18). `#if 0` blocks deleted (`d9fe3fc`). Everything else on the checklist below is ticked or annotated. Session 1 is committed as `f551dd3`. The 2026-11-10 code and test changes listed below are in the WIP checkpoint commit `dfde781` (a checkpoint, not a reviewed commit with REQ IDs); They **have not been flashed**. Commit `f126577` (2026-11-12) adds the complete spec §4 `.ioc` target state (CubeMX 6.18.1) and the calibration firmware `calib.c`/`calib.h` (spec D-47, `CALIB_README.md`); all of `Core/Src` compiles and links with the CubeIDE `arm-none-eabi-gcc` 14.3 at `-Og`/`-O2`, `APP_CALIB` 0 and 1, 0 warnings (see below). Not yet built in CubeIDE.
 
 | Gate | State |
 |---|---|
 | Host tests | passed, 54621 checks, 0 failed (`make -C test`, repeated 2026-11-12) |
 | H1 tick/clock | passed |
-| H2 slot timing | **passed 2026-11-17** on `a17bfac` (Debug `-Og`), all three runs of §3: idle 15 min (n 67811, period 20000/20000 µs, tick isr max 1.3 µs, `S_CTRL max` 9 µs), loaded USB (`S_CTRL max` 159 µs) and loaded radio at 19200 (`S_CTRL max` 158 µs, `I` complete); jitter 0 µs, overruns 0, cpu ≤ 0.3 %. H1 re-read on the same build: tick 1000.0 Hz. Builds before `a17bfac` were Debug `-O0` (CubeIDE had no optimisation level set; tick isr 2.6 µs failed REQ-NFR-01), so the 2026-11-09 numbers are void. Limit of the self-measurement: no absolute oscillator check (§3) |
-| H4 signs, dead-man, runaway, stall | passed (user report); EN-0 V-at-boot and reversal test not explicitly confirmed |
+| H2 slot timing | **passed 2026-11-17** on `a17bfac` (Debug `-Og`), all three runs of §3: idle 15 min (n 67811, period 20000/20000 µs, tick isr max 1.3 µs, `S_CTRL max` 9 µs), loaded USB (`S_CTRL max` 159 µs) and loaded radio at 19200 (`S_CTRL max` 158 µs, `I` complete); jitter 0 µs, overruns 0, cpu ≤ 0.3 %. H1 re-read on the same build: tick 1000.0 Hz. Builds before `a17bfac` were Debug `-O0` (CubeIDE had no optimisation level set; tick isr 2.6 µs failed REQ-NFR-01), so the 2026-11-09 numbers are void. Absolute check on the scope 2026-11-18: PC8 period 20 ms, jitter barely visible (§3) |
+| H4 signs, dead-man, runaway, stall | passed (user report); EN at boot measured 0.03/0.04 V (2026-11-18); reversal test not explicitly confirmed |
 | H5 faults | `FAULTINJ`, FAULT-state answers, `CLEAR` passed; deliberate HardFault trigger not done; Release `FAULTINJ 4` waits for H3b |
 | Radio | HELLO/`p`, concurrent input, replug, `s` over radio passed; `I` over radio passed with four lines (2026-11-09). `I` has five lines since 2026-11-10: read it once over the radio again. **Since `f126577` the radio runs at 19200 (D-51). Both HC-12 modules were reconfigured to 19200 (`AT+B19200`) and the radio link at 19200 was tested (team report 2026-11-17). `I` (5 lines) read over the radio in the H2 loaded run 2026-11-17: complete** |
 | **H3 `D` regression** | **passed 2026-11-17 with deviation D-53**: regression comparison against `old_firmware` (`D300`, `D1000`, `D-500`; §6) shows the new firmware as close or closer to the target; `D5000` without baseline (no room), `W90` without baseline (no such command). `sync_max` > 3 mm on `D-500`/`W90` accepted as mechanics (caster swivel and slip on reversal; aligned casters give ≈ 10 mm more ground distance on `D-500`, still short), spec D-53 |
@@ -49,7 +49,7 @@ Mark each box and keep the console log of every step (`screen`/CubeIDE terminal 
 - Console: USB VCP `/dev/cu.usbmodem11403` (number can change: `ls /dev/cu.usbmodem*`), `screen /dev/cu.usbmodem11403 115200`; radio terminal at 19200 since `f126577` (D-51; 9600 before). The board is powered from E5V (JP5); USB can still be plugged in for the console. `I` maxima and the period statistics are since boot **or since the last `r`** that answered `Counters reset` (2026-11-10; before that: since boot only). `n` in the period line is the number of 20 ms intervals in the window. Run first, read `I` after; unplugging USB does not reset the board. Overrun counts are always since boot.
 - Launch with **Run → Debug Configurations → STM32 C/C++ Application → `Challenge_TestHC Debug`**. A generic "C/C++ Application" config (`… Debug (1)`) calls plain `gdb` and fails. `Challenge_TestHC Debug.launch` still holds an old absolute log path (`/Users/danielappel/Desktop/Microcontrollers/A2.4/…`), harmless.
 - Pre-build step `../../tools/gen_build_info.sh` works (`build_info.h` is git-ignored, hash shows `-dirty`).
-- `7 bat absent` is expected: ADC1 is generated but `main.c` does not pass `.adc1` in `app_hw_t`, and the 47k/10k divider is not wired to PA0. Not needed for the phase-0 gate.
+- Battery: up to `phase0` the boot log showed `7 bat absent` (`main.c` did not pass `.adc1`). Since 2026-11-17 the 47k/10k divider with 100 nF is wired to PA0 and `main.c` passes `.adc1 = &hadc1` (spec §16.2): boot shows `7 bat OK`, `S` prints the pack voltage; `bat_ratio` still nominal `[MEASURE]`.
 - Spec and this file live in the repository root (CLAUDE.md formerly said `docs/`).
 
 Console: USB virtual COM port, 115200 8N1, CR or LF terminated. Radio (HC-12, 19200 since `f126577`, D-51) mirrors it.
@@ -138,11 +138,11 @@ Earlier results (2026-11-09, previous build, `I` only):
 - Tick-ISR ≤ 2 µs (REQ-NFR-01) was accepted on 2026-11-09 without a measurement ("no overruns"). That acceptance is replaced by the `tick isr max` criterion above and is open until it is read.
 
 Optional cross-check with an instrument (not required for the gate):
-- [ ] Oscilloscope or logic analyser on PC8 (`PROBE`, Debug build): 50 Hz pulse train, period 20.000 ms mean, jitter < 100 µs, pulse width = `S_CTRL` execution. This is the only check of the absolute frequency.
+- [x] Oscilloscope or logic analyser on PC8 (`PROBE`, Debug build): 50 Hz pulse train, period 20.000 ms mean, jitter < 100 µs, pulse width = `S_CTRL` execution. This is the only check of the absolute frequency. *(2026-11-18, Tektronix TDS 1002, Debug build `ef9d426-dirty` (= `129e42f`): 3.3 V pulses, period 20 ms, jitter barely visible, well below 100 µs. Pulse width not read off.)*
 
 ## 4. H4 – truth of signs (wheels in the air, motor supply ON)
 
-- [ ] Both EN lines low at boot: PB12/PB13 read 0 V before the first command. *(not explicitly reported)*
+- [x] Both EN lines low at boot: PB12/PB13 read 0 V before the first command. *(2026-11-18, multimeter after reset: 0.03 V and 0.04 V)*
 - [x] `r`, then spin each wheel by hand forward: `p` shows **positive** counts and positive mm for **both** wheels (`ENC_SIGN_L=+1`, `ENC_SIGN_R=-1`). Wrong sign → stop, correct the constant, rerun the unit test, re-flash. *(per user report: signs correct)*
 - [x] `10` (open loop 10 %): both wheels turn **forward**; ramp is slow (2 /s). `s` stops them (EN low a moment later).
 - [x] `-10`: both reverse. `PWM 20 0` / `PWM 0 20`: only the named wheel turns (check L/R wiring).
@@ -162,7 +162,7 @@ For each of 0x04, 0x06, 0x08, 0x13 run `20` (wheels in the air), then `FAULTINJ 
 | 0x08 | track L (R3) | as 0x04 |
 | 0x13 | numeric (R4) | as 0x06 |
 
-- [x] Each: motors stop within one tick (≤ 20 ms), console prints `FAULT, motors stopped. first fault 0x..`. *(per user report: `FAULTINJ` behaves as expected; the "at once" PB12/PB13 check of 0x06 needs a scope/meter and was not measured)*
+- [x] Each: motors stop within one tick (≤ 20 ms), console prints `FAULT, motors stopped. first fault 0x..`. *(per user report: `FAULTINJ` behaves as expected; 0x06 on the scope 2026-11-18 (Tektronix TDS 1002, single shot, falling edge): PB12 and PB13 fall together)*
 - [x] While in FAULT: `D100`, `20`, `PWM …` answer `ERR state FAULT`; `S`, `FAULTS`, `EV`, `P…?` still work.
 - [x] `CLEAR` (or `r`) → back to IDLE, `D100` works again. `FAULTS`/`EV` list the fault.
 - [x] `Error_Handler`/HardFault path: temporarily trigger a fault (e.g. call `Error_Handler()` after boot, or write through a null pointer, Debug only). EN lines go low (scope), output stays off. After reset the HELLO shows `last hard fault: code 0x02 …` with stack words. Remove the trigger. Spec marks the backup-register access `[VERIFY]`: if no record appears, note it as an open finding. **Not done deliberately.** Finding: on first boot HELLO printed a stale `last hard fault: code 0x02 msp 0x20000BA8` (stack words `3F800000 20000BA8 00000000 FFFFFFF9 00000001 00000200 0000AAAA 00000008 00000000 2000053D 20000000 21000200`). It did not come back after the next reset, so the backup-register record works and the entry was left by an earlier flash state. Origin unknown; the PC/LR guess from the raw words is unreliable (D-26). Watch every reset; if it returns, break in `HardFault_Handler`. *(2026-11-17, `d9fe3fc` Debug: PC set to 0xE0000000 in the debugger (MemManage escalated to HardFault) → HELLO after reset `last hard fault: code 0x02 msp 0x20000BB0` with stack words; second reset: record gone. The backup-register record works, `[VERIFY]` resolved. The stale 2026-11-09 record has the same stack pattern: most likely a debugger-induced fault of an earlier flash state. EN low not scoped. First attempt during a `D5000`: halting the core left TIM1 PWM running, so the resume tripped `F_TRACK_L` (0x08) and `WARN tick rate`: finding below)*
@@ -232,7 +232,7 @@ Result of the comparison:
   - Halting the core in the debugger does not stop TIM1: the motors keep their PWM while the CPU is halted (resume → `F_TRACK_L`). Freeze TIM1 in debug (`DBGMCU_APB2_FZ_DBG_TIM1_STOP`) is a candidate; not changed in phase 0.
   - One `CLEAR` answered `Faults cleared` during the §7 checks; the fault before it was not read (`FAULTS`/`EV`). Watch for it.
   - Reverse ground distance −4 % (`D-500`), heading drift up to 250 mm on 5 m, skew after `W90`: phase 1 (UMBmark, D-53).
-  - H4: EN lines 0 V at boot not measured (no multimeter on 2026-11-17). Open; measure PB12/PB13 after a reset before phase 1 drives on the floor.
+  - H4: EN lines 0 V at boot: closed 2026-11-18, PB12/PB13 0.03/0.04 V after reset.
   - Ending a debug session prints `WARN tick rate 563.3 Hz, TIM6 misconfigured?`: the core is halted while TIM2 keeps counting, so the tick-rate check sees missing ticks. Debugger artefact, same cause as the TIM1 finding; freezing TIM1/TIM2/TIM6 in debug (`DBGMCU`) would remove both.
   - `paper_isaac.pdf` not rebuilt (`reports/figures/concept.png` missing).
 - [x] Commit: `Phase 0: restructure complete, H1–H5 passed (REQ-ARC-01..04, REQ-EXE-*, REQ-MOT-*, REQ-ENC-*, REQ-WHL-*, REQ-DRV-*, REQ-PAR-*, REQ-CON-*)`.

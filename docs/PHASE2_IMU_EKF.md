@@ -1,6 +1,6 @@
 # Phase 2 — IMU and EKF
 
-Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and `t_ekf_*` green. Vehicle work starts only after H6 (phase 1); host-track work (`att`, `ekf`, tests) may run ahead (D-29).
+Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and `t_ekf_*` green. Vehicle work starts before H6 by team decision (spec D-56: H6 failed only on caster slip, phase 1 closed for now); host-track work (`att`, `ekf`, tests) may run ahead (D-29).
 
 ## Status
 
@@ -10,10 +10,12 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 2: H7, H8 (stationary part), `t_att` and 
 |---|---|
 | Host code | `att`, `ekf`, `imu_yaw` (pure); `t_att`, `t_ekf_static/slip/gate/sf_q/jacobians/backshift/line/pred`, `t_imu_yaw` |
 | Vehicle code | `imu`, `imu_lsm6ds3` (SPI1 DMA, TIM2 capture), IWDG (`sys_wdg_*`), `F_CSS` callback, console `IMU`/`EKF`, `W` with correction turns (D-57); parameters 400-404, 410-411, 500-522, 905 |
-| Host tests | passed, 56764 checks, 0 failed (`make -C test`) |
-| Build | `Core/Src` compiles with arm-none-eabi-gcc 13.2 at `-Og`/`-O2`, `FEAT_IMU` 0 and 1, 0 warnings. Not the CubeIDE build |
-| Vehicle | nothing flashed; `FEAT_IMU` defaults to 0. EKF, `att_init` and IWDG run in every build (D-64): this branch is phase-2 firmware, phase-1 calibration keeps `phase0`/main until H6 passes |
+| Host tests | passed after merging phase 1 (2026-11-20): 56876 checks, 0 failed (`make -C test`) |
+| Build | `Core/Src` builds and links with the CubeIDE arm-none-eabi-gcc 14.3 at `-Og`, `FEAT_IMU` 0 and 1 and `APP_CALIB` 1, 0 warnings (2026-11-20). Not yet built in CubeIDE |
+| Vehicle | nothing flashed; `FEAT_IMU` defaults to 0. EKF, `att_init` and IWDG run in every build (D-64): this branch carries the phase-1 defaults (115–121, 200–203) since the merge of 2026-11-20 |
 | H7, H8 (stationary part) | not done |
+
+**Watchdog (IWDG, D-64) — read before the first flash of this branch.** It starts at the end of `app_init()` in every vehicle build (not in `APP_CALIB`) and cannot be stopped until the next reset. Timeout prescaler 32 × reload 100 on the LSI ≈ 100 ms (LSI 17–47 kHz: 68–188 ms). It is refreshed only while the main loop runs at least every 5 ms and `S_CTRL` completed within the last 30 ms; one late iteration skips one refresh, about 100 ms without refresh resets the part (boot then prints `reset by watchdog`, fault `F_WDG_RESET`). `sys_wdg_start()` sets `DBGMCU` IWDG freeze, so a breakpoint or a halt in the debugger does not reset the board. `wdg_enable` (905) is read once at start: `P905=0` in RAM has no effect, disabling needs a rebuild with default 0. NMI (HSE loss) and fault paths that spin rely on the IWDG to reset after it has started.
 
 Decisions: spec D-57 to D-65. Open items (spec OQ-11):
 - Capture sets 0/1 deferred (needs `tlm`, 48 KB buffer, phase-4 protocol).
@@ -54,7 +56,7 @@ Wires short (≤ 15 cm, SPI mode 3 at about 5.6 MHz), GND wire next to SCL. Moun
 - [ ] WHO_AM_I (0x0F) read over SPI: 0x69 → plain LSM6DS3, as the spec assumes. 0x6A → LSM6DS3TR-C: deviation entry in spec §18.2 and re-check every §7.11.1 register before `imu_lsm6ds3.c` is used.
 - [ ] Record the result here and close OQ-1 in the spec.
 
-## 4. First power-up on the bench (after H6)
+## 4. First power-up on the bench (before H6, D-56)
 
 In order; stop at the first failure.
 1. [ ] Section 3 checks done (wiring, WHO_AM_I read standalone).
