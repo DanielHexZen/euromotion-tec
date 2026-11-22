@@ -1,7 +1,7 @@
 # MR2006B Vehicle Firmware — Implementation Specification
 
 > **Status:** Draft for review
-> **Version:** 1.16 (HC-12 on 5 V, D-71; 2026-11-21)
+> **Version:** 1.17 (wheel ratio from D5000 drift, D-72; 2026-11-21)
 > **Last Updated:** 2026-11-21 (course week 11 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
@@ -1751,8 +1751,8 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | ID | Name | Default | Unit | Range | Flag | Src | Note |
 |---|---|---|---|---|---|---|---|
 | 200 | `odo_m_per_cnt` | 6.35444e-5 | m | 5e-5–8e-5 | S | M | straight-line scale 2026-11-18, 5 × `D2000` + 3 × `D5000`, sd 0.15 % (`PHASE1_CALIBRATION.md` §4) |
-| 201 | `odo_scale_l` | 1.00189 | – | 0.95–1.05 | S | M | UMBmark 2026-11-19, E_d 0.996 (D-55) |
-| 202 | `odo_scale_r` | 0.99811 | – | 0.95–1.05 | S | M | idem |
+| 201 | `odo_scale_l` | 1.00084 | – | 0.95–1.05 | S | M | lateral drift of 5 × `D5000` 2026-11-21 (D-72); was 1.00189 from UMBmark (D-55) |
+| 202 | `odo_scale_r` | 0.99916 | – | 0.95–1.05 | S | M | idem; was 0.99811 |
 | 203 | `odo_wheelbase` | 0.21926 | m | 0.15–0.35 | S | M | effective, from 2 × `W360` and 2 × `W-360` with the `SETTLE` shortfall removed, 2026-11-19 (D-55); geometric track 0.22325 |
 | 204 | `odo_backlash_l` | 0 | counts | 0–200 | S | D | `[MEASURE]` calibration `L` |
 | 205 | `odo_backlash_r` | 0 | counts | 0–200 | S | D | idem |
@@ -2320,6 +2320,7 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-69 | **Gyro x/y bias in the attitude filter; `ekf_zupt_floor` 2·10⁻⁴ rad/s** (2026-11-20). (1) `att.c` integrated the raw gyro: at rest the x/y bias (5.3 / −4.7 °/s) times `att_tau` gave roll 6.7° / pitch −5.1° on a level floor. Through the yaw projection `(w_y sin φ + w_z cos φ)/cos θ` that wrong roll added −0.55 °/s to the yaw rate (learnt into `b_g`: −3.0 °/s against a raw −2.4) and scaled ω_z by cos 6.7° = 0.993 (0.6° on 90°). The 0.5 s start-up window now also averages gyro x and y; that bias is subtracted afterwards and the yaw projection uses the corrected y rate (`t_att`, bias case). The z bias stays with the EKF. (2) With `ekf_zupt_floor` 3.5·10⁻⁵ about 40 % of the ZUPTs at rest were rejected (σ_bg 0.002 °/s against real window scatter); with 2·10⁻⁴ set live: one reopen (D-67), then 44 accepted and 0 rejected. Provisional until the Allan variance of H7 | the vehicle stands at boot (D-37); the floor must cover the real scatter of a 1 s window | none |
 | D-70 | **Reduced ToF sensor set (team, 2026-11-21): F1, F2 (front), S2 (right, tilted down by `lat_tilt`), optionally L1 (on top of the vehicle, horizontal, yaw ≈ 45° from +x towards the path) for landmarks. G1–G4 and S1 are not fitted.** All fitted sensors on I2C2. L1 takes the slot of S1 (ID 6, XSHUT PB0, EXTI PA15, 0x36). I2C1 and `XSHUT_G1..4` stay in the `.ioc` unused, so no CubeMX regeneration. `gnd` classifies S2 only (§7.14 note): right side state, edge events from S2; no sensor interlock (OQ-12). H9 applies to S2 | the vehicle carries five VL53L1X, two of them spare; the team mounts F1, F2 and S2, L1 is optional | fit G1–G4 on I2C1 as in versions ≤ 1.11 |
 | D-71 | **HC-12 on the vehicle fed from 5 V; both modules P8 (+20 dBm) on CH001** (2026-11-21). Raising the transmit power to P8 on the 3.3 V AMS1117 rail is the case of the technical reference's O-4 (AMS1117 overheated with the HC-12, D-5 recommends the 5 V branch). The module regulates its logic internally, so TXD, RXD and SET stay 3.3 V (PB6/PB7 are 5 V tolerant). A trial on CH003 gave no link although `AT+RX` matched on both modules; a loopback test (FT232RL module, vehicle module with TXD bridged to RXD) passed, CH001 works on the vehicle; CH003 was not pursued. Note: other teams on the default CH001 at 19200 Bd would reach the console | the 5 V branch has the reserve for the transmit peaks; CH001 is the last proven channel | 3.3 V rail and P4 |
+| D-72 | **Wheel ratio from straight `D5000` drift, not from UMBmark; H6 still open** (2026-11-21, lecture-room tiles). UMBmark repeated with `FEAT_IMU` 0 (10 runs): single runs 190–494 mm, type B +3.6° per leg (left), type A +0.5° per corner; H6 failed. A straight `D2000` from an aligned start drifted only 22 mm left (1.3°): the legs after a turn add caster error that UMBmark books as type B. 5 × `D5000` (aligned start, casters aligned): lateral offset of the middle 124, 128, 122, 97 mm left (one outlier 14 mm) → the right wheel rolls 0.21 % more per modelled metre; scales 1.00189 / 0.99811 → 1.00084 / 0.99916 (mean kept). Check with the new values, 3 × `D5000`: 21 and 17 mm left, one run 95 mm right (outlier of the same size as the first series, about 100 mm to the right of the rest: a caster event). `odo_wheelbase` unchanged (rotation test, D-55). `odo_m_per_cnt` unchanged: x to the vehicle middle gave +18 mm on 5 m at one length only (offset or scale not separable); all measurements so far are on the smooth lecture-room tiles, the task runs outside on stone tiles: re-check P200 there with the section-4 method | straight drives isolate the wheel ratio from the casters; UMBmark on this chassis measures caster swing | UMBmark values of D-55 |
 
 ---
 
@@ -2420,3 +2421,4 @@ If the calibration firmware is used (D-31, D-47), its results map as follows; wi
 | 1.14 | 2026-11-20 | Dani / Claude | D-69: attitude filter subtracts the gyro x/y bias of the start-up window, yaw projection uses the corrected y rate; `ekf_zupt_floor` 2·10⁻⁴ rad/s. |
 | 1.15 | 2026-11-21 | Dani / Claude | D-70 reduced ToF sensor set (F1, F2, S2, optional L1; no G1–G4, no S1): §4.3, §7.13.1, notes in §7.14 and §7.15, H9, §15; OQ-10 superseded, new OQ-12 (`PHASE3_SENSORS.md`) |
 | 1.16 | 2026-11-21 | Dani / Claude | D-71: vehicle HC-12 on the 5 V branch, both modules CH001, FU3, P8; USART1 row updated. |
+| 1.17 | 2026-11-21 | Dani / Claude | D-72: UMBmark repeat (H6 failed again), wheel ratio from `D5000` drift, `odo_scale_l/r` 1.00084 / 0.99916. |

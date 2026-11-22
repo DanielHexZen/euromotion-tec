@@ -10,7 +10,9 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 
 **Sections 4, 5, 6 done (2026-11-18/19), section 7 (H6) not passed: casters (spec D-55).** Defaults compiled: 115–121 (feedforward), 200–203 (odometry).
 
-**Closed for now (2026-11-20), to be repeated:** UMBmark (§5) and the H6 verification (§7) are redone after the caster service (clean, check swivel play), 10 runs measured to the mm and the casters aligned before every run. Until then the compiled values above are the working calibration. Phase 2 (IMU, EKF) starts before H6, see spec D-56. Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+**Closed for now (2026-11-20), to be repeated:** UMBmark (§5) and the H6 verification (§7) are redone after the caster service (clean, check swivel play), 10 runs measured to the mm and the casters aligned before every run. Until then the compiled values above are the working calibration. Phase 2 (IMU, EKF) starts before H6, see spec D-56.
+
+**2026-11-21 (lecture-room tiles, `tools/data/2026-11-21/`):** UMBmark repeated with `FEAT_IMU` 0, 10 runs, 190–494 mm: H6 failed again; casters not yet serviced. Wheel ratio re-derived from the lateral drift of 5 × `D5000` instead (spec D-72): `odo_scale_l/r` 1.00084 / 0.99916, check 21 / 17 mm left and one caster outlier. All odometry so far was measured on the smooth lecture-room tiles; the task runs outside on stone tiles: re-check `odo_m_per_cnt` there (section 4 method, 3 × `D5000`). Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
 
 Calibration firmware (`APP_CALIB 1`, built on `129e42f` + uncommitted `X` tests): `C`, `B`, `K` on blocks (`tools/data/2026-11-18/calib_blocks.log`), `G`, `L`, `X` S/P/N/L/D on the floor (`calib_floor.log`, copy in `tools/data/assessment1/`). `calib_host.py check` OK, `eval` over both logs:
 

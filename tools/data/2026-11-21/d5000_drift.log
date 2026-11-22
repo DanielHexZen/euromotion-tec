@@ -1,0 +1,39 @@
+> D5?
+ERR syntax, use D<mm>
+> ?
+D<mm> drive, V<mm/s> speed, T<ms>[ <ms>] ramps, W<deg> turn, -100..100 open loop %
+PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params
+F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump
+S status, I info, IMU, EKF, EV events, FAULTS, CLEAR, MODE IDLE|BENCH
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.0 R=4998.2 sync_max=1.1 t=18220
+> D
+ERR syntax, use D<mm>
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.1 R=4998.4 sync_max=0.9 t=18220
+> D
+ERR syntax, use D<mm>
+> c
+ERR unknown, ? for help
+> r
+Counters reset
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.2 R=4998.1 sync_max=0.9 t=18240
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.0 R=4998.9 sync_max=1.3 t=18260
+> Dr
+ERR syntax, use D<mm>
+> r
+Counters reset
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.3 R=4998.2 sync_max=1.3 t=18320
+> r
+Counters reset
+> D5000
+Move 5000 mm: Vmax 300 mm/s, T 17667 ms
+DONE L=4998.3 R=4998.3 sync_max=1.1 t=18240
