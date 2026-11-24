@@ -9,7 +9,7 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 3: H9, H9b, H10, SIL on `rect10`, `t_gnd`
 | Sensor set | decided, spec D-70: F1, F2, S2, optional L1; G1–G4 and S1 not fitted |
 | CubeMX | done since `f126577`: I2C1/I2C2 400 kHz IT, all XSHUT outputs low, EXTI PA15/PA12. No regeneration needed for D-70 |
 | Host code | `gnd` (S2 classifier, right side state, edge events) and `fwd` (reflex, governor, staleness) with `t_gnd`, `t_fwd`; `vl.h` types only |
-| Vehicle code | `vl.c` init part (§7.13.2 steps 1–2, no ULD): XSHUT sequence, boot wait, model ID 0xEACC, address assignment; boot log line `9 vl <name>` per sensor (`FEAT_VL` = 1). Ranging needs the ST VL53L1X ULD (STSW-IMG009) in the repository first. Not run on the vehicle yet |
+| Vehicle code | `vl.c` complete for D-70 (D-73): init with the ST ULD v3.5.5 (XSHUT sequence, address, short mode, TB 20 ms, ROI, start ranging, F2 10 ms after F1); run time polled, interrupt-driven I2C2 state machine (ready → 17-byte result → clear), REQ-VL-03 timestamps, bus recovery (REQ-VL-04). S2 feeds `gnd`; console `VL` shows range, status, signal, ambient, age and the S2 class. `fwd` is not fed yet. Not run on the vehicle |
 | Not started | `map`, `nav`, `msn`, `drv` VEL mode, `lat` (phase 5), SIL, `course_gen.py` |
 | Wiring | F1, F2, S2 connected (team, 2026-11-24) |
 
@@ -60,6 +60,6 @@ All modules share the bus. Breakout type `[VERIFY]`: most VL53L1X boards have `V
     9 vl S2    OK
    ```
    `absent` on a connected sensor: its XSHUT wire or the sensor's supply; it never booted or did not answer at 0x29. `FAIL 3` (bus) / `FAIL 2` (timeout): SDA/SCL, pull-ups, or a second sensor still answering at 0x29. `FAIL 4` (range): wrong model ID, not a VL53L1X. Swap two XSHUT wires and the names swap: that proves the assignment.
-3. [ ] Once ranging exists (ULD): F1/F2 against a box at 0.3, 0.5, 1.0 m; ranges within ±2 cm.
+3. [ ] `VL` at rest: every fitted sensor `st 0`, age < 30 ms, range plausible. Then F1/F2 against a box at 0.3, 0.5, 1.0 m; ranges within ±2 cm.
 4. [ ] S2 on the wedge on flat floor: `LATCAL` gives `θ_meas` within 1° of `lat_tilt` (REQ-VL-10).
 5. [ ] Then H9b (tilt test), H9 (S2 outdoors), H10 (reflex).

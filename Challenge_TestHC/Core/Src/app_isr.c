@@ -10,6 +10,9 @@
 #if FEAT_IMU
 #include "imu.h"
 #endif
+#if FEAT_VL
+#include "vl.h"
+#endif
 #endif
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -38,5 +41,12 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 }
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) { if (hspi->Instance == SPI1) { imu_dma_done_isr(); } }
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)    { if (hspi->Instance == SPI1) { imu_error_isr(); } }
+#endif
+
+#if FEAT_VL
+/* VL53L1X bus (I2C2): completion and error only set flags; vl_service() does the rest. */
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *h) { if (h->Instance == I2C2) { vl_i2c_done_isr(); } }
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *h) { if (h->Instance == I2C2) { vl_i2c_done_isr(); } }
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *h)     { if (h->Instance == I2C2) { vl_i2c_error_isr(); } }
 #endif
 #endif

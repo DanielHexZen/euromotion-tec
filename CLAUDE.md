@@ -8,7 +8,7 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 Phase 0 is closed (tag `phase0`; H2 scope check, EN at boot and the runaway EN check done 2026-11-18). Details: `docs/PHASE0_COMMISSIONING.md` Status section.
 Phase 1 is closed for now (2026-11-20): feedforward and odometry defaults are compiled; H6 failed on caster slip (spec D-55), UMBmark and H6 are repeated after the caster service (`docs/PHASE1_CALIBRATION.md` Status).
 Phase 2 (IMU LSM6DS3 and EKF) is in commissioning on branch `phase2-imu-ekf` (code 2026-11-18, spec D-57 to D-65; commissioning fixes D-66 to D-69), started before H6 (spec D-56). EKF and IWDG run in every build (D-64). First power-up checklist and open items in `docs/PHASE2_IMU_EKF.md`.
-Phase 3 (ToF sensors, guidance): sensor set reduced, spec D-70 (F1, F2, S2 tilted right, optional L1 on top; no G1–G4, no S1), open points OQ-12. Host code `gnd` (S2 only), `fwd` with `t_gnd`, `t_fwd`; `vl.c` waits for the ST ULD; `map`, `nav`, `msn` not started. Wiring and status in `docs/PHASE3_SENSORS.md`.
+Phase 3 (ToF sensors, guidance): sensor set reduced, spec D-70 (F1, F2, S2 tilted right, optional L1 on top; no G1–G4, no S1), open points OQ-12. Host code `gnd` (S2 only), `fwd` with `t_gnd`, `t_fwd`; `vl.c` with ST ULD v3.5.5, all sensors polled, console `VL` (D-73); `map`, `nav`, `msn` not started. Wiring and status in `docs/PHASE3_SENSORS.md`.
 Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle track stays gated.
 
 ## Sources of truth

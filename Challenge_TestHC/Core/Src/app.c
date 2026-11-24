@@ -167,6 +167,7 @@ void app_init(const app_hw_t *hw)
 #endif
     ekf_init(&g_app.ekf);
 #if FEAT_VL
+    gnd_init(&g_app.gnd);
     (void)vl_init(hw->i2c2);                       /* step 9: one line per sensor = wiring check */
     for (uint8_t i = 0U; i < VL_N; i++) { step(9, vl_name(i), vl_state(i), F_NONE); }
 #endif
@@ -189,6 +190,14 @@ static void app_fast(void)
     com_uart_poll();
 #if FEAT_IMU
     imu_drain(&g_app.att);
+#endif
+#if FEAT_VL
+    vl_service();
+    const vl_meas_t *m = vl_get(VL_S2);
+    if (m->seq != g_app.vl_seq[VL_S2]) {                 /* REQ-LAT-07 via gnd (D-70) */
+        g_app.vl_seq[VL_S2] = m->seq;
+        gnd_on_meas(&g_app.gnd, VL_S2, m, att_roll(&g_app.att), att_pitch(&g_app.att));
+    }
 #endif
     bat_service();
 }
@@ -256,6 +265,9 @@ static void app_ctrl(void)
 {
     const enc_reading_t r = enc_read();
     ekf_step(&r);
+#if FEAT_VL
+    gnd_step(&g_app.gnd, r.t_us);
+#endif
     const drv_meas_t m = { .cnt = { r.cnt[0], r.cnt[1] }, .t_us = r.t_us, .u_bat_v = bat_v() };
 
     const reaction_t fr = sys_fault_reaction();                    /* REQ-FLT-03 */

@@ -22,10 +22,12 @@ typedef struct {
 
 const vl_meas_t *vl_get(uint8_t id);
 
-/* Init only, blocking (§7.13.2 steps 1-2): XSHUT sequence, boot wait, model ID check, address
- * assignment. hi2c2 is an I2C_HandleTypeDef* (void* keeps this header free of HAL for gnd/fwd).
- * Ranging (steps 2-3 with the ST ULD, §7.13.3) is not written yet. */
+/* Init only, blocking (§7.13.2): XSHUT sequence, boot wait, model ID, address, ULD configuration,
+ * start ranging. hi2c2 is an I2C_HandleTypeDef* (void* keeps this header free of HAL for gnd/fwd). */
 st_t vl_init(void *hi2c2);
+void vl_service(void);              /* S_FAST: non-blocking bus state machine (§7.13.3)          */
+void vl_i2c_done_isr(void);         /* HAL I2C2 MemRx/MemTx complete                              */
+void vl_i2c_error_isr(void);        /* HAL I2C2 error / abort                                     */
 st_t vl_state(uint8_t id);          /* ST_OK present, ST_NODEV absent / not fitted, else error */
 const char *vl_name(uint8_t id);
 

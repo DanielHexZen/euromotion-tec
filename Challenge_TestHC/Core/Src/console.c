@@ -63,7 +63,7 @@ static const char *const HELP[] = {
     "D<mm> drive, V<mm/s> speed, T<ms>[ <ms>] ramps, W<deg> turn, -100..100 open loop %",
     "PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params",
     "F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump",
-    "S status, I info, IMU, EKF, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
+    "S status, I info, IMU, EKF, VL, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
 };
 
 /* Every IMU / EKF number is formatted here, in legacy units (mm, deg, deg/s). */
@@ -117,6 +117,18 @@ static int ekf_line(uint32_t i, char *buf, size_t n)
     return -1;
 }
 
+static int vl_line(uint32_t i, char *buf, size_t n)
+{
+    con_vl_t s;
+    if (!con_vl_snapshot(i, &s)) { return -1; }
+    if (s.state != 0) { return snprintf(buf, n, "%s %s", s.name, (s.state == (int)ST_NODEV) ? "absent" : "FAIL"); }
+    if (!s.seen) { return snprintf(buf, n, "%s no result", s.name); }
+    char a[12], b[12], c[12], d[12];
+    f_(a, sizeof a, s.range_m * 1000.0f, 0); f_(b, sizeof b, s.signal_kcps, 0);
+    f_(c, sizeof c, s.ambient_kcps, 0); f_(d, sizeof d, s.age_s * 1000.0f, 0);
+    return snprintf(buf, n, "%s %s mm st %u sig %s amb %s age %s ms %s", s.name, a, (unsigned)s.status, b, c, d, s.cls);
+}
+
 /* Writes the line for item i into buf; returns its length, or -1 when the list is over. */
 static int job_line(con_job_t j, uint32_t i, char *buf, size_t n)
 {
@@ -151,6 +163,8 @@ static int job_line(con_job_t j, uint32_t i, char *buf, size_t n)
         return imu_line(i, buf, n);
     case CON_JOB_EKF:
         return ekf_line(i, buf, n);
+    case CON_JOB_VL:
+        return vl_line(i, buf, n);
     case CON_JOB_NONE:
     default:
         return -1;
@@ -249,6 +263,7 @@ static bool parse(com_port_t p, const char *s, con_cmd_t *c)
     if (kw(s, "FAULTS", &r) && at_end(r)) { c->type = CMD_FAULTS; return true; }
     if (kw(s, "IMU", &r) && at_end(r))    { c->type = CMD_IMU; return true; }
     if (kw(s, "EKF", &r) && at_end(r))    { c->type = CMD_EKF; return true; }
+    if (kw(s, "VL", &r) && at_end(r))     { c->type = CMD_VL; return true; }
     if (kw(s, "CLEAR", &r) && at_end(r))  { c->type = CMD_CLEAR; return true; }
     if (kw(s, "STOP", &r) && at_end(r))   { c->type = CMD_STOP; return true; }
     if (kw(s, "RUN", &r) && at_end(r))    { c->type = CMD_UNAVAILABLE; return true; }

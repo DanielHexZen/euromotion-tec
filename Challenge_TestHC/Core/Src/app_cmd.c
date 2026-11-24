@@ -157,6 +157,19 @@ void con_ekf_snapshot(con_ekf_t *s)
     }
 }
 
+bool con_vl_snapshot(uint32_t i, con_vl_t *s)
+{
+    static const char *const CLS[] = { "UNKNOWN", "PATH", "GRASS", "EDGE_UP", "DROP" };
+    if (i >= VL_N) { return false; }
+    const uint8_t id = (uint8_t)i;
+    const vl_meas_t *m = vl_get(id);
+    *s = (con_vl_t){ .name = vl_name(id) + 3, .cls = "", .state = (int)vl_state(id), .range_m = m->range_m,
+                     .signal_kcps = m->signal_kcps, .ambient_kcps = m->ambient_kcps, .status = m->status,
+                     .seen = m->seq != 0U, .age_s = (float)(uint32_t)(sys_time_us() - m->t_us) * 1.0e-6f };
+    if (id == VL_S2) { s->cls = CLS[gnd_class(&g_app.gnd, VL_S2)]; }
+    return true;
+}
+
 void app_cmd_exec(const con_cmd_t *c)
 {
     const com_port_t p = c->port;
@@ -175,6 +188,7 @@ void app_cmd_exec(const con_cmd_t *c)
     case CMD_FAULTS:    con_job(p, CON_JOB_FAULTS); break;
     case CMD_IMU:       con_job(p, CON_JOB_IMU); break;
     case CMD_EKF:       con_job(p, CON_JOB_EKF); break;
+    case CMD_VL:        con_job(p, CON_JOB_VL); break;
     case CMD_PRINT:     app_print_status(p); break;
     case CMD_INFO:      con_job(p, CON_JOB_INFO); break;
     case CMD_STATUS:

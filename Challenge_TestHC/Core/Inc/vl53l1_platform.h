@@ -92,6 +92,9 @@ int8_t VL53L1_RdDWord(
 /** @brief VL53L1_WaitMs() definition.\n
  * To be implemented by the developer
  */
+/* MR2006B: set the I2C handle (I2C_HandleTypeDef*) before the first ULD call (vl.c). */
+void vl53l1_platform_bind(void *hi2c);
+
 int8_t VL53L1_WaitMs(
 		uint16_t dev,
 		int32_t       wait_ms);

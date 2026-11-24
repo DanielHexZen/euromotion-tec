@@ -84,6 +84,9 @@
     X(521, ekf_sf_corr,      6.2832f,   "rad",     0.1f,    100.0f, PAR_L) \
     X(522, ekf_slip_T,       0.04f,     "s",       0.02f,   0.5f,   PAR_L) \
     /* 10.4 sensors (D-70: G1-G4 not fitted, gnd runs on S2) */ \
+    X(600, vl_tb_ms,         20.0f,     "ms",      20.0f,   100.0f, PAR_S) \
+    X(601, vl_imp_ms,        20.0f,     "ms",      20.0f,   200.0f, PAR_S) \
+    X(602, vl_poll_ms,       5.0f,      "ms",      2.0f,    20.0f,  PAR_S) \
     X(603, vl_timeout,       0.2f,      "s",       0.05f,   1.0f,   PAR_L) \
     X(614, gnd_d_drop,       0.03f,     "m",       0.01f,   0.1f,   PAR_L) \
     X(615, gnd_d_up,         0.02f,     "m",       0.01f,   0.1f,   PAR_L) \

@@ -23,7 +23,7 @@ typedef enum {
     CMD_UNAVAILABLE, /* valid syntax, not in this build (MANUAL, AUTO, RUN, M)       */
     CMD_CLEAR, CMD_PSET, CMD_PGET, CMD_DUMP, CMD_STATUS, CMD_INFO, CMD_EVLOG, CMD_FAULTS,
     CMD_FAULTINJ,    /* f[0] = fault code (Debug builds only)                        */
-    CMD_IMU, CMD_EKF
+    CMD_IMU, CMD_EKF, CMD_VL
 } con_cmd_type_t;
 
 typedef struct {
@@ -43,7 +43,7 @@ typedef struct {
 
 typedef enum {
     CON_JOB_NONE = 0, CON_JOB_HELP, CON_JOB_PARAMS, CON_JOB_DUMP, CON_JOB_EVLOG, CON_JOB_FAULTS, CON_JOB_INFO,
-    CON_JOB_IMU, CON_JOB_EKF
+    CON_JOB_IMU, CON_JOB_EKF, CON_JOB_VL
 } con_job_t;
 
 /* Snapshots for IMU and EKF, SI; console.c formats them in legacy units. */
@@ -76,6 +76,15 @@ int  con_info_line(uint32_t i, char *buf, size_t n);
 /* Defined by the application, called for every line of the IMU / EKF job. */
 void con_imu_snapshot(con_imu_t *s);
 void con_ekf_snapshot(con_ekf_t *s);
+/* VL job: sensor i (0..7), SI. False past the last sensor. */
+typedef struct {
+    const char *name, *cls;     /* cls: ground class of S2 or "" */
+    int         state;          /* st_t of vl_state()            */
+    float       range_m, signal_kcps, ambient_kcps, age_s;
+    uint8_t     status;
+    bool        seen;
+} con_vl_t;
+bool con_vl_snapshot(uint32_t i, con_vl_t *s);
 void con_err_state(com_port_t p, const char *mode);
 void con_err_range_par(com_port_t p, const par_desc_t *d);
 void con_print_status(com_port_t p, const con_status_t *s);

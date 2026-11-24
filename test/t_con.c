@@ -31,6 +31,8 @@ static con_imu_t g_imu;
 static con_ekf_t g_ekf;
 void con_imu_snapshot(con_imu_t *s) { *s = g_imu; }
 void con_ekf_snapshot(con_ekf_t *s) { *s = g_ekf; }
+static con_vl_t g_vl[2];
+bool con_vl_snapshot(uint32_t i, con_vl_t *s) { if (i >= 2U) { return false; } *s = g_vl[i]; return true; }
 
 static void feed(com_port_t p, const char *s) { while (*s != '\0') { con_rx_byte(p, (uint8_t)*s++); } }
 static void clear_out(void) { memset(g_out_n, 0, sizeof g_out_n); g_out[0][0] = g_out[1][0] = '\0'; }
@@ -99,6 +101,15 @@ void t_con(void)
     REQ("spec 9: IMU and EKF print SI values in legacy units (deg, deg/s, mm)");
     c = line("IMU");     CHECK(c.type == CMD_IMU);
     c = line("EKF");     CHECK(c.type == CMD_EKF);
+    c = line("VL");      CHECK(c.type == CMD_VL);
+    g_vl[0] = (con_vl_t){ .name = "G1", .cls = "", .state = (int)ST_NODEV };
+    g_vl[1] = (con_vl_t){ .name = "S2", .cls = "PATH", .state = 0, .range_m = 0.2154f, .signal_kcps = 1234.0f,
+                          .ambient_kcps = 56.0f, .age_s = 0.012f, .status = 0U, .seen = true };
+    clear_out();
+    con_job(COM_USB, CON_JOB_VL);
+    for (int i = 0; i < 4; i++) { (void)con_poll(&c); }
+    CHECK(says("G1 absent"));
+    CHECK(says("S2 215 mm st 0 sig 1234 amb 56 age 12 ms PATH"));
     g_imu = (con_imu_t){ .present = true, .alive = true, .w_radps = { 0.0f, 0.0f, 0.5f * DEG2RAD_F },
                          .temp_c = 31.24f, .roll_rad = 1.0f * DEG2RAD_F, .pitch_rad = -2.0f * DEG2RAD_F,
                          .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U };

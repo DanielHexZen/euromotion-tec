@@ -6,6 +6,7 @@
 #include "console.h"
 #include "drv.h"
 #include "ekf.h"
+#include "gnd.h"
 #include "par.h"
 
 /* Phase-0 modes. msn (phase 3) takes this over and adds MANUAL and AUTO. */
@@ -28,6 +29,8 @@ typedef struct {
     bool        turn_gyro;       /* W: the end angle is checked against the yaw integral           */
     float       turn_target_rad, turn_acc_rad;
     uint8_t     turn_fix;
+    gnd_t       gnd;             /* S2 ground class (D-70); fed in S_FAST, display only until msn */
+    uint16_t    vl_seq[VL_N];    /* last result consumed per sensor                                */
 } app_state_t;
 
 extern app_state_t g_app;
