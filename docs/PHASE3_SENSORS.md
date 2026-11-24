@@ -59,7 +59,7 @@ All modules share the bus. Breakout type `[VERIFY]`: most VL53L1X boards have `V
     9 vl L1    absent      (optional, not connected)
     9 vl S2    OK
    ```
-   `absent` on a connected sensor: its XSHUT wire or the sensor's supply; it never booted or did not answer at 0x29. `FAIL 2` (bus) / `FAIL 1` (timeout): SDA/SCL, pull-ups, or a second sensor still answering at 0x29. `FAIL 4` (range): wrong model ID, not a VL53L1X. Swap two XSHUT wires and the names swap: that proves the assignment.
+   `absent` on a connected sensor: its XSHUT wire or the sensor's supply; it never booted or did not answer at 0x29. `FAIL 3` (bus) / `FAIL 2` (timeout): SDA/SCL, pull-ups, or a second sensor still answering at 0x29. `FAIL 4` (range): wrong model ID, not a VL53L1X. Swap two XSHUT wires and the names swap: that proves the assignment.
 3. [ ] Once ranging exists (ULD): F1/F2 against a box at 0.3, 0.5, 1.0 m; ranges within ±2 cm.
 4. [ ] S2 on the wedge on flat floor: `LATCAL` gives `θ_meas` within 1° of `lat_tilt` (REQ-VL-10).
 5. [ ] Then H9b (tilt test), H9 (S2 outdoors), H10 (reflex).
