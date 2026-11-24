@@ -10,6 +10,7 @@ typedef struct {
     TIM_HandleTypeDef  *tim1, *tim2, *tim3, *tim6, *tim8;
     UART_HandleTypeDef *uart1, *uart2;
     SPI_HandleTypeDef  *spi1;
+    I2C_HandleTypeDef  *i2c2;
     IWDG_HandleTypeDef *iwdg;
     void               *adc1;       /* ADC_HandleTypeDef*, NULL until CubeMX generates ADC1 */
 } app_hw_t;

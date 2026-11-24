@@ -1,5 +1,5 @@
-/* vl.h — VL53L1X sensor IDs and result type (spec §7.13). Types only: vl.c needs the ST ULD
- * (§7.13.2) and is not written yet. Pure modules (gnd, fwd, lat) include this header. */
+/* vl.h — VL53L1X sensor IDs and result type (spec §7.13). Pure modules (gnd, fwd, lat) include
+ * this header; it has no HAL types. */
 #ifndef VL_H
 #define VL_H
 
@@ -21,5 +21,12 @@ typedef struct {
 } vl_meas_t;
 
 const vl_meas_t *vl_get(uint8_t id);
+
+/* Init only, blocking (§7.13.2 steps 1-2): XSHUT sequence, boot wait, model ID check, address
+ * assignment. hi2c2 is an I2C_HandleTypeDef* (void* keeps this header free of HAL for gnd/fwd).
+ * Ranging (steps 2-3 with the ST ULD, §7.13.3) is not written yet. */
+st_t vl_init(void *hi2c2);
+st_t vl_state(uint8_t id);          /* ST_OK present, ST_NODEV absent / not fitted, else error */
+const char *vl_name(uint8_t id);
 
 #endif

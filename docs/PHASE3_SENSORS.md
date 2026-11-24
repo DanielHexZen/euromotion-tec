@@ -9,9 +9,9 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 3: H9, H9b, H10, SIL on `rect10`, `t_gnd`
 | Sensor set | decided, spec D-70: F1, F2, S2, optional L1; G1–G4 and S1 not fitted |
 | CubeMX | done since `f126577`: I2C1/I2C2 400 kHz IT, all XSHUT outputs low, EXTI PA15/PA12. No regeneration needed for D-70 |
 | Host code | `gnd` (S2 classifier, right side state, edge events) and `fwd` (reflex, governor, staleness) with `t_gnd`, `t_fwd`; `vl.h` types only |
-| Vehicle code | `vl.c` not written: needs the ST VL53L1X ULD (STSW-IMG009, `VL53L1X_api.c/h`) in the repository first (spec §7.13.2) |
+| Vehicle code | `vl.c` init part (§7.13.2 steps 1–2, no ULD): XSHUT sequence, boot wait, model ID 0xEACC, address assignment; boot log line `9 vl <name>` per sensor (`FEAT_VL` = 1). Ranging needs the ST VL53L1X ULD (STSW-IMG009) in the repository first. Not run on the vehicle yet |
 | Not started | `map`, `nav`, `msn`, `drv` VEL mode, `lat` (phase 5), SIL, `course_gen.py` |
-| Wiring | not wired |
+| Wiring | F1, F2, S2 connected (team, 2026-11-24) |
 
 Open decisions (spec OQ-12): interlock replacement (left side blind, right side one footprint); observation point and σ of S2 edge events; L1 geometry at 45°; L1 distance mode and ROI.
 
@@ -47,10 +47,19 @@ All modules share the bus. Breakout type `[VERIFY]`: most VL53L1X boards have `V
 - Keep SCL/SDA short and away from the motor cables; at 400 kHz a long ribbon to the front sensors is the usual failure.
 - I2C1 (PB8/PB9) and `XSHUT_G1..4` (PC0–PC3) stay unconnected.
 
-## 3. First bench checks (after H7/H8, once `vl.c` exists)
+## 3. First bench checks
 
-1. [ ] One sensor at a time: only its XSHUT high, address 0x29 answers (boot log), then the full sequence of §7.13.2.
-2. [ ] Boot log: F1, F2, S2 (and L1) present, G1–G4 absent.
-3. [ ] F1/F2 against a box at 0.3, 0.5, 1.0 m; ranges within ±2 cm.
+1. [ ] Unpowered: SCL→3V3 and SDA→3V3 2.2–4.7 kΩ with all sensors connected; 3V3–GND no short.
+2. [ ] Boot log (wiring check, works now):
+   ```
+    9 vl G1    absent      (G1–G4 not fitted, D-70)
+    ...
+    9 vl F1    OK
+    9 vl F2    OK
+    9 vl L1    absent      (optional, not connected)
+    9 vl S2    OK
+   ```
+   `absent` on a connected sensor: its XSHUT wire or the sensor's supply; it never booted or did not answer at 0x29. `FAIL 2` (bus) / `FAIL 1` (timeout): SDA/SCL, pull-ups, or a second sensor still answering at 0x29. `FAIL 4` (range): wrong model ID, not a VL53L1X. Swap two XSHUT wires and the names swap: that proves the assignment.
+3. [ ] Once ranging exists (ULD): F1/F2 against a box at 0.3, 0.5, 1.0 m; ranges within ±2 cm.
 4. [ ] S2 on the wedge on flat floor: `LATCAL` gives `θ_meas` within 1° of `lat_tilt` (REQ-VL-10).
 5. [ ] Then H9b (tilt test), H9 (S2 outdoors), H10 (reflex).

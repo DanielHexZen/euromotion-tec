@@ -11,6 +11,9 @@
 #if FEAT_IMU
 #include "imu.h"
 #endif
+#if FEAT_VL
+#include "vl.h"
+#endif
 #include "mot.h"
 #include "par.h"
 #include "sys_fault.h"
@@ -163,6 +166,10 @@ void app_init(const app_hw_t *hw)
     step(8, "imu", imu_init(hw->spi1, hw->tim2), F_NONE);
 #endif
     ekf_init(&g_app.ekf);
+#if FEAT_VL
+    (void)vl_init(hw->i2c2);                       /* step 9: one line per sensor = wiring check */
+    for (uint8_t i = 0U; i < VL_N; i++) { step(9, vl_name(i), vl_state(i), F_NONE); }
+#endif
     step(11, "ekf", ST_OK, F_ASSERT);
     sys_event(EV_BOOT, (int32_t)g_app.boot_status);
 
