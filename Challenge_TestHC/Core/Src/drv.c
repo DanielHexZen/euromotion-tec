@@ -1,4 +1,4 @@
-/* drv.c — spec §7.9 (REQ-DRV-01, -02, -05..08 for the phase-0 modes). */
+/* drv.c — spec §7.9 (REQ-DRV-01..08). */
 #include "drv.h"
 
 #include <string.h>
@@ -21,6 +21,7 @@ void drv_hold(drv_t *d)
 {
     d->mode  = DRV_HOLD;
     d->phase = DRV_PH_IDLE;
+    d->vel_stop = false;
 }
 
 void drv_brake(drv_t *d) { drv_hold(d); }   /* same state in phase 0; differs once VEL ramps exist */
@@ -33,6 +34,7 @@ void drv_disable(drv_t *d)
 
 static void start_move(drv_t *d, const prof_t *pr, float sig_l, float sig_r, drv_mode_t mode)
 {
+    const bool keep_i = (d->mode == DRV_VEL);                  /* REQ-DRV-05: bumpless */
     d->prof       = *pr;
     d->mode       = mode;
     d->phase      = DRV_PH_MOVE;
@@ -46,7 +48,7 @@ static void start_move(drv_t *d, const prof_t *pr, float sig_l, float sig_r, drv
         d->x_ref[i]   = d->x_m[i];
         d->v_ref[i]   = 0.0f;
         d->reached[i] = false;
-        whl_reset(&d->whl[i]);
+        if (!keep_i) { whl_reset(&d->whl[i]); }
     }
 }
 
@@ -58,6 +60,38 @@ st_t drv_move(drv_t *d, float dist_m, float v_mps, float t_acc_s, float t_dec_s)
     if (s != ST_OK) { return s; }
     start_move(d, &pr, 1.0f, 1.0f, DRV_MOVE);
     return ST_OK;
+}
+
+st_t drv_move_from(drv_t *d, float dist_m, float v0_mps, float v_mps, float a_acc, float a_dec)
+{
+    if (d->phase != DRV_PH_IDLE || !d->have_prev) { return ST_STATE; }
+    const float need = (dist_m > 0.0f) ? 0.5f * v0_mps * v0_mps / dist_m : 0.0f;
+    prof_t pr;
+    const st_t s = prof_plan_v0(&pr, dist_m, v0_mps, v_mps, a_acc,
+                                fmaxf(a_dec, fminf(need, par()->drv_a_stop)));
+    if (s != ST_OK) { return s; }
+    start_move(d, &pr, 1.0f, 1.0f, DRV_MOVE);
+    d->v_ref[WHL_L] = v0_mps;
+    d->v_ref[WHL_R] = v0_mps;
+    return ST_OK;
+}
+
+void drv_vel(drv_t *d, float v_mps, float w_radps)
+{
+    d->vel_v_cmd = isfinite(v_mps) ? v_mps : 0.0f;
+    d->vel_w_cmd = isfinite(w_radps) ? w_radps : 0.0f;
+    d->vel_stop  = false;
+    if (d->mode == DRV_VEL) { return; }
+    const bool closed = (d->mode == DRV_MOVE || d->mode == DRV_TURN_ENC);
+    const float hb = 0.5f * par()->odo_wheelbase;
+    d->vel_v.y = closed ? 0.5f * (d->v_ref[WHL_L] + d->v_ref[WHL_R]) : 0.0f;
+    d->vel_w.y = closed ? (d->v_ref[WHL_R] - d->v_ref[WHL_L]) / (2.0f * hb) : 0.0f;
+    for (uint8_t i = 0U; i < 2U; i++) {
+        if (!closed) { whl_reset(&d->whl[i]); d->v_ref[i] = 0.0f; }   /* REQ-DRV-05 */
+    }
+    d->mode      = DRV_VEL;
+    d->phase     = DRV_PH_IDLE;
+    d->vel_entry = true;
 }
 
 st_t drv_turn_enc(drv_t *d, float dtheta_rad, float w_radps, float t_acc_s)
@@ -97,6 +131,9 @@ void drv_stop(drv_t *d)
             d->stop[WHL_L].y = d->v_ref[WHL_L];
             d->stop[WHL_R].y = d->v_ref[WHL_R];
         }
+        break;
+    case DRV_VEL:
+        d->vel_stop = true;
         break;
     case DRV_OPEN:
         drv_hold(d);
@@ -145,6 +182,35 @@ static void open_step(drv_t *d, const par_t *p, float dt, drv_out_t *out)
         d->ol_cur[i] = c;
         out->duty_d[i] = c;
         whl_reset(&d->whl[i]);
+    }
+}
+
+/* ---- VEL: limits in the order of REQ-DRV-03, anti-windup REQ-DRV-04 ------------------ */
+static void vel_refs(drv_t *d, const par_t *p, float dt, float x_ref[2], float v_ref[2], float a_ref[2])
+{
+    if (d->vel_entry) {
+        d->vel_entry  = false;
+        d->t_s        = 0.0f;
+        d->sync_max_m = 0.0f;
+        for (uint8_t i = 0U; i < 2U; i++) {
+            d->sig[i]   = 1.0f;
+            d->x0[i]    = d->x_m[i];
+            d->x_ref[i] = d->x_m[i];
+        }
+    }
+    const float hb = 0.5f * p->odo_wheelbase;
+    const float vt = d->vel_stop ? 0.0f : clampf(d->vel_v_cmd, -p->drv_v_max, p->drv_v_max);
+    const float wt = d->vel_stop ? 0.0f : clampf(d->vel_w_cmd, -p->drv_w_max, p->drv_w_max);
+    float v = ramp_step(&d->vel_v, vt, p->drv_a_max, p->drv_a_stop, dt);
+    const float w = ramp_step(&d->vel_w, wt, p->drv_alpha_max, p->drv_alpha_max, dt);
+    const float v_lim = fmaxf(p->drv_v_whl_max - fabsf(w) * hb, 0.0f);   /* keep omega, cut v */
+    if (fabsf(v) > v_lim) { v = signf(v) * v_lim; }
+    for (uint8_t i = 0U; i < 2U; i++) {
+        const float v_old = d->v_ref[i];
+        v_ref[i] = v + ((i == WHL_L) ? -w : w) * hb;
+        const float x = d->x_ref[i] + 0.5f * (v_old + v_ref[i]) * dt;
+        x_ref[i] = d->x_m[i] + clampf(x - d->x_m[i], -p->drv_e_ref_max, p->drv_e_ref_max);
+        a_ref[i] = (v_ref[i] - v_old) / dt;
     }
 }
 
@@ -207,7 +273,9 @@ static void move_step(drv_t *d, const par_t *p, const drv_meas_t *m, float dt, f
             return;
         }
     } else {
-        if (d->phase == DRV_PH_MOVE) {
+        if (d->mode == DRV_VEL) {
+            vel_refs(d, p, dt, x_ref, v_ref, a_ref);
+        } else if (d->phase == DRV_PH_MOVE) {
             float x, v, a;
             prof_eval(&d->prof, d->t_s, &x, &v, &a);
             for (uint8_t i = 0U; i < 2U; i++) {
@@ -262,7 +330,8 @@ static void move_step(drv_t *d, const par_t *p, const drv_meas_t *m, float dt, f
         if (f == F_RUNAWAY_L || f == F_RUNAWAY_R) { drv_disable(d); } else { drv_hold(d); }
         return;
     }
-    if (d->phase == DRV_PH_STOPPING && d->stop[WHL_L].y == 0.0f && d->stop[WHL_R].y == 0.0f) {
+    const bool vel_done = (d->mode == DRV_VEL && d->vel_stop && d->vel_v.y == 0.0f && d->vel_w.y == 0.0f);
+    if (vel_done || (d->phase == DRV_PH_STOPPING && d->stop[WHL_L].y == 0.0f && d->stop[WHL_R].y == 0.0f)) {
         drv_hold(d);
         out->duty_d[WHL_L] = 0.0f;
         out->duty_d[WHL_R] = 0.0f;
@@ -303,6 +372,7 @@ void drv_step(drv_t *d, const drv_meas_t *m, drv_out_t *out)
         break;
     case DRV_MOVE:
     case DRV_TURN_ENC:
+    case DRV_VEL:
         out->enable = true;
         move_step(d, p, m, dt, dt_raw, out);
         out->enable = (d->mode != DRV_DISABLED);       /* a runaway fault disables */

@@ -24,6 +24,12 @@ void t_ekf_pred(void);
 void t_imu_yaw(void);
 void t_gnd(void);
 void t_fwd(void);
+void t_drv_vel(void);
+void t_map(void);
+void t_nav_line(void);
+void t_nav_final(void);
+void t_nav_turn(void);
+void t_msn(void);
 
 int main(void)
 {
@@ -42,6 +48,12 @@ int main(void)
         { "t_imu_yaw", t_imu_yaw },
         { "t_gnd", t_gnd },
         { "t_fwd", t_fwd },
+        { "t_drv_vel", t_drv_vel },
+        { "t_map", t_map },
+        { "t_nav_line", t_nav_line },
+        { "t_nav_final", t_nav_final },
+        { "t_nav_turn", t_nav_turn },
+        { "t_msn", t_msn },
     };
     for (unsigned i = 0; i < sizeof T / sizeof T[0]; i++) {
         printf("%s\n", T[i].name);

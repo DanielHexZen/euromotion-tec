@@ -37,7 +37,12 @@
     X(152, drv_settle_timeout, 1.0f,    "s",       0.2f,    5.0f,   PAR_L) \
     X(153, drv_k_sync,       3.0f,      "1/s",     0.0f,    20.0f,  PAR_L) \
     X(154, drv_v_max,        0.45f,     "m/s",     0.1f,    0.6f,   PAR_L) \
+    X(155, drv_w_max,        2.5f,      "rad/s",   0.5f,    4.0f,   PAR_L) \
+    X(156, drv_a_max,        0.3f,      "m/s2",    0.05f,   1.0f,   PAR_L) \
     X(157, drv_a_stop,       0.5f,      "m/s2",    0.1f,    2.0f,   PAR_L) \
+    X(158, drv_alpha_max,    3.0f,      "rad/s2",  0.5f,    10.0f,  PAR_L) \
+    X(159, drv_v_whl_max,    0.45f,     "m/s",     0.1f,    0.6f,   PAR_L) \
+    X(160, drv_e_ref_max,    0.05f,     "m",       0.01f,   0.2f,   PAR_L) \
     X(161, drv_v_nom,        0.30f,     "m/s",     0.02f,   0.6f,   PAR_L) \
     X(162, drv_t_acc,        1.0f,      "s",       0.05f,   5.0f,   PAR_L) \
     X(163, drv_t_dec,        1.0f,      "s",       0.05f,   5.0f,   PAR_L) \
@@ -94,6 +99,7 @@
     X(617, gnd_sig_grass,    0.0f,      "kcps",    0.0f,    100.0f, PAR_L) \
     X(618, gnd_sd_n,         5.0f,      "-",       3.0f,    15.0f,  PAR_S) \
     X(619, gnd_n_deb,        2.0f,      "-",       1.0f,    5.0f,   PAR_L) \
+    X(620, gnd_interlock_bench, 0.0f,   "bool",    0.0f,    1.0f,   PAR_L) \
     X(632, fwd_t_lat,        0.10f,     "s",       0.02f,   0.5f,   PAR_L) \
     X(633, fwd_a_brake,      0.5f,      "m/s2",    0.1f,    3.0f,   PAR_L) \
     X(634, fwd_margin,       0.15f,     "m",       0.05f,   0.5f,   PAR_L) \
@@ -101,6 +107,32 @@
     X(636, fwd_v_slow,       0.25f,     "m/s",     0.05f,   0.45f,  PAR_L) \
     X(670, lat_tilt,         0.332f,    "rad",     0.0f,    0.7f,   PAR_S) \
     X(671, lat_h,            0.07f,     "m",       0.03f,   0.4f,   PAR_S) \
+    /* 10.5 guidance and mission (evd and the unread msn IDs join with phase 6) */ \
+    X(700, nav_wn,           1.5f,      "rad/s",   0.3f,    3.0f,   PAR_L) \
+    X(701, nav_zeta,         0.7f,      "-",       0.3f,    1.5f,   PAR_L) \
+    X(702, nav_v_min,        0.05f,     "m/s",     0.01f,   0.2f,   PAR_L) \
+    X(703, nav_a_acc,        0.3f,      "m/s2",    0.05f,   1.0f,   PAR_L) \
+    X(704, nav_a_dec,        0.3f,      "m/s2",    0.05f,   1.0f,   PAR_L) \
+    X(705, nav_w_max,        1.0f,      "rad/s",   0.2f,    2.5f,   PAR_L) \
+    X(706, nav_final_dist,   0.30f,     "m",       0.1f,    1.0f,   PAR_L) \
+    X(707, nav_turn_w,       0.8f,      "rad/s",   0.1f,    2.5f,   PAR_L) \
+    X(708, nav_turn_ta,      0.4f,      "s",       0.1f,    2.0f,   PAR_L) \
+    X(709, nav_turn_k,       2.0f,      "1/s",     0.0f,    10.0f,  PAR_L) \
+    X(710, nav_turn_tol,     0.0035f,   "rad",     0.0005f, 0.05f,  PAR_L) \
+    X(800, msn_init_min_s,   3.0f,      "s",       1.0f,    60.0f,  PAR_L) \
+    X(801, msn_init_max_s,   30.0f,     "s",       5.0f,    300.0f, PAR_L) \
+    X(802, msn_preturn_s,    1.0f,      "s",       0.0f,    5.0f,   PAR_L) \
+    X(804, msn_rec_back_m,   0.10f,     "m",       0.02f,   0.5f,   PAR_L) \
+    X(805, msn_rec_bias_m,   0.05f,     "m",       0.0f,    0.2f,   PAR_L) \
+    X(806, msn_noref_dist,   30.0f,     "m",       5.0f,    200.0f, PAR_L) \
+    X(807, msn_sig_lat_max,  0.30f,     "m",       0.05f,   2.0f,   PAR_L) \
+    X(808, msn_v_degraded,   0.20f,     "m/s",     0.05f,   0.45f,  PAR_L) \
+    X(809, msn_man_v_max,    0.40f,     "m/s",     0.05f,   0.6f,   PAR_L) \
+    X(810, msn_man_w_max,    1.5f,      "rad/s",   0.2f,    2.5f,   PAR_L) \
+    X(811, msn_man_timeout,  0.5f,      "s",       0.2f,    2.0f,   PAR_L) \
+    X(812, msn_allow_nosensors, 0.0f,   "bool",    0.0f,    1.0f,   PAR_S) \
+    X(813, msn_allow_bench_supply, 0.0f,"bool",    0.0f,    1.0f,   PAR_S) \
+    X(814, msn_wp_hold,      10.5f,     "s",       10.0f,   30.0f,  PAR_S) \
     /* 10.5 communication */ \
     X(904, con_deadman_s,    2.0f,      "s",       0.5f,    10.0f,  PAR_L) \
     X(905, wdg_enable,       1.0f,      "bool",    0.0f,    1.0f,   PAR_S)

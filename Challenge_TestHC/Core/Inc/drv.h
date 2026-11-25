@@ -1,5 +1,5 @@
 /* drv.h — drive modes and wheel references (spec §7.9). Pure.
- * Phase 0 modes: DISABLED, HOLD, OPEN, MOVE, TURN_ENC. VEL arrives with phase 3. */
+ * Modes: DISABLED, HOLD, OPEN, MOVE, TURN_ENC, VEL (phase 3, host track). */
 #ifndef DRV_H
 #define DRV_H
 
@@ -8,7 +8,7 @@
 #include "units.h"
 #include "whl.h"
 
-typedef enum { DRV_DISABLED = 0, DRV_HOLD, DRV_OPEN, DRV_MOVE, DRV_TURN_ENC } drv_mode_t;
+typedef enum { DRV_DISABLED = 0, DRV_HOLD, DRV_OPEN, DRV_MOVE, DRV_TURN_ENC, DRV_VEL } drv_mode_t;
 typedef enum { DRV_PH_IDLE = 0, DRV_PH_MOVE, DRV_PH_SETTLE, DRV_PH_STOPPING } drv_phase_t;
 typedef enum { DRV_EV_NONE = 0, DRV_EV_DONE, DRV_EV_TIMEOUT } drv_event_t;
 
@@ -49,16 +49,26 @@ typedef struct {
     ramp_t      stop[2];
     float       ol_target[2], ol_cur[2], ol_dwell_s[2];
     int8_t      ol_sign[2];
+    ramp_t      vel_v, vel_w;    /* VEL: rate-limited v, omega                       */
+    float       vel_v_cmd, vel_w_cmd;
+    bool        vel_entry, vel_stop;
 } drv_t;
 
 void drv_init(drv_t *d);
 /* Straight move; keeps the semantics of the old D<mm> command (REQ-DRV-01). ST_STATE while a
  * move is running, ST_RANGE from prof_plan. Main loop. */
 st_t drv_move(drv_t *d, float dist_m, float v_mps, float t_acc_s, float t_dec_s);
+/* Straight move starting at speed v0 >= 0 (REQ-NAV-02, §7.19): accelerates to v_mps, stops at dist_m
+ * with a_dec, raised up to drv_a_stop if v0 is too high. Allowed from HOLD and VEL (integrators kept
+ * from VEL). ST_STATE otherwise, ST_RANGE from prof_plan_v0. */
+st_t drv_move_from(drv_t *d, float dist_m, float v0_mps, float v_mps, float a_acc, float a_dec);
 /* Turn in place by encoder angle, CCW positive; wheels follow -/+ (b/2) theta. */
 st_t drv_turn_enc(drv_t *d, float dtheta_rad, float w_radps, float t_acc_s);
 /* Open-loop duty (fraction), slew-limited by mot_slew_ol (REQ-MOT-06). ST_STATE while moving. */
 st_t drv_open(drv_t *d, float duty_l, float duty_r);
+/* Velocity command (REQ-DRV-03/04/05): call every control tick while in VEL. Limits are applied
+ * here, the command is not trusted. A call after drv_stop() cancels the stop. */
+void drv_vel(drv_t *d, float v_mps, float w_radps);
 void drv_hold(drv_t *d);       /* EN high, duty 0 (brake)                                  */
 void drv_stop(drv_t *d);       /* controlled: ramp to rest at drv_a_stop, then HOLD        */
 void drv_brake(drv_t *d);      /* immediate: duty 0, EN high, HOLD                         */
