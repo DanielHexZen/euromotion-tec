@@ -99,6 +99,10 @@
     X(670, lat_tilt,         0.332f,    "rad",     0.0f,    0.7f,   PAR_S) \
     X(671, lat_h,            0.07f,     "m",       0.03f,   0.4f,   PAR_S) \
     /* 10.5 communication */ \
+    X(900, com_vid,          66.0f,     "-",       1.0f,    254.0f, PAR_S) \
+    X(901, com1_mode,        1.0f,      "enum",    0.0f,    1.0f,   PAR_S) \
+    X(902, tlm_period_ms,    100.0f,    "ms",      50.0f,   1000.0f,PAR_L) \
+    X(903, tlm_air_max_ms,   55.0f,     "ms",      20.0f,   90.0f,  PAR_L) \
     X(904, con_deadman_s,    2.0f,      "s",       0.5f,    10.0f,  PAR_L) \
     X(905, wdg_enable,       1.0f,      "bool",    0.0f,    1.0f,   PAR_S)
 

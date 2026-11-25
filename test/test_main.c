@@ -24,6 +24,9 @@ void t_ekf_pred(void);
 void t_imu_yaw(void);
 void t_gnd(void);
 void t_fwd(void);
+void t_cobs(void);
+void t_proto_msgs(void);
+void t_tlm(void);
 
 int main(void)
 {
@@ -42,6 +45,9 @@ int main(void)
         { "t_imu_yaw", t_imu_yaw },
         { "t_gnd", t_gnd },
         { "t_fwd", t_fwd },
+        { "t_cobs", t_cobs },
+        { "t_proto_msgs", t_proto_msgs },
+        { "t_tlm", t_tlm },
     };
     for (unsigned i = 0; i < sizeof T / sizeof T[0]; i++) {
         printf("%s\n", T[i].name);
