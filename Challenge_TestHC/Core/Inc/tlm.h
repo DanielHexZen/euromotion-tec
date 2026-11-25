@@ -28,7 +28,7 @@ typedef struct {                       /* SI units, as the modules publish them 
     uint8_t  seg, wp;
     float    e_y_m;
     uint8_t  gnd_l, gnd_r;             /* gnd_side_t, 3 bits each                          */
-    float    fwd_m;                    /* minimum forward range; negative, NaN or >= 2.55 m = none */
+    float    fwd_m;                    /* minimum forward range; negative, NaN or >= 2.545 m = none */
 } tlm_fast_in_t;
 
 typedef struct {
@@ -59,9 +59,10 @@ typedef struct { proto_event_t q[TLM_EV_DEPTH]; uint8_t head, n; } tlm_evq_t;
 typedef struct { tlm_evq_t port[TLM_NPORT]; uint8_t drop; } tlm_ev_t;
 
 void    tlm_ev_init(tlm_ev_t *e);
-/* Appends to every port queue. A full queue drops the NEW event (oldest kept); each drop
- * adds 1 to ev_drop, saturating at 255. */
-void    tlm_ev_push(tlm_ev_t *e, const proto_event_t *ev);
+/* Appends to the queues of the ports in port_mask (bit p = port p is in BINARY mode; a TEXT
+ * port prints the event as a line instead, §7.25). A full queue drops the NEW event (oldest
+ * kept); each drop adds 1 to ev_drop, saturating at 255. Ports outside the mask never count. */
+void    tlm_ev_push(tlm_ev_t *e, const proto_event_t *ev, unsigned port_mask);
 bool    tlm_ev_peek(const tlm_ev_t *e, unsigned port, proto_event_t *ev);   /* oldest */
 void    tlm_ev_pop(tlm_ev_t *e, unsigned port);
 uint8_t tlm_ev_count(const tlm_ev_t *e, unsigned port);

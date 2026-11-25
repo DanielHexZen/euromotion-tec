@@ -11,8 +11,9 @@ param_val.csv cap_data.csv text.csv. Columns: rx_idx (frame number), rx_time_s (
 replaying a file), seq, then the fields of the message with their wire units (mm, mm/s, 0.01 deg, ...).
 
 Frame loss: every vehicle frame carries one counter `seq` (u8, wraps 255 -> 0). A jump of g > 1 counts as
-g - 1 lost frames, a repeated value as a duplicate. After a vehicle reset the counter restarts, which shows
-up as one false gap per reset.
+g - 1 lost frames, a repeated value as a duplicate. A forward jump of more than 128 (mod 256) is a backward
+jump, i.e. a vehicle reset or a reordered frame: it counts as a reset, not as loss, and a HELLO resyncs the
+tracker (a reset to a value less than 128 above the old one cannot be told from loss without it). The exit status 3 refers to loss excluding resets.
 
 Uplink rule (8.3): the vehicle is timing master with a 100 ms period. A command is sent only after a
 vehicle frame was received in the current period, >= 5 ms after the last received byte (HC-12 turnaround),
@@ -26,7 +27,7 @@ The frame must fit the 30 ms uplink airtime (28 bytes at 9600 Bd, 57 at 19200 Bd
   gs_log.py --selftest
 
 Needs pyserial only when --port is used.
-Exit status: 0 ok, 1 usage/IO error, 3 frame loss >= 1 % (the H11 limit).
+Exit status: 0 ok, 1 usage/IO error, 3 frame loss >= 1 % (the H11 limit; resets are not loss).
 """
 import argparse
 import csv
@@ -172,16 +173,21 @@ class SeqStats:
 
     def __init__(self):
         self.last = None
-        self.rx = self.lost = self.dup = 0
+        self.rx = self.lost = self.dup = self.resets = 0
+
+    def resync(self):
+        self.last = None
 
     def update(self, seq):
         self.rx += 1
         if self.last is not None:
-            gap = (seq - self.last - 1) & 0xFF
-            if gap == 0xFF:
+            d = (seq - self.last) & 0xFF            # forward distance, 1 = next frame
+            if d == 0:
                 self.dup += 1
+            elif d > 128:                           # backward: reset or reordered frame, not loss
+                self.resets += 1
             else:
-                self.lost += gap
+                self.lost += d - 1
         self.last = seq
 
     def loss(self):
@@ -227,6 +233,8 @@ class Sink:
     def write(self, frame, t=None):
         _, mtype, seq, payload = frame
         self.idx += 1
+        if mtype == 0x01:
+            self.seq.resync()
         self.seq.update(seq)
         m = decode_msg(mtype, payload)
         if m is None:
@@ -253,8 +261,8 @@ def report(dec, sink, out=sys.stdout):
     print("frames ok %d (unknown type or length %d); dropped: crc %d, cobs %d, oversize %d, runt %d, vid %d"
           % (st["ok"], sink.unknown, st["crc"], st["cobs"], st["oversize"], st["runt"], st["vid"]), file=out)
     print("per type: " + (", ".join("%s %d" % kv for kv in sorted(sink.per_type.items())) or "none"), file=out)
-    print("seq: received %d, lost %d, duplicates %d, frame loss %.2f %%"
-          % (sq.rx, sq.lost, sq.dup, 100.0 * sq.loss()), file=out)
+    print("seq: received %d, lost %d, duplicates %d, resets/reordered %d, frame loss %.2f %% (excluding resets)"
+          % (sq.rx, sq.lost, sq.dup, sq.resets, 100.0 * sq.loss()), file=out)
 
 
 # ---- uplink rule of spec 8.3 ------------------------------------------------------------------
@@ -418,6 +426,30 @@ def selftest():
         s.update(q)
     check(s.lost == 3 and s.dup == 1 and s.rx == 11, "seq gaps, wrap, duplicate")
     check(abs(s.loss() - 3 / 14) < 1e-12, "loss fraction")
+    s = SeqStats()                                              # vehicle reset in the middle: no loss
+    for q in list(range(100, 120)) + list(range(0, 20)):
+        s.update(q)
+    check(s.lost == 0 and s.resets == 1 and s.rx == 40, "reset is not loss")
+    s = SeqStats()                                              # reordered frame: 5, 7, 6, 8
+    for q in [5, 7, 6, 8]:
+        s.update(q)
+    check(s.resets == 1 and s.dup == 0, "reorder counted separately")
+    s = SeqStats()                                              # HELLO resync hides nothing but the reset gap
+    s.update(200)
+    s.resync()
+    s.update(3)
+    s.update(4)
+    check(s.lost == 0 and s.resets == 0, "resync on HELLO")
+    d = Decoder(0x42)
+    with tempfile.TemporaryDirectory() as tmp2:
+        k = Sink(tmp2)
+        for q in [10, 11, 12]:
+            k.write(d.feed(encode_frame(0x42, 0x05, q, bytes(3)))[0])
+        k.write(d.feed(encode_frame(0x42, 0x01, 0, bytes(26)))[0])      # reboot: HELLO with seq 0
+        for q in [1, 2, 3]:
+            k.write(d.feed(encode_frame(0x42, 0x05, q, bytes(3)))[0])
+        check(k.seq.lost == 0 and k.seq.loss() == 0.0, "reboot through HELLO is not loss")
+        k.close()
 
     # CSV and file replay
     with tempfile.TemporaryDirectory() as tmp:

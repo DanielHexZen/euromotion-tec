@@ -115,6 +115,8 @@ void proto_rx_init(proto_rx_t *rx, uint8_t vid)
     rx->vid = vid;
 }
 
+void proto_rx_set_vid(proto_rx_t *rx, uint8_t vid) { rx->vid = vid; }
+
 static void rx_finish(proto_rx_t *rx)
 {
     uint8_t raw[PROTO_ENC_MAX];
@@ -401,7 +403,7 @@ bool proto_unpack_cap_data(const uint8_t *p, size_t n, proto_cap_data_t *m)
 
 size_t proto_pack_text(const char *s, size_t n, uint8_t *o)
 {
-    if (n > PROTO_PAYLOAD_MAX) { return 0U; }
+    if (n == 0U || n > PROTO_PAYLOAD_MAX) { return 0U; }
     for (size_t k = 0U; k < n; k++) { o[k] = (uint8_t)s[k]; }
     return n;
 }

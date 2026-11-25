@@ -76,9 +76,10 @@ size_t tlm_slow_payload(const tlm_slow_in_t *in, uint8_t *out)
 
 void tlm_ev_init(tlm_ev_t *e) { memset(e, 0, sizeof *e); }
 
-void tlm_ev_push(tlm_ev_t *e, const proto_event_t *ev)
+void tlm_ev_push(tlm_ev_t *e, const proto_event_t *ev, unsigned port_mask)
 {
     for (unsigned p = 0U; p < TLM_NPORT; p++) {
+        if (((port_mask >> p) & 1U) == 0U) { continue; }
         tlm_evq_t *q = &e->port[p];
         if (q->n >= TLM_EV_DEPTH) {
             if (e->drop < 255U) { e->drop++; }

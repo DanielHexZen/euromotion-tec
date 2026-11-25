@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 
 #include "par.h"
@@ -90,6 +91,12 @@ void t_cobs(void)
     { const uint8_t x[] = { 0x03, 0x11, 0x00 }; CHECK(!cobs_decode(x, 3U, d, sizeof d, &dn)); }       /* zero in block  */
     { const uint8_t x[] = { 0x05, 0x11, 0x22, 0x33, 0x44 }; CHECK(!cobs_decode(x, 5U, d, 3U, &dn)); } /* out too small  */
     CHECK(!cobs_decode(in, 0U, d, sizeof d, &dn));                                                   /* empty input    */
+    {   /* out_max == exact decoded length of the data blocks, but the inter-block zero needs one more byte */
+        const uint8_t x[] = { 0x02, 0x11, 0x01 };   /* decodes to 11 00 */
+        uint8_t *h = malloc(1U);
+        CHECK(h != NULL && !cobs_decode(x, 3U, h, 1U, &dn));
+        free(h);
+    }
     in[0] = 1U; in[1] = 2U; in[2] = 3U;
     CHECK(cobs_encode(in, 3U, e, 3U) == 0U && cobs_encode(in, 3U, e, 4U) == 4U && cobs_encode(in, 0U, e, 0U) == 0U);
 
@@ -190,6 +197,16 @@ void t_cobs(void)
         l = proto_encode((uint8_t)PROTO_T_PING, 5U, NULL, 0U, fr, sizeof fr);
         feed(&rx, fr, l);
         CHECK(proto_rx_frame(&rx, &f) && f.vid == (uint8_t)par()->com_vid);
+    }
+    {   /* com_vid changed by PARAM_SET: the receive check follows (proto_rx_set_vid) */
+        proto_rx_init(&rx, 0x42U);
+        proto_rx_set_vid(&rx, 0x77U);
+        size_t l = proto_encode_vid(0x42U, 0x20U, 1U, NULL, 0U, fr, sizeof fr);
+        feed(&rx, fr, l);
+        CHECK(!proto_rx_frame(&rx, &f) && rx.st.vid == 1U);
+        l = proto_encode_vid(0x77U, 0x20U, 2U, NULL, 0U, fr, sizeof fr);
+        feed(&rx, fr, l);
+        CHECK(proto_rx_frame(&rx, &f) && f.vid == 0x77U);
     }
     {   /* overrun: second frame before the first was read */
         proto_rx_init(&rx, 0x42U);

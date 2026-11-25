@@ -196,8 +196,14 @@ void t_proto_msgs(void)
             CHECK(proto_unpack_cap_data(p, len, &r) && r.index == 0x0102U && r.set == set && r.n == nm &&
                   memcmp(r.rec, rec, nm * sz) == 0);
             CHECK(!proto_unpack_cap_data(p, len - 1U, &r) && !proto_unpack_cap_data(p, len + 1U, &r));
-            m.n = (uint8_t)(nm + 1U);                                   /* n_max + 1 does not fit */
-            CHECK(proto_pack_cap_data(&m, p, sizeof p) == 0U);
+            {   /* n_max + 1 fails on n_max, not on the buffer size */
+                uint8_t big[200], rec2[6U * 24U] = { 0 };
+                const proto_cap_data_t m2 = { 0U, set, (uint8_t)(nm + 1U), rec2 };
+                CHECK(proto_pack_cap_data(&m2, big, sizeof big) == 0U);
+                memset(big, 0, sizeof big);                                 /* 100-byte buffer, n = n_max + 1 */
+                big[2] = set; big[3] = (uint8_t)(nm + 1U);
+                CHECK(!proto_unpack_cap_data(big, 4U + (nm + 1U) * sz, &r));
+            }
             m.n = 1U;
             CHECK(proto_pack_cap_data(&m, p, 4U + sz - 1U) == 0U);       /* out too small */
             m.n = 0U;                                                    /* end frame */

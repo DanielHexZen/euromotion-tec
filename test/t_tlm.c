@@ -15,11 +15,12 @@ static void air(uint32_t baud, size_t payload, double ms)
     CHECK_NEAR((double)tlm_air_us(baud, PROTO_WIRE(payload)) / 1000.0, ms, 0.06);
 }
 
-static void ev_n(tlm_ev_t *e, int32_t k)
+static void ev_m(tlm_ev_t *e, int32_t k, unsigned mask)
 {
     const proto_event_t ev = { (uint32_t)k * 10U, 0x0101U, k };
-    tlm_ev_push(e, &ev);
+    tlm_ev_push(e, &ev, mask);
 }
+static void ev_n(tlm_ev_t *e, int32_t k) { ev_m(e, k, 3U); }
 
 void t_tlm(void)
 {
@@ -154,7 +155,15 @@ void t_tlm(void)
       CHECK(tlm_ev_peek(&e, TLM_PORT_RADIO, &ev) && ev.arg == 100);
       for (int32_t k = 0; k < 400; k++) { ev_n(&e, k); }
       CHECK(tlm_ev_drop(&e) == 255U);                              /* saturating */
-      CHECK(!tlm_ev_peek(&e, 2U, &ev) && tlm_ev_count(&e, 2U) == 0U); }
+      CHECK(!tlm_ev_peek(&e, 2U, &ev) && tlm_ev_count(&e, 2U) == 0U);
+      /* port mask: a TEXT port gets no event and never counts drops */
+      tlm_ev_init(&e);
+      for (int32_t k = 0; k < 40; k++) { ev_m(&e, k, 1U << TLM_PORT_USB); }   /* radio in TEXT mode */
+      CHECK(tlm_ev_count(&e, TLM_PORT_USB) == 16U && tlm_ev_count(&e, TLM_PORT_RADIO) == 0U);
+      CHECK(tlm_ev_drop(&e) == 24U);
+      tlm_ev_init(&e);
+      for (int32_t k = 0; k < 40; k++) { ev_m(&e, k, 0U); }                  /* both TEXT */
+      CHECK(tlm_ev_count(&e, TLM_PORT_USB) == 0U && tlm_ev_count(&e, TLM_PORT_RADIO) == 0U && tlm_ev_drop(&e) == 0U); }
 
     REQ("REQ-TLM-03, §8.4: TELEM_FAST assembly, scaling and saturation");
     { tlm_fast_in_t in = { .t_ms = 1234U, .mode = 3U, .state = 2U, .flags = TLM_F_STILL | TLM_F_CAPTURE,

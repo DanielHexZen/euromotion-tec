@@ -67,6 +67,8 @@ typedef struct {
 } proto_rx_t;
 
 void proto_rx_init(proto_rx_t *rx, uint8_t vid);
+/* Call after com_vid changes (PARAM_SET), so the receive check follows proto_encode(). */
+void proto_rx_set_vid(proto_rx_t *rx, uint8_t vid);
 void proto_rx_byte(proto_rx_t *rx, uint8_t b);
 /* Copies the pending frame (CRC and vid checked) and clears it. A frame that arrives while
  * one is pending replaces it and counts as overrun. */
@@ -133,7 +135,8 @@ size_t proto_cap_n_max(uint8_t set);
 size_t proto_pack_cap_data(const proto_cap_data_t *m, uint8_t *out, size_t out_max);
 bool   proto_unpack_cap_data(const uint8_t *p, size_t n, proto_cap_data_t *m);
 
-/* TEXT: ASCII payload, not terminated, <= 96 bytes. Returns the length, 0 if too long. */
+/* TEXT: ASCII payload, not terminated, 1..96 bytes. Returns the length; 0 if too long or empty
+ * (an empty text is not allowed). */
 size_t proto_pack_text(const char *s, size_t n, uint8_t *out);
 
 #endif
