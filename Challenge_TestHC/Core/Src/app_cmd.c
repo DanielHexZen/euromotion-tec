@@ -175,6 +175,16 @@ void app_cmd_exec(const con_cmd_t *c)
     case CMD_FAULTS:    con_job(p, CON_JOB_FAULTS); break;
     case CMD_IMU:       con_job(p, CON_JOB_IMU); break;
     case CMD_EKF:       con_job(p, CON_JOB_EKF); break;
+    case CMD_IMUS:
+#if FEAT_IMU
+        if (p != COM_USB) { con_err_state(p, "USB only"); break; }   /* 2 kB/s: too much for the radio */
+        if (!g_app.imus) { float w[3]; uint32_t t, n; (void)imu_take_mean(w, &t, &n); }   /* empty the window */
+        g_app.imus = !g_app.imus;
+        con_printf(p, g_app.imus ? "IMUS ON\r\n" : "IMUS OFF\r\n");
+#else
+        con_err_state(p, "no IMU");
+#endif
+        break;
     case CMD_PRINT:     app_print_status(p); break;
     case CMD_INFO:      con_job(p, CON_JOB_INFO); break;
     case CMD_STATUS:
