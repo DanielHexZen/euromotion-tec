@@ -42,7 +42,7 @@ Entered as compiled defaults in `par_table.h` (`t_whl_law` now pins the hand-com
 | `odo_wheelbase` (203) | UMBmark, `tools/umbmark.py` | 5 | covered |
 | `whl_ks_l/r`, `whl_kv_l/r` (116–119) | open-loop duty steps, steady speed from the `a` print, `tools/ffit.py steady` | 6 | covered, see limits in 6 |
 | `whl_ksb_l/r` (120, 121) | open-loop duty steps from rest, `tools/ffit.py breakaway` | 6 | covered, 1 % resolution |
-| `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **deferred**: the console prints every 300 ms and there is no capture (`CAP`, spec §7.25) before phase 2. Needs the calibration firmware (`K`, 50 Hz step, §19.2) or phase 2. Default 0.050 s stays `[MEASURE]`. |
+| `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **measured on blocks** (2026-11-18, calibration firmware `K`, 50 Hz step): 0.04975 s, entered as default (results table above). The loaded value on the floor is open: capture set 0 in phase 4 (`PHASE4_TELEMETRY.md`) or `K` on the floor. |
 | `odo_backlash_l/r` (204, 205) | reversal test | – | **deferred**: the parameters do not exist in `par_table.h` yet and are used only in phase 5 (§7.6.3). Needs phase 5: calibration `L` reports motor-side counts and latency only, real gear backlash is not observable with motor-side encoders. |
 | `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the divider is wired since 2026-11-17 (`7 bat OK`, voltage in `S`), but `bat_ratio` is not yet checked against a multimeter. Keep `whl_ff_norm_en = 0`; record the `S` voltage during section 6 so `whl_ff_u_ref` can be set from it later. |
 
