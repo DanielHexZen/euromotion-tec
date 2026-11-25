@@ -8,9 +8,9 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 3: H9, H9b, H10, SIL on `rect10`, `t_gnd`
 |---|---|
 | Sensor set | decided, spec D-70: F1, F2, S2, optional L1; G1–G4 and S1 not fitted |
 | CubeMX | done since `f126577`: I2C1/I2C2 400 kHz IT, all XSHUT outputs low, EXTI PA15/PA12. No regeneration needed for D-70 |
-| Host code | `gnd` (S2 classifier, right side state, edge events) and `fwd` (reflex, governor, staleness) with `t_gnd`, `t_fwd`; `vl.h` types only |
+| Host code | `gnd` (S2), `fwd`; `map` with `course_rect10` (hand table), `nav` (follow, final, turn), `msn` (modes, AUTO without evasion, RECOVER, start conditions), `drv` VEL mode, `prof_plan_v0` (D-75). Tests `t_gnd`, `t_fwd`, `t_map`, `t_nav_line/final/turn`, `t_msn`, `t_drv_vel`; `t_nav_turn` asserts 0.35° instead of 0.2° (D-75 item 9). Not wired into the app |
 | Vehicle code | `vl.c` complete for D-70 (D-73): init with the ST ULD v3.5.5 (XSHUT sequence, address, short mode, TB 20 ms, ROI, start ranging, F2 10 ms after F1); run time polled, interrupt-driven I2C2 state machine (ready → 17-byte result → clear), REQ-VL-03 timestamps, bus recovery (REQ-VL-04). S2 feeds `gnd`; console `VL` shows range, status, signal, ambient, age and the S2 class. `fwd` is not fed yet. Not run on the vehicle |
-| Not started | `map`, `nav`, `msn`, `drv` VEL mode, `lat` (phase 5), SIL, `course_gen.py` |
+| Not started | app integration of `msn`/`nav`/`fwd` (vehicle track), `lat` (phase 5), SIL (`test/sim_vehicle.c`), `course_gen.py`; interlock replacement (OQ-12) |
 | Wiring | F1, F2, S2 connected (team, 2026-11-24) |
 
 Open decisions (spec OQ-12): interlock replacement (left side blind, right side one footprint); observation point and σ of S2 edge events; L1 geometry at 45°; L1 distance mode and ROI.
