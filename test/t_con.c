@@ -99,6 +99,11 @@ void t_con(void)
     REQ("spec 9: IMU and EKF print SI values in legacy units (deg, deg/s, mm)");
     c = line("IMU");     CHECK(c.type == CMD_IMU);
     c = line("EKF");     CHECK(c.type == CMD_EKF);
+    c = line("IMUS");    CHECK(c.type == CMD_IMUS);
+    clear_out();
+    { const float w[3] = { 0.001f, -0.0423f, 0.5f * DEG2RAD_F };
+      con_print_imus(COM_USB, 4000000001U, 123456U, w, 31.247f); }
+    CHECK(says("IMUS 4000000001 123456 57 -2424 500 3125"));   /* H7 stream: mdps, 0.01 C */
     g_imu = (con_imu_t){ .present = true, .alive = true, .w_radps = { 0.0f, 0.0f, 0.5f * DEG2RAD_F },
                          .temp_c = 31.24f, .roll_rad = 1.0f * DEG2RAD_F, .pitch_rad = -2.0f * DEG2RAD_F,
                          .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U };

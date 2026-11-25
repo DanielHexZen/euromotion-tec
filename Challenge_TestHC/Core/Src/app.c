@@ -286,6 +286,13 @@ static void app_ctrl(void)
     mot_set(WHL_R, out.duty_d[WHL_R]);
     if (out.enable) { mot_apply(); mot_enable(true); }             /* duty first, then EN */
     else { mot_enable(false); mot_apply(); }
+#if FEAT_IMU
+    if (g_app.imus) {
+        float w[3];
+        uint32_t t_us, n;
+        if (imu_take_mean(w, &t_us, &n) > 0U) { con_print_imus(COM_USB, t_us, n, w, imu_temp_c()); }
+    }
+#endif
     sys_wdg_ctrl_done();
 }
 

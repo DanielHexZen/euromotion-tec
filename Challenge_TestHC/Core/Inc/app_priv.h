@@ -28,6 +28,7 @@ typedef struct {
     bool        turn_gyro;       /* W: the end angle is checked against the yaw integral           */
     float       turn_target_rad, turn_acc_rad;
     uint8_t     turn_fix;
+    bool        imus;            /* IMUS stream on USB, one line per S_CTRL (H7, D-74)            */
 } app_state_t;
 
 extern app_state_t g_app;
