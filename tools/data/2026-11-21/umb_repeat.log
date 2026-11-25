@@ -1,0 +1,187 @@
+> [B[B[B[B[B[B[B[B[B[B[B[B[B[B[B[B
+ERR unknown, ? for help
+> ?
+D<mm> drive, V<mm/s> speed, T<ms>[ <ms>] ramps, W<deg> turn, -100..100 open loop %
+PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params
+F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump
+S status, I info, IMU, EKF, EV events, FAULTS, CLEAR, MODE IDLE|BENCH
+> r
+Counters reset
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1999.1 sync_max=0.8 t=8220
+> W-90
+Turn -90 deg
+DONE L=170.7 R=-170.5 sync_max=2.5 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1997.9 sync_max=1.0 t=8300
+> W-90
+Turn -90 deg
+DONE L=170.7 R=-170.7 sync_max=2.5 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.4 sync_max=1.2 t=8320
+> W-90
+Turn -90 deg
+DONE L=170.7 R=-170.6 sync_max=2.2 t=2240
+> Wd
+ERR syntax, use W<deg>
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.2 sync_max=1.2 t=8260
+> W-90
+Turn -90 deg
+DONE L=170.7 R=-170.9 sync_max=2.4 t=2220
+> r
+Counters reset
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.4 sync_max=1.0 t=8280
+> W-90
+Turn -90 deg
+DONE L=170.9 R=-170.6 sync_max=2.4 t=2260
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1997.9 sync_max=0.9 t=8300
+> W-90
+Turn -90 deg
+DONE L=170.3 R=-170.7 sync_max=1.9 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.4 sync_max=1.2 t=8300
+> W-90
+Turn -90 deg
+DONE L=170.9 R=-170.8 sync_max=1.8 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1998.2 sync_max=0.9 t=8240
+> W-90
+Turn -90 deg
+DONE L=171.0 R=-170.5 sync_max=2.3 t=2240
+> D200022222
+ERR syntax, use D<mm>
+> c
+ERR unknown, ? for help
+> r
+Counters reset
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1999.1 sync_max=1.3 t=8260
+> W90
+Turn 90 deg
+DONE L=-170.6 R=170.7 sync_max=1.7 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1999.1 sync_max=2.2 t=8260
+> W90
+Turn 90 deg
+DONE L=-171.1 R=170.5 sync_max=1.9 t=2260
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1998.4 sync_max=2.3 t=8280
+> W90
+Turn 90 deg
+DONE L=-171.0 R=170.5 sync_max=2.0 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.6 sync_max=2.2 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.4 R=170.7 sync_max=2.1 t=2180
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.3 R=1998.6 sync_max=1.3 t=8260
+> W90
+Turn 90 deg
+DONE L=-170.5 R=170.5 sync_max=1.8 t=2160
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1998.6 sync_max=2.3 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.9 R=171.1 sync_max=1.6 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.6 sync_max=2.4 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.9 R=171.2 sync_max=2.0 t=2220
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1998.6 sync_max=2.0 t=8220
+> W90
+Turn 90 deg
+DONE L=-170.7 R=171.1 sync_max=2.0 t=2260
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.5 sync_max=1.0 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.7 R=171.2 sync_max=2.1 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.4 sync_max=2.1 t=8200
+> W90
+Turn 90 deg
+DONE L=-170.7 R=170.5 sync_max=1.6 t=2220
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1998.1 sync_max=2.2 t=8260
+> W90
+Turn 90 deg
+DONE L=-170.7 R=170.9 sync_max=2.0 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.8 sync_max=2.1 t=8260
+> W90
+Turn 90 deg
+DONE L=-170.5 R=170.5 sync_max=1.5 t=2220
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.3 R=1998.5 sync_max=0.9 t=8260
+> W90
+Turn 90 deg
+DONE L=-170.8 R=171.1 sync_max=1.8 t=2240
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.0 R=1998.5 sync_max=2.1 t=8280
+> W90
+Turn 90 deg
+DONE L=-170.8 R=170.5 sync_max=1.7 t=2260
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.1 R=1998.8 sync_max=2.1 t=8260
+> W90
+Turn 90 deg
+DONE L=-170.6 R=170.2 sync_max=1.8 t=2180
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.6 sync_max=2.2 t=8220
+> W90
+Turn 90 deg
+DONE L=-170.7 R=170.5 sync_max=2.0 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.4 sync_max=1.0 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.9 R=170.8 sync_max=1.7 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.4 R=1998.4 sync_max=2.0 t=8280
+> W90
+Turn 90 deg
+DONE L=-170.9 R=170.5 sync_max=2.3 t=2200
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.3 sync_max=1.8 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.9 R=170.7 sync_max=1.9 t=2220
+> D2000
+Move 2000 mm: Vmax 300 mm/s, T 7667 ms
+DONE L=1998.2 R=1998.4 sync_max=2.1 t=8240
+> W90
+Turn 90 deg
+DONE L=-170.7 R=170.7 sync_max=1.9 t=2200

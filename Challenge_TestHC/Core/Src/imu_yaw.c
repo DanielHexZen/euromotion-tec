@@ -47,3 +47,20 @@ st_t imu_yaw_at(const imu_yaw_t *y, uint32_t t_us, float extrap_max_s, float *ps
     }
     return ST_RANGE;
 }
+
+bool imu_glitch_reject(imu_glitch_t *f, const int16_t g[3], int32_t lim_lsb)
+{
+    bool jump = false;
+    for (uint32_t i = 0U; i < 3U; i++) {
+        const int32_t d = (int32_t)g[i] - (int32_t)f->g[i];
+        jump = jump || d > lim_lsb || d < -lim_lsb;
+    }
+    if (f->have && jump && f->run < IMU_GLITCH_RUN) {
+        f->run++;
+        return true;
+    }
+    for (uint32_t i = 0U; i < 3U; i++) { f->g[i] = g[i]; }
+    f->run = 0U;
+    f->have = true;
+    return false;
+}

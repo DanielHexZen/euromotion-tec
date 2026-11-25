@@ -7,7 +7,7 @@
 #endif
 
 #ifndef FEAT_IMU
-#define FEAT_IMU 1           /* 1 = IMU on SPI1 (phase 2, on since 2026-11-20, D-56); 0 = EKF in encoder-heading mode (§7.17.7) */
+#define FEAT_IMU 1          /* 1 = IMU on SPI1 (phase 2, on since 2026-11-20, D-56); 0 = EKF in encoder-heading mode (§7.17.7) */
 #endif
 
 #ifndef FEAT_VL

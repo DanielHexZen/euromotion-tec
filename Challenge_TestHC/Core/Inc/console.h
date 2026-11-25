@@ -23,7 +23,7 @@ typedef enum {
     CMD_UNAVAILABLE, /* valid syntax, not in this build (MANUAL, AUTO, RUN, M)       */
     CMD_CLEAR, CMD_PSET, CMD_PGET, CMD_DUMP, CMD_STATUS, CMD_INFO, CMD_EVLOG, CMD_FAULTS,
     CMD_FAULTINJ,    /* f[0] = fault code (Debug builds only)                        */
-    CMD_IMU, CMD_EKF, CMD_VL
+    CMD_IMU, CMD_IMUS, CMD_EKF, CMD_VL
 } con_cmd_type_t;
 
 typedef struct {
@@ -51,7 +51,7 @@ typedef enum {
 typedef struct {
     bool     present, alive;
     float    w_radps[3], temp_c, roll_rad, pitch_rad, bg_radps;
-    uint32_t n_samples, n_drop, n_sat;
+    uint32_t n_samples, n_drop, n_sat, n_glitch;
 } con_imu_t;
 typedef struct {
     float    x_m, y_m, th_rad, bg_radps, s;
@@ -92,5 +92,7 @@ void con_print_move(com_port_t p, float dist_m, float v_mps, float t_s);
 void con_print_done(com_port_t p, bool timeout, const float d_m[2], float sync_m, float t_s);
 void con_print_param(com_port_t p, const par_desc_t *d, float v);
 void con_print_turn(com_port_t p, float achieved_rad, float target_rad);   /* W with gyro check */
+/* IMUS stream line (H7, D-74): "IMUS <t_us> <n> <wx> <wy> <wz> <T>", rates in mdps, T in 0.01 C. */
+void con_print_imus(com_port_t p, uint32_t t_us, uint32_t n_total, const float w_radps[3], float temp_c);
 
 #endif

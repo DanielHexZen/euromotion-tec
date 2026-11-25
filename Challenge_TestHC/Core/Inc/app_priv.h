@@ -31,6 +31,7 @@ typedef struct {
     uint8_t     turn_fix;
     gnd_t       gnd;             /* S2 ground class (D-70); fed in S_FAST, display only until msn */
     uint16_t    vl_seq[VL_N];    /* last result consumed per sensor                                */
+    bool        imus;            /* IMUS stream on USB, one line per S_CTRL (H7, D-74)            */
 } app_state_t;
 
 extern app_state_t g_app;

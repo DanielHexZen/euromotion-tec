@@ -63,7 +63,7 @@ static const char *const HELP[] = {
     "D<mm> drive, V<mm/s> speed, T<ms>[ <ms>] ramps, W<deg> turn, -100..100 open loop %",
     "PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params",
     "F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump",
-    "S status, I info, IMU, EKF, VL, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
+    "S status, I info, IMU, IMUS stream, EKF, VL, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
 };
 
 /* Every IMU / EKF number is formatted here, in legacy units (mm, deg, deg/s). */
@@ -83,8 +83,8 @@ static int imu_line(uint32_t i, char *buf, size_t n)
     if (i == 1U) {
         f_(a, sizeof a, s.roll_rad * RAD2DEG_F, 2); f_(b, sizeof b, s.pitch_rad * RAD2DEG_F, 2);
         f_(c, sizeof c, s.bg_radps * RAD2DEG_F, 3);
-        return snprintf(buf, n, "roll %s pitch %s deg  bg %s deg/s  n %lu drop %lu sat %lu", a, b, c,
-                        (unsigned long)s.n_samples, (unsigned long)s.n_drop, (unsigned long)s.n_sat);
+        return snprintf(buf, n, "roll %s pitch %s deg  bg %s deg/s  n %lu drop %lu sat %lu glitch %lu", a, b, c,
+                        (unsigned long)s.n_samples, (unsigned long)s.n_drop, (unsigned long)s.n_sat, (unsigned long)s.n_glitch);
     }
     return -1;
 }
@@ -261,6 +261,7 @@ static bool parse(com_port_t p, const char *s, con_cmd_t *c)
         c->type = CMD_FAULTINJ; c->f[0] = (float)a; return true;
     }
     if (kw(s, "FAULTS", &r) && at_end(r)) { c->type = CMD_FAULTS; return true; }
+    if (kw(s, "IMUS", &r) && at_end(r))   { c->type = CMD_IMUS; return true; }
     if (kw(s, "IMU", &r) && at_end(r))    { c->type = CMD_IMU; return true; }
     if (kw(s, "EKF", &r) && at_end(r))    { c->type = CMD_EKF; return true; }
     if (kw(s, "VL", &r) && at_end(r))     { c->type = CMD_VL; return true; }
@@ -400,6 +401,13 @@ void con_print_param(com_port_t p, const par_desc_t *d, float v)
     char num[20];
     (void)fmt_sci(num, sizeof num, v);
     con_printf(p, "P%u %s=%s %s\r\n", (unsigned)d->id, d->name, num, d->unit);
+}
+
+void con_print_imus(com_port_t p, uint32_t t_us, uint32_t n_total, const float w_radps[3], float temp_c)
+{
+    con_printf(p, "IMUS %lu %lu %ld %ld %ld %ld\r\n", (unsigned long)t_us, (unsigned long)n_total,
+               lroundf(w_radps[0] * RAD2DEG_F * 1000.0f), lroundf(w_radps[1] * RAD2DEG_F * 1000.0f),
+               lroundf(w_radps[2] * RAD2DEG_F * 1000.0f), lroundf(temp_c * 100.0f));
 }
 
 void con_print_turn(com_port_t p, float achieved_rad, float target_rad)

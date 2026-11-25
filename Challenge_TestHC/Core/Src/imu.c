@@ -29,6 +29,10 @@ static volatile uint32_t s_drop;
 
 static imu_yaw_t s_yaw;
 static uint32_t  s_prev_us, s_kick_us, s_init_us, s_sat_run, s_sat_n, s_n;
+static float     s_sum_w[3];                     /* IMUS window, main loop only */
+static uint32_t  s_sum_n;
+static imu_glitch_t s_glitch;
+static uint32_t  s_glitch_n;
 static bool      s_have_prev, s_timed_out;
 static float     s_temp_c = T_REF_C, s_w[3], s_acc[3];
 
@@ -98,6 +102,8 @@ static void process(const raw_t *r, att_t *att, const par_t *q)
     if ((uint32_t)(r->t_us - s_init_us) < SETTLE_US) { return; }   /* gyro turn-on transient (D-67) */
     int16_t g[3], a[3], tr;
     s_be->decode(r->rx, g, a, &tr);
+    /* D-77: single corrupted samples (+~300 deg/s on one axis, H7 log 2026-11-25) never reach att/yaw */
+    if (imu_glitch_reject(&s_glitch, g, (int32_t)(q->imu_jump_max / s_be->gyro_lsb_radps))) { s_glitch_n++; return; }
 
     bool sat = false;
     for (uint32_t i = 0U; i < 3U; i++) { sat = sat || g[i] == INT16_MAX || g[i] == INT16_MIN; }
@@ -131,6 +137,8 @@ static void process(const raw_t *r, att_t *att, const par_t *q)
     if (!isfinite(rate)) { sys_fault_raise(F_NUMERIC, 0); return; }                  /* REQ-COD-10 */
     imu_yaw_push(&s_yaw, r->t_us, rate);
     s_n++;
+    for (uint32_t k = 0U; k < 3U; k++) { s_sum_w[k] += s_w[k]; }
+    s_sum_n++;
 }
 
 void imu_drain(att_t *att)
@@ -173,7 +181,21 @@ float imu_temp_c(void) { return s_temp_c; }
 imu_info_t imu_info(void)
 {
     imu_info_t i = { .present = s_present, .alive = imu_alive(), .temp_c = s_temp_c,
-                     .n_samples = s_n, .n_drop = s_drop, .n_sat = s_sat_n };
+                     .n_samples = s_n, .n_drop = s_drop, .n_sat = s_sat_n,
+                     .n_glitch = s_glitch_n };
     for (uint32_t k = 0U; k < 3U; k++) { i.w_radps[k] = s_w[k]; i.acc_mps2[k] = s_acc[k]; }
     return i;
+}
+
+uint32_t imu_take_mean(float w_radps[3], uint32_t *t_last_us, uint32_t *n_total)
+{
+    const uint32_t n = s_sum_n;
+    for (uint32_t k = 0U; k < 3U; k++) {
+        w_radps[k] = (n > 0U) ? s_sum_w[k] / (float)n : NAN;
+        s_sum_w[k] = 0.0f;
+    }
+    s_sum_n = 0U;
+    *t_last_us = s_prev_us;
+    *n_total = s_n;
+    return n;
 }

@@ -110,14 +110,19 @@ void t_con(void)
     for (int i = 0; i < 4; i++) { (void)con_poll(&c); }
     CHECK(says("G1 absent"));
     CHECK(says("S2 215 mm st 0 sig 1234 amb 56 age 12 ms PATH"));
+    c = line("IMUS");    CHECK(c.type == CMD_IMUS);
+    clear_out();
+    { const float w[3] = { 0.001f, -0.0423f, 0.5f * DEG2RAD_F };
+      con_print_imus(COM_USB, 4000000001U, 123456U, w, 31.247f); }
+    CHECK(says("IMUS 4000000001 123456 57 -2424 500 3125"));   /* H7 stream: mdps, 0.01 C */
     g_imu = (con_imu_t){ .present = true, .alive = true, .w_radps = { 0.0f, 0.0f, 0.5f * DEG2RAD_F },
                          .temp_c = 31.24f, .roll_rad = 1.0f * DEG2RAD_F, .pitch_rad = -2.0f * DEG2RAD_F,
-                         .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U };
+                         .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U, .n_glitch = 2U };
     clear_out();
     con_job(COM_USB, CON_JOB_IMU);
     for (int i = 0; i < 4; i++) { (void)con_poll(&c); }
     CHECK(says("IMU alive  w 0.00 0.00 0.50 deg/s  T 31.2"));
-    CHECK(says("roll 1.00 pitch -2.00 deg  bg 0.020 deg/s  n 99 drop 1 sat 0"));
+    CHECK(says("roll 1.00 pitch -2.00 deg  bg 0.020 deg/s  n 99 drop 1 sat 0 glitch 2"));
     g_imu.present = false;
     clear_out();
     con_job(COM_USB, CON_JOB_IMU);

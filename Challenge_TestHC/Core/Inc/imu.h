@@ -38,8 +38,11 @@ typedef struct {
     bool     alive;
     float    w_radps[3], acc_mps2[3];               /* last sample, body axes                */
     float    temp_c;
-    uint32_t n_samples, n_drop, n_sat;
+    uint32_t n_samples, n_drop, n_sat, n_glitch;
 } imu_info_t;
 imu_info_t imu_info(void);                          /* console IMU                           */
+/* Mean body rate of the samples since the previous call, time of the last one and the total
+ * sample count (console IMUS, H7). Returns the number of samples in the window. Main loop only. */
+uint32_t imu_take_mean(float w_radps[3], uint32_t *t_last_us, uint32_t *n_total);
 
 #endif
