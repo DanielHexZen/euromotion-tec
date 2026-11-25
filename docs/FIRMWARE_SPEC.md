@@ -1764,7 +1764,7 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 303 | `bat_cut_v` | 10.0 | V | 9.5–11.5 | L | D | 3.33 V/cell |
 | 400 | `imu_tc1` | 0 | rad/s/K | ±1e-3 | S | D | `[MEASURE]` temperature run |
 | 401 | `imu_tc2` | 0 | rad/s/K² | ±1e-4 | S | D | idem |
-| 402 | `imu_gz_scale` | 1.0 | – | 0.95–1.05 | S | D | `[MEASURE]` 10-turn spin against marks; applied to ω_z before the temperature term (D-65) |
+| 402 | `imu_gz_scale` | 0.9907 | – | 0.95–1.05 | S | M | measured 2026-11-25, H7 10-turn spin CCW/CW against a wall mark at 4 m (`PHASE2_IMU_EKF.md` §4 step 5b); applied to ω_z before the temperature term (D-65) |
 | 403 | `imu_timeout` | 0.020 | s | 0.005–0.2 | L | D | |
 | 404 | `imu_extrap_max` | 0.002 | s | 0–0.005 | L | D | |
 | 410 | `att_tau` | 1.0 | s | 0.1–10 | L | D | complementary filter |
