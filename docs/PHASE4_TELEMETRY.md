@@ -4,14 +4,16 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 4: **H11** (15 min on the radio at 19200 
 
 ## Status (2026-11-25)
 
+Packages 1–3 written and reviewed (`make -C test` green, `gs_log.py --selftest` ok, ARM compile clean). Parameters 900–903 exist; 901–903 have no consumer until packages 4–5. Open before H11: a parameter for the 5 ms radio guard (`[VERIFY]`), the definition of `rx_err` (D-76 item 4).
+
 | Item | Track | State |
 |---|---|---|
-| `proto` (§7.24, §8.2, §8.4): COBS, header, CRC, one pack/unpack per message | host | only `crc16_ccitt` exists (`proto.c`, test in `t_crc`) |
-| `tlm` (§7.25): `TELEM_FAST` 10 Hz, `TELEM_SLOW` 1 Hz, per-port event queues (D-34), capture buffer 48 KB with sets 0–3, `CAPTURE`/`CAP_GET` (D-33) | mixed: framing and queues pure, sending on the vehicle | not started |
+| `proto` (§7.24, §8.2, §8.4): COBS, header, CRC, one pack/unpack per message | host | **done** (package 1, D-76): `proto.c`, tests `t_cobs`, `t_proto_msgs` |
+| `tlm` (§7.25): `TELEM_FAST` 10 Hz, `TELEM_SLOW` 1 Hz, per-port event queues (D-34), capture buffer 48 KB with sets 0–3, `CAPTURE`/`CAP_GET` (D-33) | mixed | **pure part done** (package 2, D-76): `tlm.h`, `tlm_pure.c` (payload assembly, event queues with port mask, radio-window planner), test `t_tlm`. Sending and capture: packages 5, 6 |
 | Port modes `TEXT`/`BINARY` (§8.1, REQ-COM-06), `BIN`, `MODE_TEXT`, `#TEXT` escape (REQ-PRO-02), `HELLO` | vehicle | not started; both ports run the text console |
 | USART1 RX by DMA circular + IDLE line, TX by DMA (REQ-COM-02/04) | vehicle | USART1 runs by interrupt at 19200 Bd (D-51); DMA streams are in the `.ioc` but unused |
 | Radio timing, vehicle as master (§8.3, REQ-PRO-04): 100 ms period, 55 ms vehicle window, one uplink frame | vehicle | not started |
-| Ground station (logging, link map, `CAP_GET` download) | host, Python | **no spec yet**: the firmware spec defines only the wire protocol (§1.3, §8) |
+| Ground station (logging, link map, `CAP_GET` download) | host, Python | **minimal logger done** (package 3, D-76): `tools/gs_log.py` (serial or file, CSV per message, loss from `seq` with reset detection, exit 3 at ≥ 1 % loss, `PING`/`PARAM_GET` with the §8.3 uplink rule). Not run against a real port yet (needs pyserial). No GUI, no link map by distance yet |
 | Radio hardware | vehicle | both HC-12 at 19200 Bd, CH001, P8, vehicle module on 5 V (D-51, D-71); text console over the radio tested |
 | H11 | vehicle | not started |
 

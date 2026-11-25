@@ -9,6 +9,7 @@ Phase 0 is closed (tag `phase0`; H2 scope check, EN at boot and the runaway EN c
 Phase 1 is closed for now (2026-11-20): feedforward and odometry defaults are compiled; H6 failed on caster slip (spec D-55), UMBmark and H6 are repeated after the caster service (`docs/PHASE1_CALIBRATION.md` Status).
 Phase 2 (IMU LSM6DS3 and EKF) is in commissioning on branch `phase2-imu-ekf` (code 2026-11-18, spec D-57 to D-65; commissioning fixes D-66 to D-69), started before H6 (spec D-56). EKF and IWDG run in every build (D-64). First power-up checklist and open items in `docs/PHASE2_IMU_EKF.md`.
 Phase 3 (ToF sensors, guidance): sensor set reduced, spec D-70 (F1, F2, S2 tilted right, optional L1 on top; no G1–G4, no S1), open points OQ-12. Host code `gnd` (S2 only), `fwd` with `t_gnd`, `t_fwd`; `vl.c` waits for the ST ULD; `map`, `nav`, `msn` not started. Wiring and status in `docs/PHASE3_SENSORS.md`.
+Phase 4 (telemetry) on branch `phase4-telemetry`: packages 1–3 done on the host (`proto`, `tlm` pure part in `tlm_pure.c`, `tools/gs_log.py`, D-76); vehicle packages 4–7 and H11 open (`docs/PHASE4_TELEMETRY.md`).
 Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle track stays gated.
 
 ## Sources of truth
@@ -21,7 +22,7 @@ Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle tra
 - `float` only: every literal has an `f` suffix, use `sinf`/`fabsf`/…, no `double`. `-Wdouble-promotion` stays clean. Never use `-ffast-math`. No `%f` in printf.
 - SI units internally (m, s, rad, V, duty in [−1, 1]). Legacy units (mm, %, ms) exist only in `console.c`.
 - Nothing blocks after `app_init()`: no `HAL_Delay`, no HAL call with a timeout, no blocking UART. Use `_IT`/`_DMA` variants. ISRs only snapshot and set flags; no float math in ISRs.
-- Pure modules (`prof whl drv att gnd lat fwd ekf map nav evd msn proto par`) must not include HAL or `main.h`. They must build on the host.
+- Pure modules (`prof whl drv att gnd lat fwd ekf map nav evd msn proto par`, `tlm_pure.c`) must not include HAL or `main.h`. They must build on the host.
 - `mot_apply()` is the only writer of TIM1 CCR1–4. Write the inactive channel before the active one.
 - Fault handlers and `Error_Handler` call `sys_fault_hard_stop()` first.
 - Tunables live in `par_table.h` (X-macro). Parameter IDs are never reused.
