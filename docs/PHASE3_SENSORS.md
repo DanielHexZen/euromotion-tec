@@ -9,7 +9,7 @@ Gate for `FIRMWARE_SPEC.md` §15 phase 3: H9, H9b, H10, SIL on `rect10`, `t_gnd`
 | Sensor set | decided, spec D-70: F1, F2, S2, optional L1; G1–G4 and S1 not fitted |
 | CubeMX | done since `f126577`: I2C1/I2C2 400 kHz IT, all XSHUT outputs low, EXTI PA15/PA12. No regeneration needed for D-70 |
 | Host code | `gnd` (S2), `fwd`; `map` with `course_rect10` (hand table), `nav` (follow, final, turn), `msn` (modes, AUTO without evasion, RECOVER, start conditions), `drv` VEL mode, `prof_plan_v0` (D-75). Tests `t_gnd`, `t_fwd`, `t_map`, `t_nav_line/final/turn`, `t_msn`, `t_drv_vel`; `t_nav_turn` asserts 0.35° instead of 0.2° (D-75 item 9). Not wired into the app |
-| Vehicle code | `vl.c` complete for D-70 (D-73): init with the ST ULD v3.5.5 (XSHUT sequence, address, short mode, TB 20 ms, ROI, start ranging, F2 10 ms after F1); run time polled, interrupt-driven I2C2 state machine (ready → 17-byte result → clear), REQ-VL-03 timestamps, bus recovery (REQ-VL-04). S2 feeds `gnd`; console `VL` shows range, status, signal, ambient, age and the S2 class. `fwd` is not fed yet. Not run on the vehicle |
+| Vehicle code | `vl.c` complete for D-70 (D-73): init with the ST ULD v3.5.5 (XSHUT sequence, address, short mode, TB 20 ms, ROI, start ranging, F2 10 ms after F1); run time polled, interrupt-driven I2C2 state machine (ready → 17-byte result → clear), REQ-VL-03 timestamps, bus recovery (REQ-VL-04). S2 feeds `gnd`; console `VL` shows range, status, signal, ambient, age and the S2 class; `VLS` stream and `LATCAL` (D-79). `fwd` is not fed yet. Not run on the vehicle |
 | Not started | app integration of `msn`/`nav`/`fwd` (vehicle track), `lat` (phase 5), SIL (`test/sim_vehicle.c`), `course_gen.py`; interlock replacement (OQ-12) |
 | Wiring | F1, F2, S2 connected (team, 2026-11-24) |
 
@@ -61,5 +61,11 @@ All modules share the bus. Breakout type `[VERIFY]`: most VL53L1X boards have `V
    ```
    `absent` on a connected sensor: its XSHUT wire or the sensor's supply; it never booted or did not answer at 0x29. `FAIL 3` (bus) / `FAIL 2` (timeout): SDA/SCL, pull-ups, or a second sensor still answering at 0x29. `FAIL 4` (range): wrong model ID, not a VL53L1X. Swap two XSHUT wires and the names swap: that proves the assignment.
 3. [ ] `VL` at rest: every fitted sensor `st 0`, age < 30 ms, range plausible. Then F1/F2 against a box at 0.3, 0.5, 1.0 m; ranges within ±2 cm.
-4. [ ] S2 on the wedge on flat floor: `LATCAL` gives `θ_meas` within 1° of `lat_tilt` (REQ-VL-10).
-5. [ ] Then H9b (tilt test), H9 (S2 outdoors), H10 (reflex).
+4. [ ] S2 on its 15° bracket (D-79): measure the optical centre height above the floor → `P671=<m>`; on flat floor `LATCAL` gives `tilt` within 1° of `lat_tilt` (REQ-VL-10). Expected flat slant range `lat_h / sin 15°` (270 mm at 7 cm).
+5. [ ] **H9b** (D-79), console log on USB (`screen -L -Logfile tools/data/<date>/h9b.log …`), vehicle standing:
+   - `VLS flat` on bare flat path, wait ≥ 20 s (1000 results at 50 Hz), `VLS` → flat-path check ±5 %.
+   - Edge at D = 15, 20, 25, 30, 40 cm from the sensor (measured horizontally): `VLS d15` … `VLS` per distance and per edge type (path/grass, edging, kerb); label e.g. `grass_d20`, `edge_d25`.
+   - The same flat and one edge run on a ±2° roll wedge (`VLS roll+2`, `VLS roll-2`): z changes < 1 cm with roll compensation.
+   - A post and a wall inside the footprint (`VLS post`, `VLS wall`); one flat run with F1/F2 aimed at a near wall (crosstalk).
+   - Evaluate: `python3 tools/vls_eval.py tools/data/<date>/h9b.log --h <lat_h> --tilt-deg 15 --expect grass_d20=GRASS --expect edge_d25=EDGE_UP …` (95 % between `D_near` 16.9 and `D_far` 53.2 cm).
+6. [ ] H9 (S2 outdoors, noon and afternoon, `--min-correct 99`), H10 (reflex, needs the `fwd` hook, not wired yet).

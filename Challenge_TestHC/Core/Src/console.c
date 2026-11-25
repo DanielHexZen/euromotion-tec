@@ -64,6 +64,7 @@ static const char *const HELP[] = {
     "PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params",
     "F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump",
     "S status, I info, IMU, IMUS stream, EKF, VL, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
+    "VLS [label] S2 stream, LATCAL S2 tilt check",
 };
 
 /* Every IMU / EKF number is formatted here, in legacy units (mm, deg, deg/s). */
@@ -265,6 +266,14 @@ static bool parse(com_port_t p, const char *s, con_cmd_t *c)
     if (kw(s, "IMU", &r) && at_end(r))    { c->type = CMD_IMU; return true; }
     if (kw(s, "EKF", &r) && at_end(r))    { c->type = CMD_EKF; return true; }
     if (kw(s, "VL", &r) && at_end(r))     { c->type = CMD_VL; return true; }
+    if (kw(s, "LATCAL", &r) && at_end(r)) { c->type = CMD_LATCAL; return true; }
+    if (kw(s, "VLS", &r)) {
+        r = sp(r);
+        const size_t n = strlen(r);
+        if (n >= sizeof c->txt || strchr(r, ' ') != NULL) { err_syntax(p, "VLS [label, max 16 chars]"); return false; }
+        memcpy(c->txt, r, n + 1U);
+        c->type = CMD_VLS; return true;
+    }
     if (kw(s, "CLEAR", &r) && at_end(r))  { c->type = CMD_CLEAR; return true; }
     if (kw(s, "STOP", &r) && at_end(r))   { c->type = CMD_STOP; return true; }
     if (kw(s, "RUN", &r) && at_end(r))    { c->type = CMD_UNAVAILABLE; return true; }
@@ -401,6 +410,24 @@ void con_print_param(com_port_t p, const par_desc_t *d, float v)
     char num[20];
     (void)fmt_sci(num, sizeof num, v);
     con_printf(p, "P%u %s=%s %s\r\n", (unsigned)d->id, d->name, num, d->unit);
+}
+
+void con_print_vls(com_port_t p, uint32_t t_us, uint16_t seq, float range_m, uint8_t status, float signal_kcps,
+                   float ambient_kcps, float h_m, const char *cls)
+{
+    con_printf(p, "VLS %lu %u %ld %u %ld %ld %ld %s\r\n", (unsigned long)t_us, (unsigned)seq, lroundf(range_m * 1000.0f),
+               (unsigned)status, lroundf(signal_kcps), lroundf(ambient_kcps), lroundf(h_m * 10000.0f), cls);
+}
+
+void con_print_latcal(com_port_t p, float r_med_m, uint32_t n, float theta_meas_rad, float lat_tilt_rad, float roll_rad)
+{
+    if (n == 0U || !isfinite(theta_meas_rad)) { con_printf(p, "LATCAL S2: no valid sample (n %lu)\r\n", (unsigned long)n); return; }
+    char r[12], a[12], b[12], c[12];
+    (void)fmt_fixed(r, sizeof r, r_med_m * 1000.0f, 1);
+    (void)fmt_fixed(a, sizeof a, theta_meas_rad * RAD2DEG_F, 2);
+    (void)fmt_fixed(b, sizeof b, lat_tilt_rad * RAD2DEG_F, 2);
+    (void)fmt_fixed(c, sizeof c, roll_rad * RAD2DEG_F, 2);
+    con_printf(p, "LATCAL S2 r %s mm n %lu tilt %s deg (lat_tilt %s, roll %s)\r\n", r, (unsigned long)n, a, b, c);
 }
 
 void con_print_imus(com_port_t p, uint32_t t_us, uint32_t n_total, const float w_radps[3], float temp_c)

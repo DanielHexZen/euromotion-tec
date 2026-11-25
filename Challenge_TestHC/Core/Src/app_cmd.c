@@ -190,6 +190,28 @@ void app_cmd_exec(const con_cmd_t *c)
     case CMD_IMU:       con_job(p, CON_JOB_IMU); break;
     case CMD_EKF:       con_job(p, CON_JOB_EKF); break;
     case CMD_VL:        con_job(p, CON_JOB_VL); break;
+    case CMD_VLS:
+#if FEAT_VL
+        if (p != COM_USB) { con_err_state(p, "USB only"); break; }
+        g_app.vls = !g_app.vls;
+        con_printf(p, g_app.vls ? "VLS ON %s\r\n" : "VLS OFF %s\r\n", c->txt);
+#else
+        con_err_state(p, "no VL");
+#endif
+        break;
+    case CMD_LATCAL:
+#if FEAT_VL
+        if (moving) { con_err_state(p, "moving"); break; }
+        if (vl_state(VL_S2) != ST_OK) { con_err_state(p, "S2 absent"); break; }
+        g_app.latcal.on = true;
+        g_app.latcal.port = p;
+        g_app.latcal.n = 0U;
+        g_app.latcal.t0_us = sys_time_us();
+        con_printf(p, "LATCAL S2: 1 s at standstill on flat ground\r\n");
+#else
+        con_err_state(p, "no VL");
+#endif
+        break;
     case CMD_IMUS:
 #if FEAT_IMU
         if (p != COM_USB) { con_err_state(p, "USB only"); break; }   /* 2 kB/s: too much for the radio */

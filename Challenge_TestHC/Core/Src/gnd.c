@@ -106,3 +106,15 @@ bool gnd_pop_edge_event(gnd_t *g, gnd_edge_ev_t *ev)
     g->ev_tail++;
     return true;
 }
+
+float gnd_median(float *v, uint8_t n)
+{
+    if (n == 0U) { return NAN; }
+    for (uint8_t i = 1U; i < n; i++) {                 /* insertion sort: n <= 64 */
+        const float x = v[i];
+        uint8_t j = i;
+        while (j > 0U && v[j - 1U] > x) { v[j] = v[j - 1U]; j--; }
+        v[j] = x;
+    }
+    return ((n & 1U) != 0U) ? v[n / 2U] : 0.5f * (v[n / 2U - 1U] + v[n / 2U]);
+}

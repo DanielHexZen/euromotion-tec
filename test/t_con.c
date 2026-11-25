@@ -102,6 +102,18 @@ void t_con(void)
     c = line("IMU");     CHECK(c.type == CMD_IMU);
     c = line("EKF");     CHECK(c.type == CMD_EKF);
     c = line("VL");      CHECK(c.type == CMD_VL);
+    c = line("LATCAL");  CHECK(c.type == CMD_LATCAL);
+    c = line("VLS");     CHECK(c.type == CMD_VLS && c.txt[0] == '\0');
+    c = line("VLS d15"); CHECK(c.type == CMD_VLS && strcmp(c.txt, "d15") == 0);
+    c = line("VLS a b"); CHECK(c.type == CMD_NONE);
+    c = line("VLS 12345678901234567"); CHECK(c.type == CMD_NONE);
+    clear_out();
+    con_print_vls(COM_USB, 123456U, 7U, 0.2704f, 0U, 1234.4f, 56.0f, 0.06998f, "PATH");
+    CHECK(says("VLS 123456 7 270 0 1234 56 700 PATH"));
+    con_print_latcal(COM_USB, 0.2705f, 50U, 15.05f * DEG2RAD_F, 0.262f, -0.2f * DEG2RAD_F);
+    CHECK(says("LATCAL S2 r 270.5 mm n 50 tilt 15.05 deg (lat_tilt 15.01, roll -0.20)"));
+    con_print_latcal(COM_USB, NAN, 0U, NAN, 0.262f, 0.0f);
+    CHECK(says("LATCAL S2: no valid sample (n 0)"));
     g_vl[0] = (con_vl_t){ .name = "G1", .cls = "", .state = (int)ST_NODEV };
     g_vl[1] = (con_vl_t){ .name = "S2", .cls = "PATH", .state = 0, .range_m = 0.2154f, .signal_kcps = 1234.0f,
                           .ambient_kcps = 56.0f, .age_s = 0.012f, .status = 0U, .seen = true };

@@ -32,6 +32,14 @@ typedef struct {
     gnd_t       gnd;             /* S2 ground class (D-70); fed in S_FAST, display only until msn */
     uint16_t    vl_seq[VL_N];    /* last result consumed per sensor                                */
     bool        imus;            /* IMUS stream on USB, one line per S_CTRL (H7, D-74)            */
+    bool        vls;             /* VLS stream on USB, one line per S2 result (H9b/H9, D-79)      */
+    struct {                     /* LATCAL (REQ-VL-10): S2 slant ranges over 1 s                  */
+        bool       on;
+        com_port_t port;
+        uint32_t   t0_us;
+        uint8_t    n;
+        float      r[64];
+    } latcal;
 } app_state_t;
 
 extern app_state_t g_app;

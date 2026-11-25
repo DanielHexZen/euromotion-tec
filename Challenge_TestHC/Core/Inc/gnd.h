@@ -38,5 +38,7 @@ gnd_class_t gnd_class(const gnd_t *g, uint8_t id);
 gnd_side_t gnd_side(const gnd_t *g, uint8_t side);
 bool gnd_interlock(const gnd_t *g);                    /* any side TOO_CLOSE             */
 bool gnd_pop_edge_event(gnd_t *g, gnd_edge_ev_t *ev);
+/* Median of v[0..n-1] (sorts v in place); NAN for n = 0. LATCAL (REQ-VL-10). */
+float gnd_median(float *v, uint8_t n);
 
 #endif

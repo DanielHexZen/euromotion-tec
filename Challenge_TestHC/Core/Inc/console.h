@@ -23,7 +23,9 @@ typedef enum {
     CMD_UNAVAILABLE, /* valid syntax, not in this build (MANUAL, AUTO, RUN, M)       */
     CMD_CLEAR, CMD_PSET, CMD_PGET, CMD_DUMP, CMD_STATUS, CMD_INFO, CMD_EVLOG, CMD_FAULTS,
     CMD_FAULTINJ,    /* f[0] = fault code (Debug builds only)                        */
-    CMD_IMU, CMD_IMUS, CMD_EKF, CMD_VL
+    CMD_IMU, CMD_IMUS, CMD_EKF, CMD_VL,
+    CMD_VLS,         /* txt = optional run label                                    */
+    CMD_LATCAL
 } con_cmd_type_t;
 
 typedef struct {
@@ -32,6 +34,7 @@ typedef struct {
     uint8_t        which;
     float          f[2];
     const par_desc_t *par;      /* CMD_PSET / CMD_PGET */
+    char           txt[17];     /* CMD_VLS label                                    */
 } con_cmd_t;
 
 typedef struct {
@@ -94,5 +97,10 @@ void con_print_param(com_port_t p, const par_desc_t *d, float v);
 void con_print_turn(com_port_t p, float achieved_rad, float target_rad);   /* W with gyro check */
 /* IMUS stream line (H7, D-74): "IMUS <t_us> <n> <wx> <wy> <wz> <T>", rates in mdps, T in 0.01 C. */
 void con_print_imus(com_port_t p, uint32_t t_us, uint32_t n_total, const float w_radps[3], float temp_c);
+/* VLS stream line (H9b/H9, D-79): "VLS <t_us> <seq> <range mm> <status> <signal> <ambient> <h 0.1 mm> <class>". */
+void con_print_vls(com_port_t p, uint32_t t_us, uint16_t seq, float range_m, uint8_t status, float signal_kcps,
+                   float ambient_kcps, float h_m, const char *cls);
+/* LATCAL result (REQ-VL-10): median slant range, sample count, measured and set depression angle, roll. */
+void con_print_latcal(com_port_t p, float r_med_m, uint32_t n, float theta_meas_rad, float lat_tilt_rad, float roll_rad);
 
 #endif

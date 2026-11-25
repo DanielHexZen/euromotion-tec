@@ -106,7 +106,7 @@
     X(634, fwd_margin,       0.15f,     "m",       0.05f,   0.5f,   PAR_L) \
     X(635, fwd_slow_range,   1.0f,      "m",       0.3f,    2.0f,   PAR_L) \
     X(636, fwd_v_slow,       0.25f,     "m/s",     0.05f,   0.45f,  PAR_L) \
-    X(670, lat_tilt,         0.332f,    "rad",     0.0f,    0.7f,   PAR_S) \
+    X(670, lat_tilt,         0.262f,    "rad",     0.0f,    0.7f,   PAR_S) \
     X(671, lat_h,            0.07f,     "m",       0.03f,   0.4f,   PAR_S) \
     /* 10.5 guidance and mission (evd and the unread msn IDs join with phase 6) */ \
     X(700, nav_wn,           1.5f,      "rad/s",   0.3f,    3.0f,   PAR_L) \

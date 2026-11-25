@@ -184,6 +184,29 @@ void app_init(const app_hw_t *hw)
 }
 
 /* ---- slots ---------------------------------------------------------------------------- */
+#if FEAT_VL
+/* VLS stream and LATCAL on every new S2 result (D-79, REQ-VL-10). */
+static void vl_s2_tools(const vl_meas_t *m)
+{
+    static const char *const CLS[] = { "UNKNOWN", "PATH", "GRASS", "EDGE_UP", "DROP" };
+    const par_t *q = par();
+    const float roll = att_roll(&g_app.att);
+    if (g_app.vls) {
+        con_print_vls(COM_USB, m->t_us, m->seq, m->range_m, m->status, m->signal_kcps, m->ambient_kcps,
+                      m->range_m * sinf(q->lat_tilt + roll), CLS[gnd_class(&g_app.gnd, VL_S2)]);
+    }
+    if (!g_app.latcal.on) { return; }
+    if (m->status == VL_ST_VALID && g_app.latcal.n < 64U) { g_app.latcal.r[g_app.latcal.n++] = m->range_m; }
+    if ((uint32_t)(sys_time_us() - g_app.latcal.t0_us) >= 1000000U) {   /* not m->t_us: it lies before the start */
+        const uint8_t n = g_app.latcal.n;
+        const float r = gnd_median(g_app.latcal.r, n);
+        const float x = q->lat_h / r;
+        con_print_latcal(g_app.latcal.port, r, n, (x > 0.0f && x <= 1.0f) ? asinf(x) : NAN, q->lat_tilt, roll);
+        g_app.latcal.on = false;
+    }
+}
+#endif
+
 static void app_fast(void)
 {
     enc_update();
@@ -197,6 +220,7 @@ static void app_fast(void)
     if (m->seq != g_app.vl_seq[VL_S2]) {                 /* REQ-LAT-07 via gnd (D-70) */
         g_app.vl_seq[VL_S2] = m->seq;
         gnd_on_meas(&g_app.gnd, VL_S2, m, att_roll(&g_app.att), att_pitch(&g_app.att));
+        vl_s2_tools(m);
     }
 #endif
     bat_service();

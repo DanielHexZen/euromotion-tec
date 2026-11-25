@@ -100,4 +100,13 @@ void t_gnd(void)
     vl_meas_t other = s2(h0 + 0.1f, VL_ST_VALID, t);
     gnd_on_meas(&g, VL_F1, &other, 0.0f, 0.0f);               /* other sensors are ignored */
     CHECK(gnd_class(&g, VL_S2) == GND_CL_EDGE_UP);
+
+    REQ("REQ-VL-10: LATCAL median (odd, even, empty)");
+    {
+        float a[5] = { 0.30f, 0.27f, 0.90f, 0.26f, 0.28f };
+        CHECK_NEAR(gnd_median(a, 5U), 0.28f, 1e-6);
+        float b[4] = { 4.0f, 1.0f, 3.0f, 2.0f };
+        CHECK_NEAR(gnd_median(b, 4U), 2.5f, 1e-6);
+        CHECK(isnan(gnd_median(b, 0U)));
+    }
 }
