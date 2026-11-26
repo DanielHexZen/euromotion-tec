@@ -23,7 +23,9 @@ typedef enum {
     CMD_UNAVAILABLE, /* valid syntax, not in this build (MANUAL, AUTO, RUN, M)       */
     CMD_CLEAR, CMD_PSET, CMD_PGET, CMD_DUMP, CMD_STATUS, CMD_INFO, CMD_EVLOG, CMD_FAULTS,
     CMD_FAULTINJ,    /* f[0] = fault code (Debug builds only)                        */
-    CMD_IMU, CMD_IMUS, CMD_EKF
+    CMD_IMU, CMD_IMUS, CMD_EKF,
+    CMD_BIN,         /* switch this port to BINARY (§8.1)                            */
+    CMD_CAP          /* which = set, f[0] = decim, f[1] = duration [s] (0 = until full) */
 } con_cmd_type_t;
 
 typedef struct {
@@ -69,6 +71,7 @@ uint32_t con_last_rx_ms(com_port_t p);                  /* REQ-CON-03 dead-man *
 bool     con_autoprint_toggle(com_port_t p);            /* returns the new state */
 bool     con_autoprint(com_port_t p);
 
+/* Dropped on a port in BINARY mode: text between frames would corrupt the next one. */
 void con_printf(com_port_t p, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 void con_job(com_port_t p, con_job_t j);
 /* Line i of the `I` report, -1 past the end. Defined by the application (app_cmd.c), which owns the data. */

@@ -40,6 +40,8 @@ uint16_t    sys_fault_first(void);             /* first latched fault since CLEA
 uint32_t    sys_fault_mask(void);              /* bit n = fault code n latched         */
 void        sys_event(event_t ev, int32_t arg);
 uint32_t    sys_event_count(void);             /* entries held, <= SYS_EVENT_LOG_N     */
+uint32_t    sys_event_total(void);             /* events ever logged (tlm reads the new ones) */
+bool        sys_event_nth(uint32_t k, sys_event_rec_t *out);  /* k-th event ever; false if overwritten or not yet logged */
 bool        sys_event_at(uint32_t i, sys_event_rec_t *out);   /* i = 0 oldest */
 /* Register-level: EN low, CCR1..4 = 0. Safe from any ISR and fault handler (REQ-FLT-01). */
 void        sys_fault_hard_stop(void);

@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "proto.h"
+#include "units.h"
 
 /* ---- TELEM_FAST / TELEM_SLOW assembly (§8.4) ------------------------------------- */
 /* Flag bits of TELEM_FAST.flags. */
@@ -101,5 +102,84 @@ void tlm_plan(const tlm_cfg_t *c, tlm_reply_t reply, uint32_t period_no, uint8_t
               tlm_plan_t *p);
 /* CAP_DATA is never sent on the radio (D-33). */
 bool tlm_cap_data_allowed(unsigned port);
+
+/* ---- duplicate suppression (REQ-PRO-05) ------------------------------------------ */
+typedef struct { uint8_t type, seq; uint32_t t_ms; bool valid; } tlm_dup_t;
+/* True if type and seq equal the last command of this port and it came < 1 s ago (acknowledge
+ * again, do not execute). Otherwise records the command and returns false. */
+bool tlm_dup_check(tlm_dup_t *d, uint8_t type, uint8_t seq, uint32_t now_ms);
+
+/* ---- capture (REQ-TLM-01, REQ-TLM-02, D-33, D-80) -------------------------------- */
+typedef struct {
+    uint8_t *buf;
+    uint32_t bytes;            /* buffer size                                       */
+    uint8_t  set, decim;
+    uint16_t size;             /* record size of `set`                              */
+    uint32_t n, n_max;         /* records held, records that fit                    */
+    uint32_t skip;             /* slot calls since the last record                  */
+    uint32_t t_end_ms;
+    bool     run, timed;
+} tlm_cap_t;
+
+void tlm_cap_init(tlm_cap_t *c, uint8_t *buf, uint32_t bytes);
+/* Starts a new recording (the old one is discarded). ST_RANGE for an unknown set or decim 0.
+ * duration_ds in 0.1 s; 0 = until the buffer is full. */
+st_t tlm_cap_start(tlm_cap_t *c, uint8_t set, uint8_t decim, uint16_t duration_ds, uint32_t now_ms);
+/* Called once per slot of `set` (S_CTRL for sets 0-2, per result for set 3). True when a record
+ * is to be stored now: the recording runs, the set matches, the duration has not passed and
+ * this is every decim-th call. Ends the recording when the duration has passed. */
+bool tlm_cap_want(tlm_cap_t *c, uint8_t set, uint32_t now_ms);
+void tlm_cap_put(tlm_cap_t *c, const uint8_t *rec);     /* stops when full   */
+void tlm_cap_stop(tlm_cap_t *c);                        /* FAULT, new start  */
+const uint8_t *tlm_cap_rec(const tlm_cap_t *c, uint32_t i);
+/* CAP_GET(from, count) with n records held: first = min(from, n), *cnt = min(count, n - first). */
+void tlm_cap_range(uint32_t n, uint16_t from, uint16_t count, uint32_t *first, uint32_t *cnt);
+
+/* Record sets 0 and 1 (§7.25), SI in, little-endian packed out (24 bytes). Sets 2 (NAV) and 3
+ * (VL) follow with phase 3 (D-80). */
+enum { TLM_SET_WHEEL = 0, TLM_SET_EST = 1, TLM_SET_NAV = 2, TLM_SET_VL = 3 };
+typedef struct {
+    uint32_t t_us;
+    float    v_ref[2], v[2], e_x[2], duty[2], integ[2];   /* L, R: m/s, m/s, m, 1, 1 */
+} tlm_rec_wheel_t;
+typedef struct {
+    uint32_t t_us;
+    float    x, y, th, bg, ds[2], dpsi;                    /* m, m, rad, rad/s, m, rad */
+    uint8_t  flags;                                        /* EKF_* flags              */
+} tlm_rec_est_t;
+size_t tlm_rec_wheel_pack(const tlm_rec_wheel_t *r, uint8_t *out);
+size_t tlm_rec_est_pack(const tlm_rec_est_t *r, uint8_t *out);
+
+/* ==== vehicle part (tlm.c, not built on the host) ===================================
+ * Ports are TLM_PORT_USB / TLM_PORT_RADIO (= com_port_t). Main loop only, except where noted. */
+#define TLM_CAP_BYTES (48U * 1024U)           /* REQ-TLM-01 */
+
+/* After par_init and com_uart_init, before any text: the radio starts in com1_mode (§8.1). */
+void tlm_init(uint32_t radio_baud);
+/* HELLO contents (built by app at boot); sent at once on USB, as the first radio reply. */
+void tlm_set_hello(const proto_hello_t *h);
+void tlm_rx_byte(unsigned port, uint8_t b);   /* com_uart_poll, BINARY ports only */
+/* S_FAST: received frames -> tlm_exec, #TEXT, event queues, CAP_DATA stream, and every
+ * tlm_period_ms the telemetry (radio inside the §8.3 window). */
+void tlm_poll(void);
+/* Port to BINARY (console BIN): HELLO follows. */
+void tlm_bin(unsigned port);
+/* Replies to the command f received on port: on USB sent at once, on the radio at the start of
+ * the next period (§8.3). The last reply is repeated for a duplicate (REQ-PRO-05). */
+void tlm_ack(unsigned port, const proto_frame_t *f, st_t result);
+void tlm_param_val(unsigned port, uint16_t id, float value, st_t result);
+void tlm_ack_hello(unsigned port, const proto_frame_t *f);           /* PING */
+void tlm_mode_text(unsigned port, const proto_frame_t *f);           /* ACK, then TEXT */
+/* CAP_GET on USB: ACK, CAP_DATA stream, end frame (REQ-TLM-02). The caller checks port and mode. */
+void tlm_cap_get(unsigned port, const proto_frame_t *f, uint16_t from, uint16_t count);
+void tlm_vid_changed(void);                   /* after PARAM_SET of com_vid (D-76 item 1) */
+/* CAPTURE: ends a running CAP_DATA stream, then tlm_cap_start (REQ-TLM-01). */
+st_t tlm_capture_start(uint8_t set, uint8_t decim, uint16_t duration_ds);
+tlm_cap_t *tlm_capture(void);                 /* app_ctrl: tlm_cap_want / tlm_cap_put */
+
+/* Defined by the application (app_cmd.c), which owns the data (REQ-APP-01). */
+void tlm_exec(unsigned port, const proto_frame_t *f);   /* one received command, not a duplicate */
+void tlm_fill_fast(tlm_fast_in_t *in);       /* tlm adds TLM_F_CAPTURE                     */
+void tlm_fill_slow(tlm_slow_in_t *in);       /* tlm fills rx_err and ev_drop               */
 
 #endif

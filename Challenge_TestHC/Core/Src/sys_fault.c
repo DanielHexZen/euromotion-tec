@@ -47,6 +47,16 @@ static void log_event(uint16_t code, int32_t arg)
 }
 
 void sys_event(event_t ev, int32_t arg) { log_event((uint16_t)ev, arg); }
+uint32_t sys_event_total(void) { return s_log_n; }
+
+bool sys_event_nth(uint32_t k, sys_event_rec_t *out)
+{
+    const uint32_t pm = sys_irq_save();
+    const bool ok = k < s_log_n && s_log_n - k <= SYS_EVENT_LOG_N;
+    if (ok) { *out = s_log[k % SYS_EVENT_LOG_N]; }
+    sys_irq_restore(pm);
+    return ok;
+}
 
 void sys_fault_raise_as(fault_t code, int32_t arg, reaction_t reaction)
 {

@@ -10,13 +10,19 @@ OBJ     := $(addprefix $(SRC)/,$(addsuffix .c,$(PURE))) sim_plant.c test_main.c 
            t_att.c t_cobs.c t_proto_msgs.c t_tlm.c t_ekf_static.c t_ekf_slip.c t_ekf_gate.c t_ekf_sf_q.c t_ekf_jacobians.c \
            t_ekf_backshift.c t_ekf_line.c t_ekf_pred.c t_imu_yaw.c t_gnd.c t_fwd.c
 
-test: t_all
+LINK    := $(addprefix $(SRC)/,tlm.c tlm_pure.c proto.c par.c fmt.c) t_tlm_link.c
+
+test: t_all t_link
 	./t_all
+	./t_link
 
 t_all: $(OBJ) $(wildcard $(CORE)/Inc/*.h) $(wildcard *.h)
 	$(CC) $(CFLAGS) $(OBJ) -lm -o $@
 
+t_link: $(LINK) $(wildcard $(CORE)/Inc/*.h) $(wildcard *.h)
+	$(CC) $(CFLAGS) $(LINK) -lm -o $@
+
 clean:
-	rm -rf t_all t_all.dSYM
+	rm -rf t_all t_all.dSYM t_link t_link.dSYM
 
 .PHONY: test clean

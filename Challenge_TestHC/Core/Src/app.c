@@ -3,6 +3,8 @@
 #include "app.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "app_config.h"
 #include "app_priv.h"
@@ -17,6 +19,7 @@
 #include "sys_irq.h"
 #include "sys_sched.h"
 #include "sys_time.h"
+#include "tlm.h"
 
 #if __has_include("build_info.h")
 #include "build_info.h"
@@ -25,7 +28,6 @@
 #define BUILD_GIT "nogit"
 #endif
 
-#define APP_VERSION        "0.1-phase0"
 #define CLOCK_CHECK_MS     100U
 #define CLOCK_CHECK_TOL_US 100U      /* §5.8 step 6 */
 #define FAULT_STOP_MAX_MS  1500U     /* give the drive this long to reach rest before EN goes low */
@@ -38,11 +40,33 @@
                                                   * drv_pos_tol 2 mm on half the wheelbase = 1.05 deg (D-68) */
 #define TURN_FIX_MAX       2U                   /* W: correction turns after the encoder turn  [DECIDE] */
 #define TURN_FIX_T_ACC_S   0.3f                 /* W: ramp of a correction turn; the main turn uses drv_t_acc (D-68) */
+#define STACK_PAINT        0xC5C5C5C5UL
+#define STACK_MARGIN_W     32U                  /* words below the SP at paint time left alone */
 
 app_state_t g_app;
 
 static uint32_t s_slow_t_us, s_slow_ticks, s_slow_overrun;
 static bool     s_slow_primed;
+
+/* Stack high-water mark for TELEM_SLOW (§8.4 stack_free): the free RAM between the heap reserve
+ * and the stack is painted at boot; S_SLOW counts the words still untouched from the bottom. */
+extern uint8_t _end[];               /* linker: end of .bss, the heap starts here */
+extern uint8_t _Min_Heap_Size[];     /* linker: its address is the heap reserve   */
+static uint32_t *s_stack_lo, *s_stack_hi;
+
+static void stack_paint(void)
+{
+    s_stack_lo = (uint32_t *)(void *)(_end + (uintptr_t)_Min_Heap_Size);   /* _end is 8-aligned */
+    s_stack_hi = (uint32_t *)__get_MSP() - STACK_MARGIN_W;
+    for (uint32_t *w = s_stack_lo; w < s_stack_hi; w++) { *w = STACK_PAINT; }
+}
+
+static uint32_t stack_free_bytes(void)
+{
+    const uint32_t *w = s_stack_lo;
+    while (w < s_stack_hi && *w == STACK_PAINT) { w++; }
+    return (uint32_t)(w - s_stack_lo) * 4U;
+}
 
 const char *app_mode_name(void)
 {
@@ -66,6 +90,7 @@ void app_enter_fault(reaction_t r)
     g_app.mode = APP_FAULT;
     g_app.stopping = false;
     g_app.fault_t0_ms = sys_ms();
+    tlm_cap_stop(tlm_capture());                         /* §7.25: the run-up to the fault is kept */
     if (r >= R4) { drv_disable(&g_app.drv); }
     else if (r == R3) { drv_brake(&g_app.drv); }
     else { drv_stop(&g_app.drv); }
@@ -104,6 +129,16 @@ static void step(uint32_t n, const char *name, st_t s, fault_t on_fail)
     com_flush(100U);
 }
 
+/* BUILD_GIT is "<hash>" or "<hash>-dirty" (tools/gen_build_info.sh). */
+static void hello_frame(uint8_t rc, uint32_t fault_code, uint32_t fault_pc)
+{
+    proto_hello_t h = { .proto_ver = 1U, .fw_major = APP_FW_MAJOR, .fw_minor = APP_FW_MINOR, .reset_cause = rc,
+                        .git_hash = (uint32_t)strtoul(BUILD_GIT, NULL, 16), .dirty = strstr(BUILD_GIT, "-dirty") != NULL,
+                        .features = (uint8_t)((FEAT_IMU ? 1U : 0U) | (1U << 2) | (FEAT_CAPTURE ? (1U << 3) : 0U)),
+                        .last_fault_code = fault_code, .last_fault_pc = fault_pc };
+    tlm_set_hello(&h);                   /* course[] stays empty until map exists (phase 3, D-80) */
+}
+
 static void hello(void)
 {
     const uint8_t rc = sys_reset_cause();
@@ -118,7 +153,9 @@ static void hello(void)
     }
     if ((rc & SYS_RST_IWDG) != 0U) { sys_fault_raise(F_WDG_RESET, 0); con_printf(COM_USB, "reset by watchdog\r\n"); }
     uint32_t code, msp, w[SYS_HARD_WORDS];
-    if (sys_fault_take_hard_record(&code, &msp, w)) {
+    const bool hard = sys_fault_take_hard_record(&code, &msp, w);
+    hello_frame(rc, hard ? code : 0U, hard ? w[6] : 0U);     /* exception frame on MSP: w[6] = stacked PC */
+    if (hard) {
         con_printf(COM_USB, "last hard fault: code 0x%02lX msp 0x%08lX\r\n", (unsigned long)code, (unsigned long)msp);
         for (uint32_t i = 0U; i < SYS_HARD_WORDS; i += 4U) {
             con_printf(COM_USB, "  %08lX %08lX %08lX %08lX\r\n", (unsigned long)w[i], (unsigned long)w[i + 1U],
@@ -142,6 +179,7 @@ static st_t clock_check(void)
 
 void app_init(const app_hw_t *hw)
 {
+    stack_paint();
     drv_init(&g_app.drv);
     att_init(&g_app.att);
     g_app.mode = APP_IDLE;
@@ -152,6 +190,7 @@ void app_init(const app_hw_t *hw)
     const st_t r3 = enc_init(hw->tim3, hw->tim8);
     const st_t r4 = par_init();
     com_uart_init(hw->uart2, hw->uart1);
+    tlm_init(hw->uart1->Init.BaudRate);                  /* radio mode from com1_mode before any text (§8.1) */
     hello();
     step(1, "sys_time", r1, F_CLOCK);
     step(2, "mot", r2, F_CLOCK);
@@ -180,6 +219,7 @@ static void app_fast(void)
 {
     enc_update();
     com_uart_poll();
+    tlm_poll();
 #if FEAT_IMU
     imu_drain(&g_app.att);
 #endif
@@ -216,6 +256,9 @@ static void ekf_step(const enc_reading_t *r)
             g_app.turn_acc_rad += u.dpsi - g_app.ekf.x[3] * u.dt;   /* minus the EKF gyro bias (ZUPT) */
         }
 #endif
+        g_app.ekf_ds[0] = u.ds_l;
+        g_app.ekf_ds[1] = u.ds_r;
+        g_app.ekf_dpsi = u.dpsi;
         const uint32_t c = sys_cycles();
         ekf_predict(&g_app.ekf, &u);
         const uint32_t used = sys_cycles() - c;
@@ -244,6 +287,38 @@ static bool turn_correct(drv_event_t ev, drv_mode_t mode)
     }
     return false;
 }
+
+#if FEAT_CAPTURE
+/* Capture sets 0 and 1 (§7.25), one call per S_CTRL after drv_step. Sets 2 and 3 need nav and vl
+ * (phase 3, D-80). */
+static void capture(uint32_t t_us, const drv_out_t *out)
+{
+    tlm_cap_t *c = tlm_capture();
+    const uint32_t now = sys_ms();
+    uint8_t rec[24];
+    if (tlm_cap_want(c, TLM_SET_WHEEL, now)) {
+        const drv_t *d = &g_app.drv;
+        tlm_rec_wheel_t w = { .t_us = t_us };
+        for (uint32_t i = 0U; i < 2U; i++) {
+            w.v_ref[i] = d->v_ref[i];
+            w.v[i] = d->v_hat[i];
+            w.e_x[i] = d->x_ref[i] - d->x_m[i];
+            w.duty[i] = out->duty_d[i];
+            w.integ[i] = d->whl[i].integ_d;
+        }
+        (void)tlm_rec_wheel_pack(&w, rec);
+        tlm_cap_put(c, rec);
+    }
+    if (tlm_cap_want(c, TLM_SET_EST, now)) {
+        ekf_out_t o;
+        ekf_get(&g_app.ekf, &o);
+        const tlm_rec_est_t e = { .t_us = t_us, .x = o.x[0], .y = o.x[1], .th = o.x[2], .bg = o.x[3],
+                                  .ds = { g_app.ekf_ds[0], g_app.ekf_ds[1] }, .dpsi = g_app.ekf_dpsi, .flags = o.flags };
+        (void)tlm_rec_est_pack(&e, rec);
+        tlm_cap_put(c, rec);
+    }
+}
+#endif
 
 static void app_ctrl(void)
 {
@@ -284,6 +359,11 @@ static void app_ctrl(void)
 
     mot_set(WHL_L, out.duty_d[WHL_L]);
     mot_set(WHL_R, out.duty_d[WHL_R]);
+    g_app.duty[WHL_L] = out.enable ? out.duty_d[WHL_L] : 0.0f;
+    g_app.duty[WHL_R] = out.enable ? out.duty_d[WHL_R] : 0.0f;
+#if FEAT_CAPTURE
+    capture(r.t_us, &out);
+#endif
     if (out.enable) { mot_apply(); mot_enable(true); }             /* duty first, then EN */
     else { mot_enable(false); mot_apply(); }
 #if FEAT_IMU
@@ -334,6 +414,7 @@ static void app_slow(void)
     s_slow_overrun = st.overrun[SLOT_CTRL];
     if (over > 10U) { sys_fault_raise_as(F_OVERRUN, (int32_t)over, R2); }
     else if (over > 0U) { sys_fault_raise(F_OVERRUN, (int32_t)over); }
+    g_app.stack_free = stack_free_bytes();
 }
 
 void app_loop(void)

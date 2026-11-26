@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 
 #include "test.h"
 #include "tlm.h"
@@ -212,4 +213,74 @@ void t_tlm(void)
       proto_telem_slow_t m;
       tlm_slow_build(&s, &m);
       CHECK(m.bat == 0U && m.scale == 32767 && m.sig_x == 65535U && m.imu_t == 0); }
+}
+
+static int16_t rd16(const uint8_t *p) { return (int16_t)(uint16_t)(p[0] | (p[1] << 8)); }
+static uint32_t rd32(const uint8_t *p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
+
+void t_tlm_cap(void)
+{
+    static uint8_t buf[100];       /* 4 records of 24 B, 6 of 16 B */
+    tlm_cap_t c;
+    uint8_t rec[24];
+    tlm_cap_init(&c, buf, sizeof buf);
+
+    REQ("REQ-TLM-01: CAPTURE rejects an unknown set and decim 0; nothing runs before a start");
+    CHECK(!tlm_cap_want(&c, 0U, 0U));
+    CHECK(tlm_cap_start(&c, 4U, 1U, 0U, 0U) == ST_RANGE);
+    CHECK(tlm_cap_start(&c, 0U, 0U, 0U, 0U) == ST_RANGE);
+
+    REQ("REQ-TLM-01: decimation, set match, stop when the buffer is full");
+    CHECK(tlm_cap_start(&c, 0U, 2U, 0U, 0U) == ST_OK && c.n_max == 4U);
+    int stored = 0;
+    for (uint32_t k = 0U; k < 20U; k++) {
+        CHECK(!tlm_cap_want(&c, 1U, k));            /* other set never records */
+        if (tlm_cap_want(&c, 0U, k)) {
+            memset(rec, (int)k, sizeof rec);
+            tlm_cap_put(&c, rec);
+            stored++;
+        }
+    }
+    CHECK(stored == 4 && c.n == 4U && !c.run);
+    CHECK(tlm_cap_rec(&c, 0)[0] == 1U && tlm_cap_rec(&c, 3)[23] == 7U);   /* every 2nd call: k = 1, 3, 5, 7 */
+
+    REQ("REQ-TLM-01: duration in 0.1 s ends the recording; a new start discards the old one; FAULT stops");
+    CHECK(tlm_cap_start(&c, 3U, 1U, 5U, 1000U) == ST_OK && c.n == 0U && c.n_max == 6U);
+    CHECK(tlm_cap_want(&c, 3U, 1499U));
+    CHECK(!tlm_cap_want(&c, 3U, 1500U) && !c.run);
+    CHECK(tlm_cap_start(&c, 1U, 1U, 0U, 0xFFFFFF00U) == ST_OK && tlm_cap_want(&c, 1U, 5U));   /* untimed: no wrap issue */
+    tlm_cap_stop(&c);
+    CHECK(!tlm_cap_want(&c, 1U, 6U));
+
+    REQ("REQ-TLM-02, D-33: CAP_GET range is clipped to the recorded records");
+    uint32_t f, n;
+    tlm_cap_range(10U, 2U, 5U, &f, &n);     CHECK(f == 2U && n == 5U);
+    tlm_cap_range(10U, 8U, 5U, &f, &n);     CHECK(f == 8U && n == 2U);
+    tlm_cap_range(10U, 12U, 5U, &f, &n);    CHECK(f == 10U && n == 0U);
+    tlm_cap_range(10U, 0U, 0U, &f, &n);     CHECK(f == 0U && n == 0U);
+    tlm_cap_range(0U, 0U, 65535U, &f, &n);  CHECK(f == 0U && n == 0U);
+
+    REQ("REQ-TLM-01, §7.25: set 0 WHEEL record, 24 B, mm/s, 0.1 mm, 1e-4, saturating");
+    const tlm_rec_wheel_t w = { .t_us = 0x89ABCDEFU, .v_ref = { 0.3f, -0.25f }, .v = { 0.2994f, -40.0f },
+                                .e_x = { 0.00123f, -0.0005f }, .duty = { 0.5f, -1.0f }, .integ = { 0.01f, NAN } };
+    CHECK(tlm_rec_wheel_pack(&w, rec) == 24U);
+    CHECK(rd32(&rec[0]) == 0x89ABCDEFU && rd16(&rec[4]) == 300 && rd16(&rec[6]) == 299);
+    CHECK(rd16(&rec[8]) == -250 && rd16(&rec[10]) == -32768 && rd16(&rec[12]) == 12 && rd16(&rec[14]) == -5);
+    CHECK(rd16(&rec[16]) == 5000 && rd16(&rec[18]) == -10000 && rd16(&rec[20]) == 100 && rd16(&rec[22]) == 0);
+
+    REQ("REQ-TLM-01, §7.25, D-80: set 1 EST record, 24 B; bg in 1e-5 rad/s holds the H7 bias");
+    const tlm_rec_est_t e = { .t_us = 7U, .x = 12.3456f, .y = -0.0001f, .th = 3.0f * PI_F / 2.0f,
+                              .bg = -2.42f * DEG2RAD_F, .ds = { 0.006f, -0.0061f }, .dpsi = 0.0012f, .flags = 5U };
+    CHECK(tlm_rec_est_pack(&e, rec) == 24U);
+    CHECK(rd32(&rec[0]) == 7U && (int32_t)rd32(&rec[4]) == 123456 && (int32_t)rd32(&rec[8]) == -1);
+    CHECK(rd16(&rec[12]) == -15708 && rd16(&rec[14]) == -4224);
+    CHECK(rd16(&rec[16]) == 6000 && rd16(&rec[18]) == -6100 && rd16(&rec[20]) == 120 && rec[22] == 5U && rec[23] == 0U);
+
+    REQ("REQ-PRO-05: same type and seq within 1 s is a duplicate; other seq, other type or 1 s later is not");
+    tlm_dup_t d = { 0 };
+    CHECK(!tlm_dup_check(&d, 0x25U, 7U, 100U));
+    CHECK(tlm_dup_check(&d, 0x25U, 7U, 1099U));
+    CHECK(!tlm_dup_check(&d, 0x25U, 7U, 1100U));     /* 1 s after the recorded one: executed again */
+    CHECK(!tlm_dup_check(&d, 0x25U, 8U, 1101U));
+    CHECK(!tlm_dup_check(&d, 0x24U, 8U, 1102U));
 }

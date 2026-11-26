@@ -27,6 +27,7 @@ void t_fwd(void);
 void t_cobs(void);
 void t_proto_msgs(void);
 void t_tlm(void);
+void t_tlm_cap(void);
 
 int main(void)
 {
@@ -48,6 +49,7 @@ int main(void)
         { "t_cobs", t_cobs },
         { "t_proto_msgs", t_proto_msgs },
         { "t_tlm", t_tlm },
+        { "t_tlm_cap", t_tlm_cap },
     };
     for (unsigned i = 0; i < sizeof T / sizeof T[0]; i++) {
         printf("%s\n", T[i].name);

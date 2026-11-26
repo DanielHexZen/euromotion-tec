@@ -4,11 +4,14 @@
 Reads the binary protocol of spec 8.2/8.4 from a serial port (USB VCP or HC-12 radio) or from a
 recorded binary file, decodes frames with the firmware's rules (COBS, CRC-16/CCITT-FALSE little-endian,
 vid filter, <= 101 raw bytes), writes one CSV per message type and prints frame-loss statistics from the
-`seq` gaps. It can send PING and PARAM_GET on the radio, respecting the uplink rule of spec 8.3.
+`seq` gaps. It sends uplink commands (--cmd, --ping, --param-get) with the uplink rule of spec 8.3, prints
+every reply, event and HELLO as it arrives, and decodes capture records (CAP_DATA of sets 0 and 1) into
+cap_wheel.csv / cap_est.csv (H11b, PHASE4_TELEMETRY.md).
 
 CSV files (in --out, default ./gs_log_out): hello.csv telem_fast.csv telem_slow.csv event.csv ack.csv
 param_val.csv cap_data.csv text.csv. Columns: rx_idx (frame number), rx_time_s (host clock, empty when
 replaying a file), seq, then the fields of the message with their wire units (mm, mm/s, 0.01 deg, ...).
+cap_wheel.csv / cap_est.csv: one row per record, index first, in the units of spec 7.25 (est bg in 1e-5 rad/s, D-80).
 
 Frame loss: every vehicle frame carries one counter `seq` (u8, wraps 255 -> 0). A jump of g > 1 counts as
 g - 1 lost frames, a repeated value as a duplicate. A forward jump of more than 128 (mod 256) is a backward
@@ -22,7 +25,10 @@ as the first byte after >= 30 ms of silence (frames inside a vehicle burst follo
 The frame must fit the 30 ms uplink airtime (28 bytes at 9600 Bd, 57 at 19200 Bd).
 
   gs_log.py --port /dev/tty.usbserial-X [--baud 19200] [--vid 66] [--out DIR] [--duration S]
-            [--ping SEC] [--param-get ID ...]
+            [--bin] [--ping SEC] [--param-get ID ...] [--cmd CMD ...]
+  CMD, sent in order, one per vehicle period: PING, STOP, STOPALL (vid 0xFF), CLEAR, MODE=<0..3>,
+  PGET=<id>, PSET=<id>:<value>, CAPTURE=<set>,<decim>,<0.1 s>, CAPGET=<from>,<count>, DRIVE=<mm/s>,<mrad/s>,
+  MODETEXT, TEXT (the raw line "#TEXT"), WAIT=<s>.  --bin first sends the console line "BIN" (USB starts in TEXT).
   gs_log.py --file capture.bin [--vid 66] [--out DIR]
   gs_log.py --selftest
 
@@ -44,6 +50,8 @@ VID_BCAST = 0xFF
 T_STOP = 0x21
 T_PING = 0x20
 T_PARAM_GET = 0x24
+UPLINK = {"PING": 0x20, "STOP": 0x21, "MODE": 0x22, "DRIVE": 0x23, "PGET": 0x24, "PSET": 0x25, "CAPTURE": 0x26,
+          "CAPGET": 0x27, "CLEAR": 0x28, "MODETEXT": 0x2F}
 
 # type -> (csv name, struct format, field names); '<' = little-endian, no padding (spec 8.4)
 MSG = {
@@ -64,6 +72,13 @@ MSG = {
 T_CAP_DATA = 0x07
 T_TEXT = 0x08
 CAP_REC = {0: 24, 1: 24, 2: 24, 3: 16}
+# capture records (spec 7.25; set 1 bg in 1e-5 rad/s, D-80). Sets 2 and 3 arrive with phase 3.
+CAP_SET = {
+    0: ("cap_wheel", "<Ihhhhhhhhhh", ["t_us", "v_ref_l_mmps", "v_l_mmps", "v_ref_r_mmps", "v_r_mmps", "e_x_l_0.1mm",
+                                       "e_x_r_0.1mm", "duty_l_1e4", "duty_r_1e4", "integ_l_1e4", "integ_r_1e4"]),
+    1: ("cap_est", "<IiihhhhhBB", ["t_us", "x_0.1mm", "y_0.1mm", "th_1e4rad", "bg_1e5radps", "ds_l_um", "ds_r_um",
+                                    "dpsi_1e5rad", "flags", "reserved"]),
+}
 
 
 # ---- CRC, COBS, frames (mirror proto.c) -------------------------------------------------------
@@ -249,7 +264,24 @@ class Sink:
             w.writerow(["rx_idx", "rx_time_s", "seq"] + fields)
             self.files[name] = (fh, w)
         self.files[name][1].writerow([self.idx, "" if t is None else "%.4f" % t, seq] + vals)
+        if name == "cap_data":
+            self._records(payload)
         return name, fields, vals
+
+    def _records(self, payload):
+        index, cset, n = struct.unpack("<HBB", payload[:4])
+        if cset not in CAP_SET:
+            return
+        cname, fmt, cfields = CAP_SET[cset]
+        if cname not in self.files:
+            os.makedirs(self.outdir, exist_ok=True)
+            fh = open(os.path.join(self.outdir, cname + ".csv"), "w", newline="")
+            w = csv.writer(fh)
+            w.writerow(["index"] + cfields)
+            self.files[cname] = (fh, w)
+        size = struct.calcsize(fmt)
+        for k in range(n):
+            self.files[cname][1].writerow([index + k] + list(struct.unpack_from(fmt, payload, 4 + k * size)))
 
     def close(self):
         for fh, _ in self.files.values():
@@ -296,6 +328,35 @@ class Uplink:
         self.sent = True
 
 
+def parse_cmd(text, vid):
+    """CMD string -> ("frame", vid, type, payload) | ("raw", bytes) | ("wait", seconds). ValueError if malformed."""
+    name, _, arg = text.partition("=")
+    name = name.upper()
+    nums = [a for a in arg.replace(":", ",").split(",") if a] if arg else []
+    if name == "WAIT":
+        return ("wait", float(arg))
+    if name == "TEXT":
+        return ("raw", b"#TEXT\r\n")
+    if name == "STOPALL":
+        return ("frame", VID_BCAST, UPLINK["STOP"], b"")
+    if name not in UPLINK:
+        raise ValueError("unknown command " + text)
+    fmt = {"MODE": "<B", "PGET": "<H", "PSET": "<Hf", "CAPTURE": "<BBH", "CAPGET": "<HH", "DRIVE": "<hhB"}.get(name, "")
+    if name == "DRIVE":
+        nums.append("0")
+    vals = [float(v) if (name == "PSET" and k == 1) else int(v, 0) for k, v in enumerate(nums)]
+    if len(vals) != (len(fmt) - 1 if fmt else 0):
+        raise ValueError("wrong arguments for " + name)
+    return ("frame", vid, UPLINK[name], struct.pack(fmt, *vals) if fmt else b"")
+
+
+def describe(name, fields, vals):
+    """One line for the console: every frame except telemetry and capture data."""
+    if name in ("telem_fast", "telem_slow", "cap_data"):
+        return None
+    return name + " " + " ".join("%s=%s" % (f, v) for f, v in zip(fields, vals))
+
+
 def uplink_max_bytes(baud, air=0.030):
     return int(air * baud / 10.0 + 1e-9)
 
@@ -320,10 +381,14 @@ def run_serial(args):
         return None
     ser = serial.Serial(args.port, args.baud, timeout=0.005)
     dec, sink, up = Decoder(args.vid), Sink(args.out), Uplink()
-    pending = [(T_PARAM_GET, struct.pack("<H", i)) for i in args.param_get]
+    pending = [("frame", args.vid, T_PARAM_GET, struct.pack("<H", i)) for i in args.param_get]
+    pending += [parse_cmd(c, args.vid) for c in args.cmd]
+    if args.bin:
+        ser.write(b"BIN\r\n")
     tx_seq = 0
     t0 = time.monotonic()
     next_ping = t0 if args.ping > 0 else None
+    wait_until = 0.0
     try:
         while args.duration <= 0 or time.monotonic() - t0 < args.duration:
             data = ser.read(max(1, ser.in_waiting))
@@ -332,17 +397,28 @@ def run_serial(args):
                 up.on_bytes(now)
                 for f in dec.feed(data):
                     up.on_frame()
-                    sink.write(f, now - t0)
+                    m = sink.write(f, now - t0)
+                    line = describe(*m) if m else None
+                    if line:
+                        print("%8.3f %s" % (now - t0, line))
             if next_ping is not None and now >= next_ping:
-                pending.append((T_PING, b""))
+                pending.append(("frame", args.vid, T_PING, b""))
                 next_ping = now + args.ping
-            if pending:
-                fr = encode_frame(args.vid, pending[0][0], tx_seq, pending[0][1])
-                if up.ready(now, len(fr) * 10.0 / args.baud):
+            if pending and now >= wait_until:
+                c = pending[0]
+                if c[0] == "wait":
                     pending.pop(0)
-                    tx_seq = (tx_seq + 1) & 0xFF
-                    ser.write(fr)
-                    up.mark_sent()
+                    wait_until = now + c[1]
+                elif c[0] == "raw":
+                    pending.pop(0)
+                    ser.write(c[1])
+                else:
+                    fr = encode_frame(c[1], c[2], tx_seq, c[3])
+                    if up.ready(now, len(fr) * 10.0 / args.baud):
+                        pending.pop(0)
+                        tx_seq = (tx_seq + 1) & 0xFF
+                        ser.write(fr)
+                        up.mark_sent()
     except KeyboardInterrupt:
         pass
     finally:
@@ -499,6 +575,40 @@ def selftest():
     check(len(encode_frame(0x42, T_PING, 0)) == 7 and len(encode_frame(0x42, T_PARAM_GET, 0, b"\x87\x03")) == 9,
           "uplink frames fit")
 
+    # capture records: same values as test/t_tlm.c (t_tlm_cap)
+    rec_w = struct.pack("<Ihhhhhhhhhh", 0x89ABCDEF, 300, 299, -250, -32768, 12, -5, 5000, -10000, 100, 0)
+    rec_e = struct.pack("<IiihhhhhBB", 7, 123456, -1, -15708, -4224, 6000, -6100, 120, 5, 0)
+    with tempfile.TemporaryDirectory() as tmp3:
+        k = Sink(tmp3)
+        k.write((0x42, 0x07, 1, struct.pack("<HBB", 10, 0, 1) + rec_w))
+        k.write((0x42, 0x07, 2, struct.pack("<HBB", 0, 1, 3) + rec_e * 3))
+        k.write((0x42, 0x07, 3, struct.pack("<HBB", 3, 1, 0)))                  # end frame
+        k.close()
+        with open(os.path.join(tmp3, "cap_wheel.csv")) as fh:
+            rw = list(csv.DictReader(fh))
+        with open(os.path.join(tmp3, "cap_est.csv")) as fh:
+            re_ = list(csv.DictReader(fh))
+        check(len(rw) == 1 and rw[0]["index"] == "10" and rw[0]["v_r_mmps"] == "-32768", "cap_wheel.csv")
+        check([r["index"] for r in re_] == ["0", "1", "2"] and re_[2]["bg_1e5radps"] == "-4224", "cap_est.csv")
+
+    # uplink commands
+    check(parse_cmd("PSET=161:0.3", 0x42) == ("frame", 0x42, 0x25, struct.pack("<Hf", 161, 0.3)), "PSET")
+    check(parse_cmd("capture=1,2,300", 0x42)[3] == struct.pack("<BBH", 1, 2, 300), "CAPTURE")
+    check(parse_cmd("CAPGET=0,65535", 0x42)[3] == struct.pack("<HH", 0, 65535), "CAPGET")
+    check(parse_cmd("DRIVE=200,-100", 0x42)[3] == struct.pack("<hhB", 200, -100, 0), "DRIVE")
+    check(parse_cmd("STOPALL", 0x42) == ("frame", 0xFF, 0x21, b"") and parse_cmd("WAIT=2", 0x42) == ("wait", 2.0),
+          "STOPALL, WAIT")
+    check(parse_cmd("TEXT", 0x42) == ("raw", b"#TEXT\r\n") and parse_cmd("MODE=1", 0x42)[3] == b"\x01", "TEXT, MODE")
+    for bad in ("MODE", "PSET=1", "FOO", "PING=3"):
+        try:
+            parse_cmd(bad, 0x42)
+            check(False, "rejects " + bad)
+        except ValueError:
+            pass
+    check(max(len(encode_frame(0x42, c[2], 0, c[3])) for c in
+              [parse_cmd(x, 0x42) for x in ("PSET=1:1", "CAPTURE=0,1,1", "DRIVE=1,1")]) <= uplink_max_bytes(9600),
+          "uplink commands fit 9600 Bd")
+
     if fails:
         for f in fails:
             print("FAIL", f)
@@ -520,6 +630,9 @@ def main():
     p.add_argument("--ping", type=float, default=0.0, metavar="SEC", help="send a PING every SEC seconds")
     p.add_argument("--param-get", type=int, action="append", default=[], metavar="ID",
                    help="send PARAM_GET for this parameter ID once (repeatable)")
+    p.add_argument("--cmd", action="append", default=[], metavar="CMD",
+                   help="uplink command, repeatable, sent in order (see the list above)")
+    p.add_argument("--bin", action="store_true", help='send the console line "BIN" first (USB port starts in TEXT)')
     args = p.parse_args()
     if args.selftest:
         return selftest()
@@ -528,6 +641,14 @@ def main():
         return 1
     if not 0 <= args.vid <= 255:
         print("vid out of range", file=sys.stderr)
+        return 1
+    try:
+        cmds = [parse_cmd(c, args.vid) for c in args.cmd]
+    except (ValueError, struct.error) as e:
+        print(e, file=sys.stderr)
+        return 1
+    if any(c[0] == "frame" and len(encode_frame(c[1], c[2], 0, c[3])) > uplink_max_bytes(args.baud) for c in cmds):
+        print("uplink frame longer than the 30 ms limit at this baud rate", file=sys.stderr)
         return 1
     if args.file:
         try:

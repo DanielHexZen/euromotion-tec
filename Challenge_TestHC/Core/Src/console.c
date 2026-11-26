@@ -50,6 +50,7 @@ bool con_autoprint_toggle(com_port_t p) { P[p].autoprint = !P[p].autoprint; retu
 
 void con_printf(com_port_t p, const char *fmt, ...)
 {
+    if (com_mode(p) != COM_TEXT) { return; }
     char buf[128];
     va_list ap;
     va_start(ap, fmt);
@@ -64,6 +65,7 @@ static const char *const HELP[] = {
     "PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params",
     "F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump",
     "S status, I info, IMU, IMUS stream, EKF, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
+    "BIN binary protocol on this port (#TEXT returns), CAP <set> <decim> <s> capture",
 };
 
 /* Every IMU / EKF number is formatted here, in legacy units (mm, deg, deg/s). */
@@ -251,6 +253,17 @@ static bool parse(com_port_t p, const char *s, con_cmd_t *c)
     if (kw(s, "IMU", &r) && at_end(r))    { c->type = CMD_IMU; return true; }
     if (kw(s, "EKF", &r) && at_end(r))    { c->type = CMD_EKF; return true; }
     if (kw(s, "CLEAR", &r) && at_end(r))  { c->type = CMD_CLEAR; return true; }
+    if (kw(s, "BIN", &r) && at_end(r))    { c->type = CMD_BIN; return true; }
+    if (kw(s, "CAP", &r)) {
+        long d, t;
+        if (!num_l(sp(r), &a, &e) || !num_l(sp(e), &d, &e) || !num_l(sp(e), &t, &e) || !at_end(e)) {
+            err_syntax(p, "CAP <set> <decim> <s>"); return false;
+        }
+        if (a < 0 || a > 3) { err_range(p, 0, 3); return false; }
+        if (d < 1 || d > 255) { err_range(p, 1, 255); return false; }
+        if (t < 0 || t > 6553) { err_range(p, 0, 6553); return false; }
+        c->type = CMD_CAP; c->which = (uint8_t)a; c->f[0] = (float)d; c->f[1] = (float)t; return true;
+    }
     if (kw(s, "STOP", &r) && at_end(r))   { c->type = CMD_STOP; return true; }
     if (kw(s, "RUN", &r) && at_end(r))    { c->type = CMD_UNAVAILABLE; return true; }
     if (kw(s, "EV", &r) && at_end(r))     { c->type = CMD_EVLOG; return true; }

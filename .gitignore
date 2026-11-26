@@ -104,5 +104,6 @@ _minted*/
 
 # host tests and generated build info
 test/t_all
+test/t_link
 test/t_all.dSYM/
 Challenge_TestHC/Core/Inc/build_info.h

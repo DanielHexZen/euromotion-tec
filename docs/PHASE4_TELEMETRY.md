@@ -1,21 +1,29 @@
 # Phase 4 — Telemetry and binary protocol
 
-Gate for `FIRMWARE_SPEC.md` §15 phase 4: **H11** (15 min on the radio at 19200 Bd, < 1 % frame loss at ≤ 30 m, link map along the course; on failure repeated at 9600 Bd, D-35), `t_cobs` and `t_proto_msgs` green. Week-10 milestone in the plan (behind schedule). Vehicle work after the phase-3 hardware gates; host-track work may start now (D-29).
+Gate for `FIRMWARE_SPEC.md` §15 phase 4: **H11b** (protocol on the bench, D-80) and **H11** (15 min on the radio at 19200 Bd, < 1 % frame loss at ≤ 30 m, link map along the course; on failure repeated at 9600 Bd, D-35), `t_cobs`, `t_proto_msgs`, `t_tlm`, `t_tlm_cap`, `t_link` green. Week-10 milestone in the plan (behind schedule). Vehicle work runs ahead of the phase-3 hardware gates by team decision (D-80); the phase-3 fields follow when the branches meet and repeat H11b.
 
-## Status (2026-11-25)
+## Status (2026-11-26)
 
-Packages 1–3 written and reviewed (`make -C test` green, `gs_log.py --selftest` ok, ARM compile clean). Parameters 900–903 exist; 901–903 have no consumer until packages 4–5. Open before H11: a parameter for the 5 ms radio guard (`[VERIFY]`), the definition of `rx_err` (D-76 item 4).
+Packages 1–6 written (D-76, D-80) on `phase4-telemetry`, which holds phase 2 (`main` merged) but not phase 3. `make -C test` green (`t_all`, `t_link`), `gs_log.py --selftest` ok, ARM build clean in Debug, Release `-O2` and `FEAT_CAPTURE 0`/`FEAT_IMU 0`. **Not flashed, not run on the vehicle.** Next: H11b on the bench.
 
 | Item | Track | State |
 |---|---|---|
-| `proto` (§7.24, §8.2, §8.4): COBS, header, CRC, one pack/unpack per message | host | **done** (package 1, D-76): `proto.c`, tests `t_cobs`, `t_proto_msgs` |
-| `tlm` (§7.25): `TELEM_FAST` 10 Hz, `TELEM_SLOW` 1 Hz, per-port event queues (D-34), capture buffer 48 KB with sets 0–3, `CAPTURE`/`CAP_GET` (D-33) | mixed | **pure part done** (package 2, D-76): `tlm.h`, `tlm_pure.c` (payload assembly, event queues with port mask, radio-window planner), test `t_tlm`. Sending and capture: packages 5, 6 |
-| Port modes `TEXT`/`BINARY` (§8.1, REQ-COM-06), `BIN`, `MODE_TEXT`, `#TEXT` escape (REQ-PRO-02), `HELLO` | vehicle | not started; both ports run the text console |
-| USART1 RX by DMA circular + IDLE line, TX by DMA (REQ-COM-02/04) | vehicle | USART1 runs by interrupt at 19200 Bd (D-51); DMA streams are in the `.ioc` but unused |
-| Radio timing, vehicle as master (§8.3, REQ-PRO-04): 100 ms period, 55 ms vehicle window, one uplink frame | vehicle | not started |
-| Ground station (logging, link map, `CAP_GET` download) | host, Python | **minimal logger done** (package 3, D-76): `tools/gs_log.py` (serial or file, CSV per message, loss from `seq` with reset detection, exit 3 at ≥ 1 % loss, `PING`/`PARAM_GET` with the §8.3 uplink rule). Not run against a real port yet (needs pyserial). No GUI, no link map by distance yet |
-| Radio hardware | vehicle | both HC-12 at 19200 Bd, CH001, P8, vehicle module on 5 V (D-51, D-71); text console over the radio tested |
-| H11 | vehicle | not started |
+| `proto` (§7.24, §8.2, §8.4) | host | **done** (package 1): `proto.c`, `t_cobs`, `t_proto_msgs` |
+| `tlm` pure part: payloads, event queues, window planner, capture core, record packing, duplicates | host | **done** (packages 2, 6): `tlm_pure.c`, `t_tlm`, `t_tlm_cap` |
+| `tlm` vehicle part (`tlm.c`): binary receivers, replies, radio window, events, `HELLO`, `CAP_DATA` stream | vehicle | **written** (packages 4–6), host test `t_link` against stubbed ports |
+| Port modes (§8.1, REQ-COM-06): `BIN`, `#TEXT`, `MODE_TEXT`; radio starts in `com1_mode` (default `BINARY`) | vehicle | **written**; text to a binary port is dropped (D-80 item 6) |
+| USART1 RX circular DMA, TX DMA (REQ-COM-02/04/05) | vehicle | **written**, read by NDTR in the 1 kHz poll, no IDLE interrupt (D-80 item 4) |
+| Binary commands (§8.4) in `app_cmd.c` | vehicle | **written**: PING, STOP (also 0xFF), MODE IDLE/BENCH, PARAM_GET/SET, CAPTURE, CAP_GET (USB only), CLEAR, MODE_TEXT; MANUAL/AUTO `ST_STATE`, DRIVE ignored (phases 3/6) |
+| Capture (`FEAT_CAPTURE` 1, 48 KB, REQ-TLM-01): sets 0 `WHEEL`, 1 `EST`; console `CAP` | vehicle | **written**; sets 2/3 `ST_NODEV` until phase 3; set 1 `bg` in 1e-5 rad/s (D-80 item 3) |
+| `TELEM_SLOW` `stack_free` (stack painting), `rx_err` (D-80 item 5) | vehicle | **written** |
+| Ground station `tools/gs_log.py` | host | logger (package 3) plus `--bin`, `--cmd` (all uplink commands, `WAIT`, `TEXT`), live print of replies/events, `cap_wheel.csv`/`cap_est.csv`. No link map by distance yet (H11) |
+| Radio hardware | vehicle | both HC-12 at 19200 Bd, CH001, P8, vehicle module on 5 V (D-51, D-71) |
+| H11b | vehicle | not started (§4) |
+| H11 | vehicle | not started (§5); needs the link map in `gs_log.py` |
+
+**Follows with phase 3 (D-80 item 2), then H11b again for these:** `TELEM_FAST` `mode`/`state` from `msn`, `seg`, `wp`, `e_y`, `gnd`, `fwd` and the reflex/interlock/evade/VL/manual-timeout flags; `TELEM_SLOW` `vl_alive` and the course bit; `HELLO` `course` and VL bit; capture sets 2 `NAV` and 3 `VL`; `MODE` MANUAL/AUTO. `DRIVE` with phase 6.
+
+**Before the first flash:** CubeIDE must pick up the new file `Core/Src/tlm.c` (it is in `Core/Src`, so a refresh of the project is enough; no `.cproject` change). Note: with `com1_mode` 1 (default) the radio console is binary from boot; `P901=0` (or `#TEXT` over the radio) brings the text console back.
 
 ## 1. Why now
 
@@ -42,7 +50,22 @@ Packages 1–3 written and reviewed (`make -C test` green, `gs_log.py --selftest
 - **Events at 9600 Bd** stay `[DECIDE]` in §8.3: no event fits behind `TELEM_FAST` in the 55 ms window. Irrelevant if H11 passes at 19200 Bd.
 - **`[VERIFY]` HC-12 turnaround** (FU3) against the 5 ms guard, during H11.
 
-## 4. H11 checklist (after packages 1–5)
+## 4. H11b checklist (bench, D-80)
+
+Vehicle on blocks, wheels free, battery connected. Logger: `python3 tools/gs_log.py --port <port> --baud <baud> --out tools/data/<date>/h11b_<step> --duration <s> [--bin] [--cmd ...]`. Record the build (`HELLO` git hash) and every log under `tools/data/<date>/`.
+
+1. [ ] Text console unchanged on USB after boot (`?`, `S`, `I`); boot log ends with `ready`; the radio shows no text (binary from boot).
+2. [ ] USB binary: `--port <usb> --baud 115200 --bin --duration 900`: `HELLO` printed, `telem_fast` ≈ 9000 rows, `telem_slow` ≈ 900, frame loss 0.00 %. `bat_mv` within 50 mV of `S`; `x_mm`, `th_cdeg`, `bg_mdps` agree with `EKF`.
+3. [ ] Back to text: `--cmd TEXT` (raw `#TEXT`), the console answers `?`; again with `--bin --cmd MODETEXT` (`ack result=0`, then text).
+4. [ ] Radio: `--port <hc12> --baud 19200 --duration 900 --ping 10 --cmd PGET=902 --cmd PSET=161:0.25 --cmd PGET=161`: `ack` + `hello` every 10 s, `param_val` lines with `result=0`, loss < 1 %, `rx_err` 0 in `telem_slow.csv`. Reset `P161` afterwards.
+5. [ ] STOP: start `D1000` on USB text, then over the radio `--cmd STOP`; again with `--cmd STOPALL` (vid 0xFF). Both stop the wheels and print `ack result=0`.
+6. [ ] Modes: `--cmd MODE=1 --cmd MODE=0 --cmd MODE=2 --cmd MODE=3`: results 0, 0, 5, 5 (`ST_STATE`). Duplicate suppression (REQ-PRO-05) is covered by `t_link`, not repeated here.
+7. [ ] Events: `P161=0.25` on the USB console while the radio logs: `event` line with code 0x101 (EV_PARAM) inside the next windows; `ev_drop` 0.
+8. [ ] Capture: on the USB text console `CAP 0 1 30`, then `D1000`; then `--bin --cmd CAPGET=0,65535 --cmd TEXT --duration 20`: `cap_wheel.csv` with continuous indices from 0, one end frame, the console is text again; plot `v_ref` against `v`. Same with `CAP 1 1 30` (`cap_est.csv`). Over the radio `--cmd CAPGET=0,10` gives `ack result=5` and no data.
+9. [ ] `I` with both ports binary for 5 min (switch USB back with `#TEXT` to read it): no new `S_CTRL` overruns; `stack_free` ≥ 2048 in `telem_slow.csv`.
+10. [ ] Result here and in spec H11b; failures as findings.
+
+## 5. H11 checklist (after H11b)
 
 1. [ ] Both modules at 19200 Bd, CH001, P8 (`AT+RX` on each, record the answers).
 2. [ ] Vehicle on the course, laptop with the logger at the start point; walk the vehicle (or drive `MANUAL` once phase 6 exists) along the course out to ≥ 30 m.

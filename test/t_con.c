@@ -17,6 +17,8 @@ size_t com_write(com_port_t p, const uint8_t *d, size_t n)
     return n;
 }
 size_t   com_tx_free(com_port_t p) { (void)p; return g_free; }
+static com_mode_t g_mode[2];
+com_mode_t com_mode(com_port_t p) { return g_mode[p]; }
 int con_info_line(uint32_t i, char *buf, size_t n)
 {
     return (i < 5U) ? snprintf(buf, n, "info line %u .....................................................", (unsigned)i) : -1;
@@ -205,4 +207,20 @@ void t_con(void)
         snprintf(key, sizeof key, "info line %u", k);
         CHECK(strstr(g_out[COM_RADIO], key) != NULL);
     }
+
+    REQ("REQ-COM-06, §9: BIN switches the port; CAP <set> <decim> <s> with range checks");
+    c = line("BIN");          CHECK(c.type == CMD_BIN && c.port == COM_USB);
+    c = line("CAP 1 2 30");   CHECK(c.type == CMD_CAP && c.which == 1U); CHECK_NEAR(c.f[0], 2.0, 0); CHECK_NEAR(c.f[1], 30.0, 0);
+    c = line("CAP 4 1 1");    CHECK(c.type == CMD_NONE && says("ERR range 0..3"));
+    c = line("CAP 0 0 1");    CHECK(c.type == CMD_NONE && says("ERR range 1..255"));
+    c = line("CAP 0 1");      CHECK(c.type == CMD_NONE && says("ERR syntax"));
+    c = line("BINX");         CHECK(c.type == CMD_NONE);
+
+    REQ("REQ-COM-06: no text goes to a port in BINARY mode");
+    clear_out();
+    g_mode[COM_RADIO] = COM_BINARY;
+    con_printf(COM_RADIO, "FAULT\r\n");
+    con_printf(COM_USB, "x\r\n");
+    CHECK(g_out_n[COM_RADIO] == 0U && g_out_n[COM_USB] == 3U);
+    g_mode[COM_RADIO] = COM_TEXT;
 }

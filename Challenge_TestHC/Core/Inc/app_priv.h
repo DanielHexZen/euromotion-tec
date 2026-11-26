@@ -8,6 +8,10 @@
 #include "ekf.h"
 #include "par.h"
 
+#define APP_VERSION  "0.4-phase4"
+#define APP_FW_MAJOR 0U
+#define APP_FW_MINOR 4U
+
 /* Phase-0 modes. msn (phase 3) takes this over and adds MANUAL and AUTO. */
 typedef enum { APP_IDLE = 0, APP_BENCH, APP_FAULT } app_mode_t;
 
@@ -29,6 +33,9 @@ typedef struct {
     float       turn_target_rad, turn_acc_rad;
     uint8_t     turn_fix;
     bool        imus;            /* IMUS stream on USB, one line per S_CTRL (H7, D-74)            */
+    float       duty[2];         /* last duty sent to mot_set, for TELEM_FAST                     */
+    float       ekf_ds[2], ekf_dpsi;   /* last EKF odometry input, for capture set 1 (NAN: no gyro) */
+    uint32_t    stack_free;      /* bytes never touched since boot, S_SLOW                        */
 } app_state_t;
 
 extern app_state_t g_app;
@@ -42,5 +49,7 @@ void        app_print_status(com_port_t p);                   /* app_cmd.c */
 void        app_enter_fault(reaction_t r);                    /* app.c     */
 const char *app_mode_name(void);                              /* app.c     */
 bool        app_clear_faults(void);                           /* app.c: true if now out of FAULT */
+void        app_stop(void);                                   /* app_cmd.c: s, STOP frame      */
+st_t        app_mode_req(uint8_t mode, com_port_t p);         /* app_cmd.c: 0 IDLE, 1 BENCH    */
 
 #endif

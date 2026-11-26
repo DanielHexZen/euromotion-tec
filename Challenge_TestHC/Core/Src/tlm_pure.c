@@ -157,3 +157,103 @@ void tlm_plan(const tlm_cfg_t *c, tlm_reply_t reply, uint32_t period_no, uint8_t
 }
 
 bool tlm_cap_data_allowed(unsigned port) { return port == (unsigned)TLM_PORT_USB; }
+
+/* ---- duplicates ------------------------------------------------------------------- */
+
+#define DUP_WINDOW_MS 1000U
+
+bool tlm_dup_check(tlm_dup_t *d, uint8_t type, uint8_t seq, uint32_t now_ms)
+{
+    if (d->valid && d->type == type && d->seq == seq && now_ms - d->t_ms < DUP_WINDOW_MS) { return true; }
+    *d = (tlm_dup_t){ .type = type, .seq = seq, .t_ms = now_ms, .valid = true };
+    return false;
+}
+
+/* ---- capture ---------------------------------------------------------------------- */
+
+void tlm_cap_init(tlm_cap_t *c, uint8_t *buf, uint32_t bytes)
+{
+    *c = (tlm_cap_t){ .buf = buf, .bytes = bytes };
+}
+
+st_t tlm_cap_start(tlm_cap_t *c, uint8_t set, uint8_t decim, uint16_t duration_ds, uint32_t now_ms)
+{
+    const size_t size = proto_cap_rec_size(set);
+    if (size == 0U || decim == 0U) { return ST_RANGE; }
+    c->set = set;
+    c->decim = decim;
+    c->size = (uint16_t)size;
+    c->n = 0U;
+    c->n_max = c->bytes / (uint32_t)size;
+    c->skip = 0U;
+    c->timed = duration_ds > 0U;
+    c->t_end_ms = now_ms + (uint32_t)duration_ds * 100U;
+    c->run = c->n_max > 0U;
+    return ST_OK;
+}
+
+bool tlm_cap_want(tlm_cap_t *c, uint8_t set, uint32_t now_ms)
+{
+    if (!c->run || set != c->set) { return false; }
+    if (c->timed && (int32_t)(now_ms - c->t_end_ms) >= 0) { c->run = false; return false; }
+    if (++c->skip < c->decim) { return false; }
+    c->skip = 0U;
+    return true;
+}
+
+void tlm_cap_put(tlm_cap_t *c, const uint8_t *rec)
+{
+    if (!c->run) { return; }
+    memcpy(&c->buf[c->n * c->size], rec, c->size);
+    if (++c->n >= c->n_max) { c->run = false; }
+}
+
+void tlm_cap_stop(tlm_cap_t *c) { c->run = false; }
+
+const uint8_t *tlm_cap_rec(const tlm_cap_t *c, uint32_t i) { return &c->buf[i * c->size]; }
+
+void tlm_cap_range(uint32_t n, uint16_t from, uint16_t count, uint32_t *first, uint32_t *cnt)
+{
+    *first = (from < n) ? from : n;
+    const uint32_t left = n - *first;
+    *cnt = (count < left) ? count : left;
+}
+
+static void le16(uint8_t *o, int16_t v) { const uint16_t u = (uint16_t)v; o[0] = (uint8_t)u; o[1] = (uint8_t)(u >> 8); }
+static void le32(uint8_t *o, uint32_t u)
+{
+    o[0] = (uint8_t)u; o[1] = (uint8_t)(u >> 8); o[2] = (uint8_t)(u >> 16); o[3] = (uint8_t)(u >> 24);
+}
+
+size_t tlm_rec_wheel_pack(const tlm_rec_wheel_t *r, uint8_t *o)
+{
+    le32(&o[0], r->t_us);
+    le16(&o[4], i16(r->v_ref[0] * 1000.0f));
+    le16(&o[6], i16(r->v[0] * 1000.0f));
+    le16(&o[8], i16(r->v_ref[1] * 1000.0f));
+    le16(&o[10], i16(r->v[1] * 1000.0f));
+    le16(&o[12], i16(r->e_x[0] * 1.0e4f));
+    le16(&o[14], i16(r->e_x[1] * 1.0e4f));
+    le16(&o[16], i16(r->duty[0] * 1.0e4f));
+    le16(&o[18], i16(r->duty[1] * 1.0e4f));
+    le16(&o[20], i16(r->integ[0] * 1.0e4f));
+    le16(&o[22], i16(r->integ[1] * 1.0e4f));
+    return 24U;
+}
+
+/* bg in 1e-5 rad/s, not the 1e-6 of §7.25: the H7 bias of -2.4 deg/s (-0.042 rad/s) would
+ * saturate i16 at 1e-6 (+-0.033 rad/s). D-80. */
+size_t tlm_rec_est_pack(const tlm_rec_est_t *r, uint8_t *o)
+{
+    le32(&o[0], r->t_us);
+    le32(&o[4], (uint32_t)sat_i(r->x * 1.0e4f, -2.0e9f, 2.0e9f));
+    le32(&o[8], (uint32_t)sat_i(r->y * 1.0e4f, -2.0e9f, 2.0e9f));
+    le16(&o[12], i16(wrap_pi(r->th) * 1.0e4f));
+    le16(&o[14], i16(r->bg * 1.0e5f));
+    le16(&o[16], i16(r->ds[0] * 1.0e6f));
+    le16(&o[18], i16(r->ds[1] * 1.0e6f));
+    le16(&o[20], i16(r->dpsi * 1.0e5f));
+    o[22] = r->flags;
+    o[23] = 0U;
+    return 24U;
+}
