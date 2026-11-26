@@ -40,4 +40,25 @@ void t_imu_yaw(void)
     CHECK(imu_yaw_at(&y, nt - 20000U, 0.002f, &a) == ST_OK);
     CHECK(imu_yaw_at(&y, nt, 0.002f, &b) == ST_OK);
     CHECK_NEAR(b - a, 2.0 * 20000e-6, 1e-5);
+
+    REQ("REQ-IMU-07 / D-77: a single corrupted gyro sample is rejected, a real step is accepted after 3");
+    {
+        imu_glitch_t f = { 0 };
+        const int16_t rest[3] = { 307, -275, -148 };
+        const int16_t spike[3] = { 307, -275, (int16_t)(-148 + 17000) };
+        CHECK(!imu_glitch_reject(&f, rest, 5700));           /* first sample: reference */
+        CHECK(!imu_glitch_reject(&f, rest, 5700));
+        CHECK(imu_glitch_reject(&f, spike, 5700));            /* +300 deg/s in one sample */
+        CHECK(!imu_glitch_reject(&f, rest, 5700));            /* next normal sample passes */
+        const int16_t small[3] = { 307, -275, (int16_t)(-148 + 5000) };
+        CHECK(!imu_glitch_reject(&f, small, 5700));           /* below the limit: kept */
+        const int16_t step[3] = { 307, -275, 20000 };
+        CHECK(imu_glitch_reject(&f, step, 5700));
+        CHECK(imu_glitch_reject(&f, step, 5700));
+        CHECK(imu_glitch_reject(&f, step, 5700));
+        CHECK(!imu_glitch_reject(&f, step, 5700));            /* 4th in a row: accepted, new reference */
+        CHECK(!imu_glitch_reject(&f, step, 5700));
+        const int16_t neg[3] = { 307, (int16_t)(-275 - 6000), 20000 };
+        CHECK(imu_glitch_reject(&f, neg, 5700));              /* negative jumps on any axis count too */
+    }
 }

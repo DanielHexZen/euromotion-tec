@@ -51,7 +51,7 @@ typedef enum {
 typedef struct {
     bool     present, alive;
     float    w_radps[3], temp_c, roll_rad, pitch_rad, bg_radps;
-    uint32_t n_samples, n_drop, n_sat;
+    uint32_t n_samples, n_drop, n_sat, n_glitch;
 } con_imu_t;
 typedef struct {
     float    x_m, y_m, th_rad, bg_radps, s;

@@ -137,6 +137,7 @@ void con_imu_snapshot(con_imu_t *s)
     s->n_samples = i.n_samples;
     s->n_drop = i.n_drop;
     s->n_sat = i.n_sat;
+    s->n_glitch = i.n_glitch;
 #endif
 }
 

@@ -53,9 +53,10 @@
     /* 10.2 imu */ \
     X(400, imu_tc1,          0.0f,      "rad/s/K", -1.0e-3f, 1.0e-3f, PAR_S) \
     X(401, imu_tc2,          0.0f,      "rad/s/K2",-1.0e-4f, 1.0e-4f, PAR_S) \
-    X(402, imu_gz_scale,     1.0f,      "-",       0.95f,   1.05f,  PAR_S) \
+    X(402, imu_gz_scale,     0.9907f,   "-",       0.95f,   1.05f,  PAR_S) \
     X(403, imu_timeout,      0.020f,    "s",       0.005f,  0.2f,   PAR_L) \
     X(404, imu_extrap_max,   0.002f,    "s",       0.0f,    0.005f, PAR_L) \
+    X(405, imu_jump_max,     1.745f,    "rad/s",   0.1f,    10.0f,  PAR_L) \
     /* 10.2 attitude filter */ \
     X(410, att_tau,          1.0f,      "s",       0.1f,    10.0f,  PAR_L) \
     X(411, att_acc_gate,     0.1f,      "g",       0.02f,   0.5f,   PAR_L) \

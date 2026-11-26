@@ -23,4 +23,11 @@ void imu_yaw_push(imu_yaw_t *y, uint32_t t_us, float rate_radps);
  * beyond it. ST_RANGE for anything older or newer. */
 st_t imu_yaw_at(const imu_yaw_t *y, uint32_t t_us, float extrap_max_s, float *psi);
 
+/* Glitch filter (D-77): a gyro sample whose raw value jumps by more than lim_lsb on any axis
+ * against the last accepted sample is rejected (returns true). After IMU_GLITCH_RUN rejections in a
+ * row the sample is accepted and becomes the new reference, so a real change is never locked out. */
+#define IMU_GLITCH_RUN 3U
+typedef struct { int16_t g[3]; uint8_t run; bool have; } imu_glitch_t;
+bool imu_glitch_reject(imu_glitch_t *f, const int16_t g[3], int32_t lim_lsb);
+
 #endif
