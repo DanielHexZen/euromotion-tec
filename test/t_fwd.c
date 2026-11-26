@@ -92,4 +92,26 @@ void t_fwd(void)
     }
     CHECK(fwd_stale(&f));
     CHECK(!fwd_reflex(&f));
+
+    REQ("REQ-FWD-01: rejected implausible samples age a sensor like unknown ones: stale after vl_timeout");
+    fwd_init(&f);
+    t = both(&f, 1.0f, 0U, 3U, 0.0f);
+    CHECK(!fwd_stale(&f));
+    for (uint32_t k = 0U; k < 15U; k++, t += 20U) {            /* F1 alternates 1.0 / 2.5 m: every sample a jump */
+        put(&f, VL_F1, (k & 1U) ? 1.0f : 2.5f, VL_ST_VALID, t);
+        put(&f, VL_F2, 0.0f, 4U, t);                           /* F2 unknown */
+        fwd_step(&f, 0.0f, t * 1000U);
+    }
+    CHECK(fwd_stale(&f));
+    CHECK_NEAR(fwd_range(&f, 0U), 1.0f, 1e-6);                 /* median frozen at the last accepted value */
+
+    REQ("REQ-FWD-01: a plausible stream keeps its sensor fresh");
+    fwd_init(&f);
+    t = both(&f, 1.0f, 0U, 3U, 0.0f);
+    for (uint32_t k = 0U; k < 15U; k++, t += 20U) {
+        put(&f, VL_F1, 1.0f, VL_ST_VALID, t);
+        put(&f, VL_F2, 0.0f, 4U, t);
+        fwd_step(&f, 0.0f, t * 1000U);
+    }
+    CHECK(!fwd_stale(&f));
 }

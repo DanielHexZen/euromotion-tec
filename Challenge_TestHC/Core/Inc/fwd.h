@@ -7,9 +7,10 @@
 
 typedef struct {
     float    r[3];            /* last accepted ranges (m), INFINITY = free (signal fail) */
-    uint8_t  n, i;
+    uint8_t  n, i;            /* n: accepted samples held (0..3), never decreases      */
     float    last;            /* previous raw range, for the plausibility check        */
-    uint32_t t_last_us;       /* time of the previous raw sample (also staleness)      */
+    uint32_t t_last_us;       /* time of the previous raw sample, for the jump dt      */
+    uint32_t t_acc_us;        /* time of the last accepted sample (staleness)          */
     bool     seen;
 } fwd_sensor_t;
 

@@ -36,6 +36,7 @@ void fwd_on_meas(fwd_t *f, uint8_t id, const vl_meas_t *m, uint8_t zone)
     s->r[s->i] = r;
     s->i = (uint8_t)((s->i + 1U) % 3U);
     if (s->n < 3U) { s->n++; }
+    s->t_acc_us = m->t_us;
 }
 
 static float med(const fwd_sensor_t *s)
@@ -62,7 +63,7 @@ void fwd_step(fwd_t *f, float v_mps, uint32_t now_us)
     uint8_t n_bad = 0U;
     for (uint8_t k = 0U; k < 2U; k++) {
         const fwd_sensor_t *s = &f->s[k];
-        const bool bad = !s->seen || (uint32_t)(now_us - s->t_last_us) > to_us;
+        const bool bad = s->n == 0U || (uint32_t)(now_us - s->t_acc_us) > to_us;
         const float r = med(s);
         if (bad) { n_bad++; all_clear = false; continue; }
         rmin = fminf(rmin, r);
