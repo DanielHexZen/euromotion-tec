@@ -1,7 +1,7 @@
 /* vl.c — VL53L1X manager (spec §7.13), sensor set D-70: F1, F2, S2 and the optional L1 on I2C2.
  * Init (blocking, §7.13.2) uses the ST ULD; run time (§7.13.3) is an interrupt-driven state
  * machine with one transaction in flight: ready? -> 17-byte result -> clear. All sensors are
- * polled (D-73: the EXTI lines are not enabled in the .ioc). */
+ * polled (D-73: the EXTI data-ready lines are wired but not used). */
 #include "vl.h"
 
 #include "VL53L1X_api.h"
