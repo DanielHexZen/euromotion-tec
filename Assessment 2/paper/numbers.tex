@@ -1,0 +1,110 @@
+% ======================================================================
+% numbers.tex -- every number quoted in the paper that is produced by a work
+% package. Update here only. Sections marked [03] / [04] are under revision.
+% ======================================================================
+\providecommand{\TODO}[1]{\textbf{\textcolor{red}{[TODO: #1]}}}
+% ---------------- [01] system identification --------------------------
+\newcommand{\Tsamp}{0.02}
+\newcommand{\vTauV}{0.217}      % tau_v [s]
+\newcommand{\vPoleV}{0.9119}    % pole of Gv
+\newcommand{\vAone}{-0.9119}    \newcommand{\vBone}{0.0882}
+\newcommand{\vGdc}{1.001}
+\newcommand{\latAone}{-1.3122}  \newcommand{\latAtwo}{0.4813} \newcommand{\latBone}{0.2923}
+\newcommand{\latKdelta}{1.728}  \newcommand{\latWn}{24.7} \newcommand{\latZeta}{0.74}
+\newcommand{\latPoleRe}{0.6561} \newcommand{\latPoleIm}{0.2255}
+\newcommand{\Kus}{0.055}        \newcommand{\csat}{1.50}
+\newcommand{\fitLonIdOSA}{96.61}  \newcommand{\rLonIdOSA}{0.9989}
+\newcommand{\fitLonIdFree}{92.52} \newcommand{\rLonIdFree}{0.9944}
+\newcommand{\fitLonVaOSA}{97.31}  \newcommand{\rLonVaOSA}{0.9993}
+\newcommand{\fitLonVaFree}{93.14} \newcommand{\rLonVaFree}{0.9953}
+\newcommand{\fitLatIdOSA}{96.85}  \newcommand{\rLatIdOSA}{0.9990}
+\newcommand{\fitLatIdFree}{91.94} \newcommand{\rLatIdFree}{0.9935}
+\newcommand{\fitLatVaOSA}{96.95}  \newcommand{\rLatVaOSA}{0.9991}
+\newcommand{\fitLatVaFree}{91.66} \newcommand{\rLatVaFree}{0.9930}
+\newcommand{\fitLonChrono}{84.3}  \newcommand{\fitLatChrono}{91.6}
+\newcommand{\fitLonSwap}{91.5}    \newcommand{\fitLatSwap}{91.7}
+\newcommand{\fitLatBase}{85.6}    \newcommand{\fitLatSpeed}{90.4}
+\newcommand{\tfssErr}{10^{-15}}
+% ---------------- [02] PID --------------------------------------------
+\newcommand{\lonKp}{6.820} \newcommand{\lonKi}{9.738} \newcommand{\lonKd}{0.9396} \newcommand{\lonPf}{0.599}
+\newcommand{\latKp}{2.063} \newcommand{\latKi}{1.815} \newcommand{\latKd}{1.048}  \newcommand{\latPf}{0.235}
+\newcommand{\lonZeta}{0.85} \newcommand{\lonTss}{1.56} \newcommand{\lonOS}{0.56}
+\newcommand{\latZetaPID}{0.75} \newcommand{\latTss}{2.10} \newcommand{\latOS}{1.20}
+\newcommand{\lonTssDes}{1.5} \newcommand{\latTssDes}{2.0}
+\newcommand{\lonWn}{3.137} \newcommand{\latWnPID}{2.667}
+\newcommand{\lonOSoneDOF}{22.4} \newcommand{\latOSoneDOF}{64.3}
+\newcommand{\latStaticZeta}{0.20}
+\newcommand{\lonRise}{0.92} \newcommand{\latRise}{1.18}
+\newcommand{\awLonNone}{96.6} \newcommand{\awLonBC}{0.4} \newcommand{\awLonCl}{1.3}
+\newcommand{\awLatNone}{84.0} \newcommand{\awLatBC}{3.6}  \newcommand{\awLatCl}{25.3}
+\newcommand{\nlLatOS}{1.18} \newcommand{\nlLatTss}{2.12}
+% ---------------- [03] linear Kalman filter ---------------------------
+\newcommand{\sigAxStand}{0.0592} \newcommand{\sigAyStand}{0.0326}
+\newcommand{\sigAxMot}{0.404}    \newcommand{\sigAyMot}{0.584}
+\newcommand{\sigGyro}{0.00517}
+\newcommand{\sigWStand}{0.0478}  \newcommand{\sigWMot}{0.502}
+\newcommand{\qbRW}{1.96\times10^{-5}}
+\newcommand{\sigZ}{0.05}         \newcommand{\sigPsi}{0.02}
+\newcommand{\simRawInt}{493.5}  \newcommand{\simRawBC}{77.96}
+\newcommand{\simFixAt}{0.0716}  \newcommand{\simFixHeld}{0.1213}
+\newcommand{\simLKFfour}{0.0969} \newcommand{\simLKF}{0.0270}
+\newcommand{\realRawInt}{180.0} \newcommand{\realRawBC}{145.3}
+\newcommand{\realFixAt}{0.0698} \newcommand{\realFixHeld}{0.1102}
+\newcommand{\realLKFfour}{0.1170} \newcommand{\realLKF}{0.1097}
+\newcommand{\simRedInt}{99.99}  \newcommand{\simRedFixAt}{62.3} \newcommand{\simRedHeld}{77.8}
+\newcommand{\realRedInt}{99.94} \newcommand{\realRedFixAt}{-57.0} \newcommand{\realRedHeld}{0.5}
+\newcommand{\simNIS}{2.04}   \newcommand{\simNISband}{1.92--2.08}
+\newcommand{\realNIS}{6.12}  \newcommand{\realNISstand}{23.5}
+\newcommand{\simNEES}{2.08}
+\newcommand{\realRMSEstandQ}{0.2339}
+\newcommand{\simBestQ}{1.00} \newcommand{\realBestRMSE}{8.92} \newcommand{\realBestQ}{10}
+\newcommand{\simRMSEcm}{2.70} \newcommand{\realRMSEcm}{10.97}
+\newcommand{\simWheelRMSE}{0.0187}
+\newcommand{\realCorrAy}{0.96} \newcommand{\realCorrAx}{0.5}
+% ---------------- [04] closed-loop navigation -------------------------
+\newcommand{\trackLen}{429.0} \newcommand{\trackLenFS}{4290}
+\newcommand{\trackWmin}{0.99} \newcommand{\trackWmax}{1.77}
+\newcommand{\kappaMax}{0.95}  \newcommand{\rMin}{1.06}
+\newcommand{\vTrackMax}{2.5}  \newcommand{\aLat}{2.5} \newcommand{\tLA}{0.12}
+\newcommand{\lapTime}{174.1}  \newcommand{\vMean}{2.47}
+\newcommand{\CTEmax}{0.101}   \newcommand{\CTEmaxFS}{1.01}
+\newcommand{\CTErmse}{0.025}  \newcommand{\CTErmseFS}{0.25}
+\newcommand{\CTEiae}{3.38}    \newcommand{\ATErmse}{0.012} \newcommand{\ATEmax}{0.039}
+\newcommand{\posRMSEnav}{0.028}
+\newcommand{\margin}{0.305}
+\newcommand{\deltaRMS}{0.040} \newcommand{\deltaRateRMS}{0.44}
+\newcommand{\idealCTEmax}{0.101} \newcommand{\idealCTErmse}{0.012} \newcommand{\idealIAE}{0.73}
+\newcommand{\idealATE}{0.001}
+\newcommand{\navLKFpos}{0.019} \newcommand{\navRaw}{51.7} \newcommand{\navRed}{99.96}
+\newcommand{\navRedFix}{72.7}
+\newcommand{\navFixRMSE}{0.071}
+\newcommand{\seedRMSElo}{0.022} \newcommand{\seedRMSEhi}{0.025}
+\newcommand{\seedCTElo}{0.101} \newcommand{\seedCTEhi}{0.113}
+\newcommand{\stdRMSE}{0.024}
+\newcommand{\idealATEmax}{0.011} \newcommand{\idealPosRMSE}{0.012} \newcommand{\idealMargin}{0.292}
+\newcommand{\idealDeltaRate}{0.26} \newcommand{\CTEaltA}{0.207} \newcommand{\CTEvTwo}{0.101}
+\newcommand{\ATEvThree}{0.044} \newcommand{\lapTwo}{215.4} \newcommand{\lapIncrease}{24}
+\newcommand{\marginMinRob}{0.262}
+% robustness table rows: lap & CTEmax & RMSE_CTE & IAE & ATE_RMSE & margin & verdict
+\newcommand{\RobNominal}{174.1 & 0.101 & 0.025 & 3.38 & 0.012 & 0.305 & pass}
+\newcommand{\RobIdeal}{174.1 & 0.101 & 0.012 & 0.73 & 0.001 & 0.292 & pass}
+\newcommand{\RobStand}{174.1 & 0.101 & 0.024 & 3.24 & 0.013 & 0.313 & pass}
+\newcommand{\RobSeeds}{174.1 & 0.113 & 0.025 & 3.38 & 0.013 & 0.262 & pass}
+\newcommand{\RobVtwo}{215.4 & 0.101 & 0.023 & 3.79 & 0.013 & 0.290 & pass}
+\newcommand{\RobVthree}{147.9 & 0.101 & 0.027 & 3.05 & 0.044 & 0.300 & pass}
+\newcommand{\RobGrLo}{174.1 & 0.137 & 0.034 & 4.52 & 0.013 & 0.273 & pass}
+\newcommand{\RobGrHi}{174.1 & 0.112 & 0.026 & 3.54 & 0.012 & 0.270 & pass}
+\newcommand{\RobGvLo}{174.1 & 0.102 & 0.025 & 3.37 & 0.015 & 0.306 & pass}
+\newcommand{\RobGvHi}{174.1 & 0.101 & 0.025 & 3.39 & 0.012 & 0.305 & pass}
+% new in final revision
+\newcommand{\navFusedLKF}{0.019}  \newcommand{\navNoFusedLKF}{0.039}
+\newcommand{\realWheelRMSE}{0.201}
+\newcommand{\CTEafter}{0.069}
+\newcommand{\GrWorstCTE}{0.137}
+\newcommand{\CTEtenWorst}{0.113}  \newcommand{\RMSEtenWorst}{0.025}
+\newcommand{\ablActe}{0.173}      \newcommand{\ablCcte}{0.237}
+\newcommand{\steerRateOld}{2.75}  \newcommand{\steerRateNew}{0.35}
+\newcommand{\simulinkPos}{8.5e-14} \newcommand{\simulinkEst}{4.3e-14}
+\newcommand{\simulinkDelta}{2.4e-14}
+\newcommand{\arxLon}{2.2\times10^{-15}} \newcommand{\arxLat}{0.06}
+\newcommand{\latAoneAbs}{1.3122}
