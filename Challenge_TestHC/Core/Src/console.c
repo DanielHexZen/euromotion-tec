@@ -63,8 +63,59 @@ static const char *const HELP[] = {
     "D<mm> drive, V<mm/s> speed, T<ms>[ <ms>] ramps, W<deg> turn, -100..100 open loop %",
     "PWM <l%> <r%>, s or STOP stop, r reset counters (CLEAR in FAULT), p print, a auto, k params",
     "F[L|R]<Ks%> <Kv>, G<Kp> <Ki>, Y<Ksync>, P<id|name>=<v> set, P<id|name>? get, L dump",
-    "S status, I info, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
+    "S status, I info, IMU, IMUS stream, EKF, EV events, FAULTS, CLEAR, MODE IDLE|BENCH",
 };
+
+/* Every IMU / EKF number is formatted here, in legacy units (mm, deg, deg/s). */
+static void f_(char *b, size_t n, float v, uint8_t dec) { (void)fmt_fixed(b, n, v, dec); }
+
+static int imu_line(uint32_t i, char *buf, size_t n)
+{
+    con_imu_t s;
+    con_imu_snapshot(&s);
+    if (!s.present) { return (i == 0U) ? snprintf(buf, n, "IMU absent") : -1; }
+    char a[12], b[12], c[12], d[12];
+    if (i == 0U) {
+        f_(a, sizeof a, s.w_radps[0] * RAD2DEG_F, 2); f_(b, sizeof b, s.w_radps[1] * RAD2DEG_F, 2);
+        f_(c, sizeof c, s.w_radps[2] * RAD2DEG_F, 2); f_(d, sizeof d, s.temp_c, 1);
+        return snprintf(buf, n, "IMU %s  w %s %s %s deg/s  T %s C", s.alive ? "alive" : "DEAD", a, b, c, d);
+    }
+    if (i == 1U) {
+        f_(a, sizeof a, s.roll_rad * RAD2DEG_F, 2); f_(b, sizeof b, s.pitch_rad * RAD2DEG_F, 2);
+        f_(c, sizeof c, s.bg_radps * RAD2DEG_F, 3);
+        return snprintf(buf, n, "roll %s pitch %s deg  bg %s deg/s  n %lu drop %lu sat %lu glitch %lu", a, b, c,
+                        (unsigned long)s.n_samples, (unsigned long)s.n_drop, (unsigned long)s.n_sat, (unsigned long)s.n_glitch);
+    }
+    return -1;
+}
+
+static int ekf_line(uint32_t i, char *buf, size_t n)
+{
+    static const char *const NAME[CON_EKF_NU] = { "ZUPT", "edge", "face", "heading", "point" };
+    con_ekf_t s;
+    con_ekf_snapshot(&s);
+    char a[14], b[14], c[14], d[14], e[14];
+    if (i == 0U) {
+        f_(a, sizeof a, s.x_m * 1000.0f, 1); f_(b, sizeof b, s.y_m * 1000.0f, 1);
+        f_(c, sizeof c, s.th_rad * RAD2DEG_F, 2); f_(d, sizeof d, s.bg_radps * RAD2DEG_F, 3);
+        f_(e, sizeof e, s.s, 4);
+        return snprintf(buf, n, "EKF x %s y %s mm th %s deg bg %s deg/s s %s%s%s%s", a, b, c, d, e,
+                        s.still ? " STILL" : "", s.slip ? " SLIP" : "", s.degraded ? " DEGRADED" : "");
+    }
+    if (i == 1U) {
+        f_(a, sizeof a, s.sig_x_m * 1000.0f, 1); f_(b, sizeof b, s.sig_y_m * 1000.0f, 1);
+        f_(c, sizeof c, s.sig_th_rad * RAD2DEG_F, 2); f_(d, sizeof d, s.sig_bg_radps * RAD2DEG_F, 3);
+        return snprintf(buf, n, "sigma x %s y %s mm th %s deg bg %s deg/s; slips %lu, step %lu us", a, b, c, d,
+                        (unsigned long)s.slip_episodes, (unsigned long)s.step_us);
+    }
+    if (i < 2U + CON_EKF_NU) {
+        const uint32_t k = i - 2U;
+        f_(a, sizeof a, s.nis_mean[k], 2);
+        return snprintf(buf, n, "%s acc %lu rej %lu nis %s", NAME[k], (unsigned long)s.n_acc[k],
+                        (unsigned long)s.n_rej[k], a);
+    }
+    return -1;
+}
 
 /* Writes the line for item i into buf; returns its length, or -1 when the list is over. */
 static int job_line(con_job_t j, uint32_t i, char *buf, size_t n)
@@ -96,6 +147,10 @@ static int job_line(con_job_t j, uint32_t i, char *buf, size_t n)
     }
     case CON_JOB_INFO:
         return con_info_line(i, buf, n);
+    case CON_JOB_IMU:
+        return imu_line(i, buf, n);
+    case CON_JOB_EKF:
+        return ekf_line(i, buf, n);
     case CON_JOB_NONE:
     default:
         return -1;
@@ -192,6 +247,9 @@ static bool parse(com_port_t p, const char *s, con_cmd_t *c)
         c->type = CMD_FAULTINJ; c->f[0] = (float)a; return true;
     }
     if (kw(s, "FAULTS", &r) && at_end(r)) { c->type = CMD_FAULTS; return true; }
+    if (kw(s, "IMUS", &r) && at_end(r))   { c->type = CMD_IMUS; return true; }
+    if (kw(s, "IMU", &r) && at_end(r))    { c->type = CMD_IMU; return true; }
+    if (kw(s, "EKF", &r) && at_end(r))    { c->type = CMD_EKF; return true; }
     if (kw(s, "CLEAR", &r) && at_end(r))  { c->type = CMD_CLEAR; return true; }
     if (kw(s, "STOP", &r) && at_end(r))   { c->type = CMD_STOP; return true; }
     if (kw(s, "RUN", &r) && at_end(r))    { c->type = CMD_UNAVAILABLE; return true; }
@@ -328,4 +386,19 @@ void con_print_param(com_port_t p, const par_desc_t *d, float v)
     char num[20];
     (void)fmt_sci(num, sizeof num, v);
     con_printf(p, "P%u %s=%s %s\r\n", (unsigned)d->id, d->name, num, d->unit);
+}
+
+void con_print_imus(com_port_t p, uint32_t t_us, uint32_t n_total, const float w_radps[3], float temp_c)
+{
+    con_printf(p, "IMUS %lu %lu %ld %ld %ld %ld\r\n", (unsigned long)t_us, (unsigned long)n_total,
+               lroundf(w_radps[0] * RAD2DEG_F * 1000.0f), lroundf(w_radps[1] * RAD2DEG_F * 1000.0f),
+               lroundf(w_radps[2] * RAD2DEG_F * 1000.0f), lroundf(temp_c * 100.0f));
+}
+
+void con_print_turn(com_port_t p, float achieved_rad, float target_rad)
+{
+    char a[16], t[16];
+    (void)fmt_fixed(a, sizeof a, achieved_rad * RAD2DEG_F, 1);
+    (void)fmt_fixed(t, sizeof t, target_rad * RAD2DEG_F, 1);
+    con_printf(p, "Turn (gyro) %s of %s deg\r\n", a, t);
 }

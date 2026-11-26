@@ -20,10 +20,10 @@ function p = ekf_params()
 %   See also EKF_PARAM_CAST, EKF_INIT.
 
 % ------------------------------------------------------------- odometry (§10.2)
-p.odo_m_per_cnt   = 6.3638e-5;   % 200  m      pi*0.0726/3584, measured 8 Oct (M)
-p.odo_scale_l     = 1.0;         % 201  -      [MEASURE] UMBmark
-p.odo_scale_r     = 1.0;         % 202  -      [MEASURE] UMBmark
-p.odo_wheelbase   = 0.22325;     % 203  m      geometric; effective [MEASURE] UMBmark
+p.odo_m_per_cnt   = 6.35444e-5;  % 200  m      straight-line scale 2026-11-18 (M); was 6.3638e-5
+p.odo_scale_l     = 1.00084;     % 201  -      D5000 drift 2026-11-21 (M, D-72)
+p.odo_scale_r     = 0.99916;     % 202  -      idem
+p.odo_wheelbase   = 0.21926;     % 203  m      effective, W360 rotation test 2026-11-19 (M, D-55); geometric 0.22325
 
 % ------------------------------------------------------------- IMU (§10.2, §7.11)
 p.imu_timeout     = 0.020;       % 403  s
@@ -49,7 +49,7 @@ p.ekf_gyro_sf     = 0.003;       % 504  -           gyro scale-factor uncertaint
 p.ekf_q_bg        = 1.0e-10;     % 505  (rad/s)^2/s [MEASURE] Allan variance
 p.ekf_q_s         = 1.0e-9;      % 506  1/s
 p.ekf_q_th_enc    = 1.0e-4;      % 507  rad^2/m     encoder-heading mode
-p.ekf_zupt_floor  = 3.5e-5;      % 508  rad/s
+p.ekf_zupt_floor  = 2.0e-4;      % 508  rad/s  vehicle 2026-11-20 (D-69), [MEASURE] Allan (H7); was 3.5e-5
 p.ekf_zupt_T      = 1.0;         % 509  s
 p.ekf_still_s     = 0.2;         % 510  s
 p.ekf_gate1       = 9.0;         % 511  -           chi2_1 99.7 %
@@ -60,7 +60,7 @@ p.ekf_edge_skip   = 0.25;        % 515  m
 p.ekf_bg_conv     = 3.5e-4;      % 516  rad/s       0.02 deg/s
 p.ekf_p0_xy       = 0.01;        % 517  m (sigma)
 p.ekf_p0_th       = 0.0087;      % 518  rad (sigma)  0.5 deg
-p.ekf_p0_bg       = 0.0087;      % 519  rad/s (sigma) 0.5 deg/s
+p.ekf_p0_bg       = 0.087;       % 519  rad/s (sigma) 5 deg/s (D-66); was 0.5 deg/s
 p.ekf_p0_s        = 0.005;       % 520  - (sigma)
 
 % constants from the text of §7.17 (no parameter ID)

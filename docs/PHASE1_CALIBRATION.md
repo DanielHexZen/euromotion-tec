@@ -10,7 +10,9 @@ Do the steps in order. Stop at the first failure and write it down. Mark each bo
 
 **Sections 4, 5, 6 done (2026-11-18/19), section 7 (H6) not passed: casters (spec D-55).** Defaults compiled: 115–121 (feedforward), 200–203 (odometry).
 
-**Closed for now (2026-11-20), to be repeated:** UMBmark (§5) and the H6 verification (§7) are redone after the caster service (clean, check swivel play), 10 runs measured to the mm and the casters aligned before every run. Until then the compiled values above are the working calibration. Phase 2 (IMU, EKF) starts before H6, see spec D-56. Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
+**Closed for now (2026-11-20), to be repeated:** UMBmark (§5) and the H6 verification (§7) are redone after the caster service (clean, check swivel play), 10 runs measured to the mm and the casters aligned before every run. Until then the compiled values above are the working calibration. Phase 2 (IMU, EKF) starts before H6, see spec D-56.
+
+**2026-11-21 (lecture-room tiles, `tools/data/2026-11-21/`):** UMBmark repeated with `FEAT_IMU` 0, 10 runs, 190–494 mm: H6 failed again; casters not yet serviced. Wheel ratio re-derived from the lateral drift of 5 × `D5000` instead (spec D-72): `odo_scale_l/r` 1.00084 / 0.99916, check 21 / 17 mm left and one caster outlier. All odometry so far was measured on the smooth lecture-room tiles; the task runs outside on stone tiles: re-check `odo_m_per_cnt` there (section 4 method, 3 × `D5000`). Every number in the tools' `--help` text is labelled as an example. Do not copy example numbers into a parameter.
 
 Calibration firmware (`APP_CALIB 1`, built on `129e42f` + uncommitted `X` tests): `C`, `B`, `K` on blocks (`tools/data/2026-11-18/calib_blocks.log`), `G`, `L`, `X` S/P/N/L/D on the floor (`calib_floor.log`, copy in `tools/data/assessment1/`). `calib_host.py check` OK, `eval` over both logs:
 
@@ -40,7 +42,7 @@ Entered as compiled defaults in `par_table.h` (`t_whl_law` now pins the hand-com
 | `odo_wheelbase` (203) | UMBmark, `tools/umbmark.py` | 5 | covered |
 | `whl_ks_l/r`, `whl_kv_l/r` (116–119) | open-loop duty steps, steady speed from the `a` print, `tools/ffit.py steady` | 6 | covered, see limits in 6 |
 | `whl_ksb_l/r` (120, 121) | open-loop duty steps from rest, `tools/ffit.py breakaway` | 6 | covered, 1 % resolution |
-| `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **deferred**: the console prints every 300 ms and there is no capture (`CAP`, spec §7.25) before phase 2. Needs the calibration firmware (`K`, 50 Hz step, §19.2) or phase 2. Default 0.050 s stays `[MEASURE]`. |
+| `whl_tau_m` (115) | needs a step response with ≤ 20 ms resolution | – | **measured on blocks** (2026-11-18, calibration firmware `K`, 50 Hz step): 0.04975 s, entered as default (results table above). The loaded value on the floor is open: capture set 0 in phase 4 (`PHASE4_TELEMETRY.md`) or `K` on the floor. |
 | `odo_backlash_l/r` (204, 205) | reversal test | – | **deferred**: the parameters do not exist in `par_table.h` yet and are used only in phase 5 (§7.6.3). Needs phase 5: calibration `L` reports motor-side counts and latency only, real gear backlash is not observable with motor-side encoders. |
 | `whl_ff_u_ref` (129), `whl_ff_norm_en` (128) | feedforward at a measured battery voltage | – | **deferred**: the divider is wired since 2026-11-17 (`7 bat OK`, voltage in `S`), but `bat_ratio` is not yet checked against a multimeter. Keep `whl_ff_norm_en = 0`; record the `S` voltage during section 6 so `whl_ff_u_ref` can be set from it later. |
 

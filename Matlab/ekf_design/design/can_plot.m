@@ -32,7 +32,7 @@ function octave_fonts()
 % Octave only: provide FreeSans*.otf if Octave has no font directory of its own.
 if ~isempty(getenv('OCTAVE_FONTS_DIR')), return; end
 try
-    d0 = __octave_config_info__('octfontsdir');
+    d0 = feval('__octave_config_info__', 'octfontsdir');   % by name: MATLAB cannot parse a leading underscore
 catch
     d0 = '';
 end

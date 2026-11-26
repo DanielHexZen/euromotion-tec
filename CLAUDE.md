@@ -5,7 +5,11 @@ STM32F446RE (NUCLEO-F446RE) firmware for an autonomous differential-drive robot.
 **Always use the `/ponytail` skill** for work in this repository.
 
 ## Current state
-Phase 0 is closed (tag `phase0`; H2 scope check, EN at boot and the runaway EN check done 2026-11-18). Read the **Status** section of `docs/PHASE0_COMMISSIONING.md` first: gate table, ordered next steps, uncommitted changes, setup facts. Work runs on two tracks (spec §15, D-29): host-track work may run ahead of the gates, the vehicle track stays gated. Phase 1 is closed for now (2026-11-20): feedforward and odometry defaults are compiled; H6 failed on caster slip (spec D-55), UMBmark and H6 are repeated after the caster service. Phase 2 (IMU, EKF) starts before H6 (spec D-56); its code is on branch `phase2-imu-ekf`.
+Phase 0 is closed (tag `phase0`; H2 scope check, EN at boot and the runaway EN check done 2026-11-18). Details: `docs/PHASE0_COMMISSIONING.md` Status section.
+Phase 1 is closed for now (2026-11-20): feedforward and odometry defaults are compiled; H6 failed on caster slip (spec D-55), UMBmark and H6 are repeated after the caster service (`docs/PHASE1_CALIBRATION.md` Status).
+Phase 2 (IMU LSM6DS3 and EKF): **gate passed 2026-11-25** on branch `phase2-imu-ekf` (H7 with D-78, H8 stationary; `imu_gz_scale` 0.9907, glitch filter D-77, `FEAT_IMU` 1). Follow-up: final `ekf_gyro_nd`/`ekf_zupt_floor` from an overnight `IMUS` log (`tools/allan.py`). Set `FEAT_IMU` 0 for the H6 repeat. Details `docs/PHASE2_IMU_EKF.md`.
+Phase 3 (ToF sensors, guidance): sensor set reduced, spec D-70 (F1, F2, S2 tilted right, optional L1 on top; no G1–G4, no S1), open points OQ-12. Host code `gnd` (S2 only), `fwd` with `t_gnd`, `t_fwd`; `vl.c` waits for the ST ULD; `map`, `nav`, `msn` not started. Wiring and status in `docs/PHASE3_SENSORS.md`.
+Two tracks (spec §15, D-29): host track may run ahead of the gates, vehicle track stays gated.
 
 ## Sources of truth
 - `docs/FIRMWARE_SPEC.md`: normative. Defines what the code does: interfaces, numbers, `REQ-*` IDs. If code disagrees with it, the code is wrong.

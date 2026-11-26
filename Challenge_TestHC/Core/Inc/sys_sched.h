@@ -97,6 +97,13 @@ void     sys_sched_stats_peek(sys_sched_stats_t *out);
  * Overrun counters and the tick count are kept. */
 void     sys_sched_stats_reset(void);
 
+/* Watchdog (§5.7). start: init only, last step of app_init; Release always, Debug if wdg_enable.
+ * ctrl_done: end of app_ctrl. service: every main-loop pass, refreshes only if S_CTRL ran within
+ * 30 ms and the previous pass was less than 5 ms ago. */
+void     sys_wdg_start(IWDG_HandleTypeDef *h);
+void     sys_wdg_ctrl_done(void);
+void     sys_wdg_service(void);
+
 void     sys_slot_begin(slot_id_t s);
 void     sys_slot_end(slot_id_t s);
 

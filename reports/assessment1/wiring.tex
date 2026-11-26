@@ -33,7 +33,7 @@
 \node[pn,anchor=east] at (4.1,7.4) {TXD};
 \node[pn,anchor=east] at (4.1,7.0) {SET};
 \node[pn,anchor=south] at (2.8,6.5) {VCC};
-\draw[wlog] (2.8,6.45) -- (2.8,6.25); \node[tgl,anchor=north] at (2.8,6.25) {3V3};
+\draw[wlog] (2.8,6.45) -- (2.8,6.25); \node[tgl,anchor=north] at (2.8,6.25) {5V};
 \node[pn,anchor=south] at (3.4,6.5) {GND};
 \draw[wlog] (3.4,6.45) -- (3.4,6.25); \node[tgl,anchor=north] at (3.4,6.25) {GND};
 \node[bpw,minimum width=2.4cm,minimum height=1.0cm,align=center] (div) at (1.4,4.2) {47\,k$\Omega$ / 10\,k$\Omega$\\[-1pt]\tiny $+$100\,nF at node};
@@ -143,6 +143,6 @@
 \draw[wpow] (6.7,1.2) -- (6.7,1.45); \node[tgp,anchor=south] at (6.7,1.45) {GND};
 \draw[wsig] (14.4,1.0) -- (14.9,1.0); \node[pn,anchor=west] at (15.0,1.0) {signal};
 \draw[wpow] (14.4,0.65) -- (14.9,0.65); \node[pn,anchor=west] at (15.0,0.65) {battery / motor power};
-\draw[wlog] (14.4,0.3) -- (14.9,0.3); \node[pn,anchor=west] at (15.0,0.3) {logic supply (E5V, 3.3\,V rail)};
+\draw[wlog] (14.4,0.3) -- (14.9,0.3); \node[pn,anchor=west] at (15.0,0.3) {logic supply (5\,V buck, 3.3\,V rail)};
 \node[pn,anchor=west,align=left] at (14.4,-0.1) {Tags of equal name are connected;\\[-1pt] +Vbat/GND at the star point.};
 \end{tikzpicture}

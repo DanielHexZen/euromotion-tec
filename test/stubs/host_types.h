@@ -6,4 +6,5 @@
 #include <stdint.h>
 typedef struct { int unused; } UART_HandleTypeDef;
 typedef struct { int unused; } TIM_HandleTypeDef;
+typedef struct { int unused; } IWDG_HandleTypeDef;
 #endif

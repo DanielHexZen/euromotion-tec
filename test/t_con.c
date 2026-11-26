@@ -26,6 +26,12 @@ bool     sys_event_at(uint32_t i, sys_event_rec_t *o) { (void)i; (void)o; return
 uint32_t sys_fault_mask(void) { return 0U; }
 uint16_t sys_fault_first(void) { return 0U; }
 
+/* Snapshots the application would supply (app_cmd.c). */
+static con_imu_t g_imu;
+static con_ekf_t g_ekf;
+void con_imu_snapshot(con_imu_t *s) { *s = g_imu; }
+void con_ekf_snapshot(con_ekf_t *s) { *s = g_ekf; }
+
 static void feed(com_port_t p, const char *s) { while (*s != '\0') { con_rx_byte(p, (uint8_t)*s++); } }
 static void clear_out(void) { memset(g_out_n, 0, sizeof g_out_n); g_out[0][0] = g_out[1][0] = '\0'; }
 
@@ -90,8 +96,38 @@ void t_con(void)
     c = line("P113?");      CHECK(c.type == CMD_PGET && c.par->id == 113U);
     c = line("Pwhl_kp_x?"); CHECK(c.type == CMD_PGET);
 
+    REQ("spec 9: IMU and EKF print SI values in legacy units (deg, deg/s, mm)");
+    c = line("IMU");     CHECK(c.type == CMD_IMU);
+    c = line("EKF");     CHECK(c.type == CMD_EKF);
+    c = line("IMUS");    CHECK(c.type == CMD_IMUS);
+    clear_out();
+    { const float w[3] = { 0.001f, -0.0423f, 0.5f * DEG2RAD_F };
+      con_print_imus(COM_USB, 4000000001U, 123456U, w, 31.247f); }
+    CHECK(says("IMUS 4000000001 123456 57 -2424 500 3125"));   /* H7 stream: mdps, 0.01 C */
+    g_imu = (con_imu_t){ .present = true, .alive = true, .w_radps = { 0.0f, 0.0f, 0.5f * DEG2RAD_F },
+                         .temp_c = 31.24f, .roll_rad = 1.0f * DEG2RAD_F, .pitch_rad = -2.0f * DEG2RAD_F,
+                         .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U, .n_glitch = 2U };
+    clear_out();
+    con_job(COM_USB, CON_JOB_IMU);
+    for (int i = 0; i < 4; i++) { (void)con_poll(&c); }
+    CHECK(says("IMU alive  w 0.00 0.00 0.50 deg/s  T 31.2"));
+    CHECK(says("roll 1.00 pitch -2.00 deg  bg 0.020 deg/s  n 99 drop 1 sat 0 glitch 2"));
+    g_imu.present = false;
+    clear_out();
+    con_job(COM_USB, CON_JOB_IMU);
+    for (int i = 0; i < 4; i++) { (void)con_poll(&c); }
+    CHECK(says("IMU absent"));
+    g_ekf = (con_ekf_t){ .x_m = 1.2345f, .y_m = -0.5f, .th_rad = 90.0f * DEG2RAD_F, .s = 1.0003f,
+                         .sig_x_m = 0.002f, .still = true, .n_acc = { 12U }, .nis_mean = { 1.02f } };
+    clear_out();
+    con_job(COM_USB, CON_JOB_EKF);
+    for (int i = 0; i < 8; i++) { (void)con_poll(&c); }
+    CHECK(says("EKF x 1234.5 y -500.0 mm th 90.00 deg bg 0.000 deg/s s 1.0003 STILL"));
+    CHECK(says("sigma x 2.0 y 0.0 mm"));
+    CHECK(says("ZUPT acc 12 rej 0 nis 1.02") && says("point acc 0 rej 0 nis 0.00"));
+
     REQ("REQ-CON-04: unknown, range and syntax errors");
-    c = line("IMU");     CHECK(c.type == CMD_NONE && says("ERR unknown, ? for help"));
+    c = line("IMUX");    CHECK(c.type == CMD_NONE && says("ERR unknown, ? for help"));
     c = line("x1");      CHECK(c.type == CMD_NONE && says("ERR unknown"));
     c = line("D3");      CHECK(c.type == CMD_NONE && says("ERR range 5..20000"));
     c = line("D20001");  CHECK(c.type == CMD_NONE && says("ERR range"));
