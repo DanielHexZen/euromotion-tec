@@ -22,9 +22,10 @@
 #define TURN_MAX_DEG  3600.0f
 
 typedef struct {
-    char     line[LINE_MAX_CH + 1U];
+    char     line[LINE_MAX_CH + 1U];      /* line being assembled                  */
+    char     pend[2][LINE_MAX_CH + 1U];   /* completed lines, FIFO, for con_poll  */
+    uint8_t  npend;
     uint8_t  len;
-    bool     ready;
     uint32_t last_rx_ms;
     bool     autoprint;
     con_job_t job;
@@ -38,8 +39,12 @@ void con_rx_byte(com_port_t p, uint8_t b)
     port_t *c = &P[p];
     c->last_rx_ms = sys_ms();
     if (b == '\r' || b == '\n') {
-        if (c->len > 0U && !c->ready) { c->line[c->len] = '\0'; c->len = 0U; c->ready = true; }
-    } else if (!c->ready && c->len < LINE_MAX_CH) {
+        if (c->len > 0U) {
+            c->line[c->len] = '\0';
+            if (c->npend < 2U) { memcpy(c->pend[c->npend], c->line, sizeof c->line); c->npend++; }   /* else dropped */
+            c->len = 0U;
+        }
+    } else if (c->len < LINE_MAX_CH) {
         c->line[c->len++] = (char)b;
     }
 }
@@ -358,10 +363,11 @@ bool con_poll(con_cmd_t *cmd)
     for (uint32_t i = 0U; i < (uint32_t)COM_N; i++) { job_advance((com_port_t)i); }
     for (uint32_t i = 0U; i < (uint32_t)COM_N; i++) {
         port_t *c = &P[i];
-        if (!c->ready) { continue; }
+        if (c->npend == 0U) { continue; }
         char line[LINE_MAX_CH + 1U];
-        memcpy(line, c->line, sizeof line);
-        c->ready = false;
+        memcpy(line, c->pend[0], sizeof line);
+        if (c->npend == 2U) { memcpy(c->pend[0], c->pend[1], sizeof c->pend[0]); }
+        c->npend--;
         con_printf((com_port_t)i, "> %s\r\n", line);                 /* echo: corrupted radio input is visible */
         if (parse((com_port_t)i, line, cmd)) { return true; }
     }

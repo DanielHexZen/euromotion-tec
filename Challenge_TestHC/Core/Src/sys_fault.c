@@ -87,6 +87,7 @@ void sys_fault_clear(void)
     const uint32_t pm = sys_irq_save();
     s_latched &= keep;
     if (s_latched == 0U) { s_first = 0U; }
+    else if ((s_latched & (1UL << s_first)) == 0U) { s_first = (uint16_t)__builtin_ctz(s_latched); }
     sys_irq_restore(pm);
 }
 

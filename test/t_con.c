@@ -151,6 +151,13 @@ void t_con(void)
     CHECK(con_poll(&c) && c.type == CMD_MOVE && c.port == COM_USB);
     CHECK_NEAR(c.f[0], 1.0, 1e-6);                /* "D10" + "00" = D1000 */
 
+    REQ("REQ-CON-02: two lines in one burst (before con_poll) both run, in order");
+    clear_out();
+    feed(COM_USB, "STOP\r\nD1000\r\n");
+    CHECK(con_poll(&c) && c.type == CMD_STOP);
+    CHECK(con_poll(&c) && c.type == CMD_MOVE);
+    CHECK_NEAR(c.f[0], 1.0, 1e-6);
+
     REQ("line length limit 48: the rest is dropped, the line still runs");
     c = line("D1000                                                  junk");
     CHECK(c.type == CMD_MOVE);
