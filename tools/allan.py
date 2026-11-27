@@ -14,7 +14,7 @@ nobody touching it. `IMUS` to start, 30 min (at least 10), `IMUS` to stop.
 
 Output
   1. DRDY rate = (n_last - n_first) / (t_last - t_first) against --odr (H7: +/- 0.1 %)
-  2. mean rate (bias) per axis; z rate against temperature (tc1, tc2 for P400/P401, corrupted readings\n     dropped with the firmware rule of D-80; needs a warm-up span of >= 2 K, quadratic from 5 K)
+  2. mean rate (bias) per axis; z rate against temperature (tc1, tc2 for P400/P401, corrupted readings\n     dropped with the firmware rule of D-81; needs a warm-up span of >= 2 K, quadratic from 5 K)
   3. overlapping Allan deviation per axis (table)
   4. from the z axis: angle random walk N (-> ekf_gyro_nd, P503), bias instability, ZUPT floor
      sqrt(sigma_z(T)^2 - N^2/T) at T = --zupt-T (-> ekf_zupt_floor, P508; the ZUPT variance of
@@ -92,7 +92,7 @@ def interp(ad, tau):
 
 
 def temp_guard(temps, step=1.0):
-    """Same rule as the firmware (D-80): -40..85 C, steps > 1 K rejected up to 3 times in a row.
+    """Same rule as the firmware (D-81): -40..85 C, steps > 1 K rejected up to 3 times in a row.
     -> list of accepted temperatures or None per window."""
     out, last, run = [], None, 0
     for t in temps:
@@ -113,7 +113,7 @@ def temp_fit(rows, out):
     pts = [(t - 25.0, r[4]) for t, r in zip(tg, rows) if t is not None]
     bad = len(rows) - len(pts)
     ts = [p[0] + 25.0 for p in pts]
-    out(f"temperature {min(ts):.2f} .. {max(ts):.2f} degC ({bad} corrupted readings dropped, D-80)")
+    out(f"temperature {min(ts):.2f} .. {max(ts):.2f} degC ({bad} corrupted readings dropped, D-81)")
     span = max(ts) - min(ts)
     if span < 2.0:
         out("temperature span < 2 K: no coefficient (REQ-IMU-03 needs a warm-up run from cold)")
