@@ -2,6 +2,7 @@
 
 > **Status:** Draft for review
 > **Version:** 1.25 (phases 2 and 3 merged, latest D-80; 2026-11-27)
+> **Last Updated:** 2026-11-27 (course week 11 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
 > **Companion documents:** `MR2006B_Vehicle_Technical_Reference.tex/.pdf` (physics, models, rationale — *why*), `PHASE0_COMMISSIONING.md` (phase-0 gate and status), `PHASE1_CALIBRATION.md` (phase-1 procedure, D-31), `PHASE2_IMU_EKF.md` (IMU wiring, phase-2 status and bench checklist), `Matlab/ekf_design/` (EKF reference model, D-30), `BENCH_README.md` (bench firmware), `MR2006B_CubeMX_Konfiguration.xlsx` (current `.ioc` state, in `Challenge_TestHC/`), `CALIB_README.md` (calibration firmware, optional route, D-47), `CONCEPT_REV_F_CHANGES.md`. Not in the repository (checked with `git ls-files`, 2026-11-10): `CONCEPT.md` Rev. E, `TOOLCHAIN.md`, `MR2006B_Pinout.xlsx`
