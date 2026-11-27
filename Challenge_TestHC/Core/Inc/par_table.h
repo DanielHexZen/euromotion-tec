@@ -57,6 +57,7 @@
     X(403, imu_timeout,      0.020f,    "s",       0.005f,  0.2f,   PAR_L) \
     X(404, imu_extrap_max,   0.002f,    "s",       0.0f,    0.005f, PAR_L) \
     X(405, imu_jump_max,     1.745f,    "rad/s",   0.1f,    10.0f,  PAR_L) \
+    X(406, imu_spi_div,      16.0f,     "-",       2.0f,    256.0f, PAR_L) \
     /* 10.2 attitude filter */ \
     X(410, att_tau,          1.0f,      "s",       0.1f,    10.0f,  PAR_L) \
     X(411, att_acc_gate,     0.1f,      "g",       0.02f,   0.5f,   PAR_L) \

@@ -106,12 +106,12 @@ void t_con(void)
     CHECK(says("IMUS 4000000001 123456 57 -2424 500 3125"));   /* H7 stream: mdps, 0.01 C */
     g_imu = (con_imu_t){ .present = true, .alive = true, .w_radps = { 0.0f, 0.0f, 0.5f * DEG2RAD_F },
                          .temp_c = 31.24f, .roll_rad = 1.0f * DEG2RAD_F, .pitch_rad = -2.0f * DEG2RAD_F,
-                         .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U, .n_glitch = 2U };
+                         .bg_radps = 0.02f * DEG2RAD_F, .n_samples = 99U, .n_drop = 1U, .n_glitch = 2U, .n_temp_rej = 3U, .spi_div = 16U };
     clear_out();
     con_job(COM_USB, CON_JOB_IMU);
     for (int i = 0; i < 4; i++) { (void)con_poll(&c); }
     CHECK(says("IMU alive  w 0.00 0.00 0.50 deg/s  T 31.2"));
-    CHECK(says("roll 1.00 pitch -2.00 deg  bg 0.020 deg/s  n 99 drop 1 sat 0 glitch 2"));
+    CHECK(says("roll 1.00 pitch -2.00 deg  bg 0.020 deg/s  n 99 drop 1 sat 0 glitch 2/3 spi 16"));
     g_imu.present = false;
     clear_out();
     con_job(COM_USB, CON_JOB_IMU);

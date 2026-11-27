@@ -34,7 +34,8 @@ static float     s_sum_w[3];                     /* IMUS window, main loop only 
 static uint32_t  s_sum_n;
 static imu_glitch_t s_glitch;
 static imu_tguard_t s_tguard;
-static uint32_t  s_glitch_n;
+static uint32_t  s_glitch_n, s_temp_rej_n;
+static int       s_spi_br = 3;                   /* CubeMX default: /16 */
 static bool      s_have_prev, s_timed_out;
 static float     s_temp_c = T_REF_C, s_w[3], s_acc[3];
 
@@ -126,7 +127,7 @@ static void process(const raw_t *r, att_t *att, const par_t *q)
         }
     }
     float t_c = (float)tr * s_be->temp_lsb_c + s_be->temp_off_c;
-    if (imu_temp_reject(&s_tguard, &t_c, T_STEP_MAX_C)) { s_glitch_n++; }   /* D-81: corrupted bytes hit T too */
+    if (imu_temp_reject(&s_tguard, &t_c, T_STEP_MAX_C)) { s_temp_rej_n++; }   /* D-81: corrupted bytes hit T too */
     s_temp_c = t_c;
     const float dT = s_temp_c - T_REF_C;
     s_w[2] = s_w[2] * q->imu_gz_scale - (q->imu_tc1 * dT + q->imu_tc2 * dT * dT);   /* REQ-IMU-03 */
@@ -149,6 +150,12 @@ void imu_drain(att_t *att)
 {
     if (!s_present) { return; }
     const par_t *q = par();
+    const int br = imu_spi_br_bits(q->imu_spi_div);        /* D-82: invalid values keep the applied one */
+    if (br >= 0 && br != s_spi_br) {
+        const uint32_t pm = sys_irq_save();                /* the DRDY ISR cannot start a transfer meanwhile */
+        if (!s_busy) { imu_lsm6ds3_set_spi_br((uint32_t)br); s_spi_br = br; }
+        sys_irq_restore(pm);
+    }
     const uint32_t h = s_head;
     __DMB();                                              /* slot contents after the head index */
     uint32_t t = s_tail;
@@ -186,7 +193,8 @@ imu_info_t imu_info(void)
 {
     imu_info_t i = { .present = s_present, .alive = imu_alive(), .temp_c = s_temp_c,
                      .n_samples = s_n, .n_drop = s_drop, .n_sat = s_sat_n,
-                     .n_glitch = s_glitch_n };
+                     .n_glitch = s_glitch_n, .n_temp_rej = s_temp_rej_n,
+                     .spi_div = 2U << (uint32_t)s_spi_br };
     for (uint32_t k = 0U; k < 3U; k++) { i.w_radps[k] = s_w[k]; i.acc_mps2[k] = s_acc[k]; }
     return i;
 }

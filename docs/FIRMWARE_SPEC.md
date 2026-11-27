@@ -1,7 +1,7 @@
 # MR2006B Vehicle Firmware — Implementation Specification
 
 > **Status:** Draft for review
-> **Version:** 1.26 (IMU temperature guard and fit, D-81; 2026-11-27)
+> **Version:** 1.27 (live SPI1 prescaler for the IMU corruption A/B test, D-82; 2026-11-27)
 > **Last Updated:** 2026-11-27 (course week 11 of 16; version 1.0 of 2026-10-14 was written in week 6)
 > **Authors:** Dani (system design, goals), Claude (specification)
 > **Scope:** all code that runs on the NUCLEO-F446RE of the MR2006B vehicle, and the host-side tools the firmware depends on (course generator, unit tests)
@@ -1768,6 +1768,7 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 403 | `imu_timeout` | 0.020 | s | 0.005–0.2 | L | D | |
 | 404 | `imu_extrap_max` | 0.002 | s | 0–0.005 | L | D | |
 | 405 | `imu_jump_max` | 1.745 | rad/s | 0.1–10 | L | D | glitch filter (D-77): largest accepted gyro change between two samples (100 °/s in 1.2 ms) `[DECIDE]` |
+| 406 | `imu_spi_div` | 16 | – | 2–256 | L | D | SPI1 prescaler applied live, powers of two only (D-82); /16 = 5.6 MHz as in §7.11.1 |
 | 410 | `att_tau` | 1.0 | s | 0.1–10 | L | D | complementary filter |
 | 411 | `att_acc_gate` | 0.1 | g | 0.02–0.5 | L | D | |
 
@@ -2327,6 +2328,7 @@ Each decision has a short rationale. Each can be reversed; the column "To revers
 | D-77 | **IMU glitch filter** (2026-11-25). The H7 standstill log showed 31 y and 16 z samples in 1524 s (0 on x) with about +17 000 LSB (+300 °/s) on one axis, one sample each: corrupted reads, not motion (only axes with a negative rest value are hit). A gyro sample whose raw value differs from the last accepted one by more than `imu_jump_max` (P405, 100 °/s) on any axis is dropped before `att` and the yaw integral and counted (`IMU` shows `glitch`); after 3 rejections in a row the sample is accepted as the new reference, so a real change cannot lock the filter. Pure helper `imu_glitch_reject` in `imu_yaw.c`, test in `t_imu_yaw`. The SPI clock stays at /16 (team decision: short direct wires); the cause is still open | each z event added about +0.35° to the yaw integral and spoiled one ZUPT window; the vehicle cannot change its rate by 100 °/s within 1.2 ms | `imu_jump_max` = 10 (filter effectively off) |
 | D-78 | **The measured DRDY rate of 820.85 Hz (−1.46 % against the nominal 833 Hz) is accepted** (H7 standstill log 2026-11-25, rate from the board's sample counter and TIM2 over 2226 s). The H7 rate criterion becomes: rate stable over the log, no gaps in the sample stream, deviation from the nominal ODR documented; instead of ± 0.1 % | the rate is a property of the LSM6DS3 internal oscillator; all integration uses TIM2 timestamps of the DRDY edges (REQ-IMU-01), so the deviation has no effect; the yaw ring (32 samples = 39 ms at 821 Hz) and `imu_timeout` (20 ms) still fit | ± 0.1 % with an external clock for the IMU |
 | D-81 | **Temperature guard before the temperature model (REQ-IMU-03), and the coefficient fit in `allan.py`** (2026-11-27). The H7 log of 2026-11-26 showed corrupted temperature readings (−33 °C, 1279 °C), the same byte corruption as D-77. With `imu_tc1/tc2` ≠ 0 every such reading would put a step into ω_z. A reading outside −40…85 °C is always replaced by the last good one; a step > 1 K against it is replaced up to 3 times in a row, then accepted (`imu_temp_reject` in `imu_yaw.c`, `t_imu_yaw`; counted in `glitch`). `allan.py` drops corrupted readings with the same rule and fits ω_z = c0 + c1·ΔT + c2·ΔT² (ΔT = T − 25 °C; linear below 5 K span, nothing below 2 K) with standard errors, and prints `P400`/`P401` as an increment to the values active during the log. `imu_tc1/tc2` stay 0 until a warm-up log from cold gives a span ≥ 2 K | the die temperature changes by far less than 1 K per 1.2 ms; the model is useless while corrupted readings reach it | no guard, keep `imu_tc1/tc2` = 0 |
+| D-82 | **Live SPI1 prescaler for the corruption A/B test** (2026-11-27). Byte corruption on the IMU read persists (D-77, D-81: 0.2 % of the samples, temperature and gyro y/z high bytes). `imu_spi_div` (P406, default 16 = 5.6 MHz, as before) sets the SPI1 prescaler at run time without a CubeMX regeneration: `imu_drain` compares `imu_spi_br_bits(P406)` (pure helper, `t_imu_yaw`) with the applied code and, with interrupts masked and no DMA transfer in flight (`s_busy` false), clears SPE and writes the BR bits; `HAL_SPI_TransmitReceive_DMA` sets SPE again on the next read. Anything but a power of two 2…256 is ignored. The counters are split: `IMU` line 2 shows `glitch G/T spi D` (G gyro rejections D-77, T temperature rejections D-81, D applied divider). Procedure in `PHASE2_IMU_EKF.md`. If T drops to about 0 at /64, /64 is kept (burst 86 µs instead of 21 µs, far inside the 1.2 ms period) and the default changes | the cause is open; the SPI clock is the cheapest variable and a reflash per setting would blur the comparison | recompile with another `BaudRatePrescaler` in CubeMX (regeneration, one setting per flash) |
 
 ---
 
@@ -2432,3 +2434,4 @@ If the calibration firmware is used (D-31, D-47), its results map as follows; wi
 | 1.22 | 2026-11-25 | Dani / Claude | D-77: IMU glitch filter, parameter 405 `imu_jump_max`. Numbered after D-76/1.21 of `phase4-telemetry` |
 | 1.23 | 2026-11-25 | Dani / Claude | D-78: DRDY rate 820.85 Hz accepted, H7 rate criterion changed |
 | 1.26 | 2026-11-27 | Dani / Claude | D-81: temperature guard before REQ-IMU-03, `allan.py` fits `imu_tc1/tc2`. Numbered after D-80/1.25 of `phase4-telemetry` (port modes, USART1 DMA, radio window, H11b) |
+| 1.27 | 2026-11-27 | Dani / Claude | D-82: `imu_spi_div` (P406) switches the SPI1 prescaler live, `IMU` shows `glitch G/T spi D` |
