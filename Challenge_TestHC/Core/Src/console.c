@@ -84,8 +84,9 @@ static int imu_line(uint32_t i, char *buf, size_t n)
     if (i == 1U) {
         f_(a, sizeof a, s.roll_rad * RAD2DEG_F, 2); f_(b, sizeof b, s.pitch_rad * RAD2DEG_F, 2);
         f_(c, sizeof c, s.bg_radps * RAD2DEG_F, 3);
-        return snprintf(buf, n, "roll %s pitch %s deg  bg %s deg/s  n %lu drop %lu sat %lu glitch %lu", a, b, c,
-                        (unsigned long)s.n_samples, (unsigned long)s.n_drop, (unsigned long)s.n_sat, (unsigned long)s.n_glitch);
+        return snprintf(buf, n, "roll %s pitch %s deg  bg %s deg/s  n %lu drop %lu sat %lu glitch %lu/%lu spi %lu", a, b, c,
+                        (unsigned long)s.n_samples, (unsigned long)s.n_drop, (unsigned long)s.n_sat, (unsigned long)s.n_glitch,
+                        (unsigned long)s.n_temp_rej, (unsigned long)s.spi_div);
     }
     return -1;
 }

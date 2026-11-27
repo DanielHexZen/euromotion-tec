@@ -36,4 +36,7 @@ bool imu_glitch_reject(imu_glitch_t *f, const int16_t g[3], int32_t lim_lsb);
 typedef struct { float t; uint8_t run; bool have; } imu_tguard_t;
 bool imu_temp_reject(imu_tguard_t *g, float *t_c, float max_step_c);
 
+/* SPI1 prescaler (D-82): BR code 0..7 (divider 2..256) for a power-of-two divider, -1 otherwise. */
+int imu_spi_br_bits(float div);
+
 #endif

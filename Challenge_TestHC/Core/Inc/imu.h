@@ -38,7 +38,8 @@ typedef struct {
     bool     alive;
     float    w_radps[3], acc_mps2[3];               /* last sample, body axes                */
     float    temp_c;
-    uint32_t n_samples, n_drop, n_sat, n_glitch;
+    uint32_t n_samples, n_drop, n_sat, n_glitch, n_temp_rej;   /* gyro glitches D-77, temperature rejections D-81 */
+    uint32_t spi_div;                               /* applied SPI1 prescaler (D-82)         */
 } imu_info_t;
 imu_info_t imu_info(void);                          /* console IMU                           */
 /* Mean body rate of the samples since the previous call, time of the last one and the total

@@ -19,6 +19,13 @@ static SPI_HandleTypeDef *s_spi;
 
 void imu_lsm6ds3_bind(SPI_HandleTypeDef *hspi) { s_spi = hspi; }
 
+void imu_lsm6ds3_set_spi_br(uint32_t br)
+{
+    s_spi->Instance->CR1 &= ~SPI_CR1_SPE;                  /* HAL_SPI_TransmitReceive_DMA sets it again */
+    s_spi->Instance->CR1 = (s_spi->Instance->CR1 & ~SPI_CR1_BR) | (br << SPI_CR1_BR_Pos);
+    s_spi->Init.BaudRatePrescaler = br << SPI_CR1_BR_Pos;
+}
+
 static void cs(bool low)
 {
     IMU_CS_GPIO_Port->BSRR = low ? ((uint32_t)IMU_CS_Pin << 16U) : (uint32_t)IMU_CS_Pin;

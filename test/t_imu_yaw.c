@@ -62,6 +62,14 @@ void t_imu_yaw(void)
         CHECK(imu_glitch_reject(&f, neg, 5700));              /* negative jumps on any axis count too */
     }
 
+    REQ("REQ-IMU-01 / D-82: SPI divider to BR code, only powers of two 2..256");
+    CHECK(imu_spi_br_bits(2.0f) == 0);
+    CHECK(imu_spi_br_bits(16.0f) == 3);
+    CHECK(imu_spi_br_bits(64.0f) == 5);
+    CHECK(imu_spi_br_bits(256.0f) == 7);
+    CHECK(imu_spi_br_bits(0.0f) == -1 && imu_spi_br_bits(1.0f) == -1 && imu_spi_br_bits(3.0f) == -1);
+    CHECK(imu_spi_br_bits(24.0f) == -1 && imu_spi_br_bits(512.0f) == -1 && imu_spi_br_bits(NAN) == -1);
+
     REQ("REQ-IMU-03 / D-81: corrupted temperature readings are replaced by the last good one");
     {
         imu_tguard_t g = { 0 };

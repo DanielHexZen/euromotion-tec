@@ -6,5 +6,6 @@
 
 extern const imu_backend_t IMU_LSM6DS3;
 void imu_lsm6ds3_bind(SPI_HandleTypeDef *hspi);     /* init only, before probe() */
+void imu_lsm6ds3_set_spi_br(uint32_t br);         /* SPE off, BR code 0..7; SPI idle only (D-82) */
 
 #endif

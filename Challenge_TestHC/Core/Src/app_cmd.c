@@ -138,6 +138,8 @@ void con_imu_snapshot(con_imu_t *s)
     s->n_drop = i.n_drop;
     s->n_sat = i.n_sat;
     s->n_glitch = i.n_glitch;
+    s->n_temp_rej = i.n_temp_rej;
+    s->spi_div = i.spi_div;
 #endif
 }
 

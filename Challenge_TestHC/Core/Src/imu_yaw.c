@@ -80,3 +80,11 @@ bool imu_temp_reject(imu_tguard_t *g, float *t_c, float max_step_c)
     g->have = true;
     return false;
 }
+
+int imu_spi_br_bits(float div)
+{
+    for (int br = 0; br < 8; br++) {
+        if (div == (float)(2U << (uint32_t)br)) { return br; }
+    }
+    return -1;
+}
