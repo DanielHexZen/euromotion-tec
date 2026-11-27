@@ -14,6 +14,7 @@
 #define COS_MIN   0.05f          /* 1 / cos(theta) cap: a ground vehicle never pitches to 87 deg */
 #define SAT_RUN   3U             /* REQ-IMU-07 */
 #define T_REF_C   25.0f          /* REQ-IMU-03 */
+#define T_STEP_MAX_C 1.0f        /* D-80: the die cannot change by 1 K within one sample (1.2 ms) */
 #define SETTLE_US 500000U        /* samples of the first 0.5 s after configure are dropped (D-67) */
 
 typedef struct { uint32_t t_us; uint8_t rx[IMU_READ_BYTES]; } raw_t;
@@ -32,6 +33,7 @@ static uint32_t  s_prev_us, s_kick_us, s_init_us, s_sat_run, s_sat_n, s_n;
 static float     s_sum_w[3];                     /* IMUS window, main loop only */
 static uint32_t  s_sum_n;
 static imu_glitch_t s_glitch;
+static imu_tguard_t s_tguard;
 static uint32_t  s_glitch_n;
 static bool      s_have_prev, s_timed_out;
 static float     s_temp_c = T_REF_C, s_w[3], s_acc[3];
@@ -123,7 +125,9 @@ static void process(const raw_t *r, att_t *att, const par_t *q)
             s_acc[i] += (float)MAP[i][j] * (float)a[j] * s_be->acc_lsb_mps2;
         }
     }
-    s_temp_c = (float)tr * s_be->temp_lsb_c + s_be->temp_off_c;
+    float t_c = (float)tr * s_be->temp_lsb_c + s_be->temp_off_c;
+    if (imu_temp_reject(&s_tguard, &t_c, T_STEP_MAX_C)) { s_glitch_n++; }   /* D-80: corrupted bytes hit T too */
+    s_temp_c = t_c;
     const float dT = s_temp_c - T_REF_C;
     s_w[2] = s_w[2] * q->imu_gz_scale - (q->imu_tc1 * dT + q->imu_tc2 * dT * dT);   /* REQ-IMU-03 */
 

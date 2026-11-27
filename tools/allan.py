@@ -14,7 +14,7 @@ nobody touching it. `IMUS` to start, 30 min (at least 10), `IMUS` to stop.
 
 Output
   1. DRDY rate = (n_last - n_first) / (t_last - t_first) against --odr (H7: +/- 0.1 %)
-  2. mean rate (bias) and temperature span per axis, z drift against temperature
+  2. mean rate (bias) per axis; z rate against temperature (tc1, tc2 for P400/P401, corrupted readings\n     dropped with the firmware rule of D-80; needs a warm-up span of >= 2 K, quadratic from 5 K)
   3. overlapping Allan deviation per axis (table)
   4. from the z axis: angle random walk N (-> ekf_gyro_nd, P503), bias instability, ZUPT floor
      sqrt(sigma_z(T)^2 - N^2/T) at T = --zupt-T (-> ekf_zupt_floor, P508; the ZUPT variance of
@@ -91,6 +91,60 @@ def interp(ad, tau):
     return None
 
 
+def temp_guard(temps, step=1.0):
+    """Same rule as the firmware (D-80): -40..85 C, steps > 1 K rejected up to 3 times in a row.
+    -> list of accepted temperatures or None per window."""
+    out, last, run = [], None, 0
+    for t in temps:
+        ok_range = -40.0 <= t <= 85.0
+        if not ok_range or (last is not None and abs(t - last) > step and run < 3):
+            run = run + 1 if ok_range else 0
+            out.append(None)
+            continue
+        last, run = t, 0
+        out.append(t)
+    return out
+
+
+def temp_fit(rows, out):
+    """z rate against temperature (REQ-IMU-03): wz = c0 + c1 dT + c2 dT^2, dT = T - 25 C, least squares.
+    Linear below a 5 K span, nothing below 2 K. -> (tc1, tc2) in rad/s/K, rad/s/K^2 or None."""
+    tg = temp_guard([r[5] for r in rows])
+    pts = [(t - 25.0, r[4]) for t, r in zip(tg, rows) if t is not None]
+    bad = len(rows) - len(pts)
+    ts = [p[0] + 25.0 for p in pts]
+    out(f"temperature {min(ts):.2f} .. {max(ts):.2f} degC ({bad} corrupted readings dropped, D-80)")
+    span = max(ts) - min(ts)
+    if span < 2.0:
+        out("temperature span < 2 K: no coefficient (REQ-IMU-03 needs a warm-up run from cold)")
+        return None
+    deg = 2 if span >= 5.0 else 1
+    n = deg + 1
+    A = [[sum(p[0] ** (i + j) for p in pts) for j in range(n)] for i in range(n)]
+
+    def solve(rhs):                                        # Gauss without pivoting: A is SPD
+        M = [row[:] + [r] for row, r in zip(A, rhs)]
+        for i in range(n):
+            for k in range(i + 1, n):
+                f = M[k][i] / M[i][i]
+                for j in range(i, n + 1):
+                    M[k][j] -= f * M[i][j]
+        x = [0.0] * n
+        for i in reversed(range(n)):
+            x[i] = (M[i][n] - sum(M[i][j] * x[j] for j in range(i + 1, n))) / M[i][i]
+        return x
+    c = solve([sum(p[1] * p[0] ** i for p in pts) for i in range(n)])
+    s2 = sum((p[1] - sum(c[i] * p[0] ** i for i in range(n))) ** 2 for p in pts) / (len(pts) - n)
+    se = [math.sqrt(s2 * solve([1.0 if j == i else 0.0 for j in range(n)])[i]) for i in range(n)]
+    c1, c2 = c[1], (c[2] if deg == 2 else 0.0)
+    e1, e2 = se[1], (se[2] if deg == 2 else 0.0)
+    out(f"z against temperature: {c1 * 1e3:+.2f} +/- {e1 * 1e3:.2f} mdps/K, {c2 * 1e3:+.3f} +/- {e2 * 1e3:.3f} mdps/K^2 "
+        f"over {span:.1f} K ({'quadratic' if deg == 2 else 'linear, span < 5 K'}; +/- one standard error, white noise only)")
+    out(f"P400={c1 * D2R:.3e}   # imu_tc1, ADD to the value active during the log (the stream is compensated)")
+    out(f"P401={c2 * D2R:.3e}   # imu_tc2, idem")
+    return c1 * D2R, c2 * D2R, e1 * D2R, e2 * D2R
+
+
 def analyse(rows, odr, zupt_t, out=print, spike_lim=3.0, despike=False):
     if len(rows) < 100:
         out("ERROR: fewer than 100 IMUS lines")
@@ -130,19 +184,11 @@ def analyse(rows, odr, zupt_t, out=print, spike_lim=3.0, despike=False):
         out(f"SPIKES: {n_spk[0]} x, {n_spk[1]} y, {n_spk[2]} z windows off by > {spike_lim:g} deg/s from the median "
             f"({'replaced by the median (--despike)' if despike else 'not removed'})")
 
-    temps = [r[5] for r in rows]
     for ax, name in ((2, "x"), (3, "y"), (4, "z")):
         w = [r[ax] for r in rows]
         out(f"mean w{name} {sum(w) / len(w):+.4f} deg/s")
-    out(f"temperature {min(temps):.2f} .. {max(temps):.2f} degC")
     wz = [r[4] for r in rows]
-    if max(temps) - min(temps) >= 2.0:
-        mt, mw = sum(temps) / len(temps), sum(wz) / len(wz)
-        b = sum((a - mt) * (c - mw) for a, c in zip(temps, wz)) / sum((a - mt) ** 2 for a in temps)
-        out(f"z drift against temperature {b * 1e3:+.2f} mdps/K (imu_tc1 would be {b * D2R:+.3e} rad/s/K; "
-            "only with a real warm-up span, REQ-IMU-03)")
-    else:
-        out("temperature span < 2 K: no temperature coefficient (REQ-IMU-03 needs a warm-up run)")
+    tc = temp_fit(rows, out)
 
     taus = log_taus(dt_med, dur)
     ads = [adev(t, [r[ax] for r in rows], taus) for ax in (2, 3, 4)]
@@ -254,6 +300,17 @@ def selftest():
     code4, r4 = analyse(rows_b, 833.0, 1.0, out=quiet.append, despike=True)
     chk(r4 is not None and abs(r4["rate"] / odr_true - 1.0) < 2e-5, "rate unchanged across a gap")
     chk(r4 is not None and abs(r4["N"] / N - 1.0) < 0.10, "N within 10 % on the longest piece after --despike")
+    warm = [(0.02 * k, 18.0 + 10.0 * (1.0 - math.exp(-0.02 * k / 600.0))) for k in range(90000)]
+    rw = random.Random(7)
+    rows_w = [(t, k, 0.0, 0.0, -2.0 + 0.002 * (T - 25.0) + 0.0001 * (T - 25.0) ** 2 + rw.gauss(0.0, 0.05), T)
+              for k, (t, T) in enumerate(warm)]
+    for k in (100, 5000, 40000):
+        rows_w[k] = rows_w[k][:5] + (1279.3,)
+    rows_w[60000] = rows_w[60000][:5] + (-32.9,)
+    tcw = temp_fit(rows_w, quiet.append)
+    chk(tcw is not None and abs(tcw[0] - 0.002 * D2R) < 3.0 * tcw[2] and abs(tcw[1] - 0.0001 * D2R) < 3.0 * tcw[3]
+        and tcw[2] < 0.1 * 0.002 * D2R,
+        "warm-up 18 -> 28 C with corrupted temperatures: tc1, tc2 within 3 standard errors, tc1 to better than 10 %")
     print("SELFTEST PASSED" if ok else "SELFTEST FAILED")
     return 0 if ok else 1
 
