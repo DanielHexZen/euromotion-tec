@@ -64,3 +64,19 @@ bool imu_glitch_reject(imu_glitch_t *f, const int16_t g[3], int32_t lim_lsb)
     f->have = true;
     return false;
 }
+
+bool imu_temp_reject(imu_tguard_t *g, float *t_c, float max_step_c)
+{
+    const float t = *t_c;
+    const bool range_ok = t >= -40.0f && t <= 85.0f;                 /* LSM6DS3 operating range */
+    const bool jump = g->have && fabsf(t - g->t) > max_step_c;
+    if (!range_ok || (jump && g->run < IMU_GLITCH_RUN)) {
+        g->run = range_ok ? (uint8_t)(g->run + 1U) : 0U;   /* only plausible steps in a row count */
+        *t_c = g->have ? g->t : 25.0f;
+        return true;
+    }
+    g->t = t;
+    g->run = 0U;
+    g->have = true;
+    return false;
+}

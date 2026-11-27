@@ -30,4 +30,10 @@ st_t imu_yaw_at(const imu_yaw_t *y, uint32_t t_us, float extrap_max_s, float *ps
 typedef struct { int16_t g[3]; uint8_t run; bool have; } imu_glitch_t;
 bool imu_glitch_reject(imu_glitch_t *f, const int16_t g[3], int32_t lim_lsb);
 
+/* Temperature guard (D-80): a reading outside -40..85 C is always rejected; a step of more than
+ * max_step_c against the last accepted reading is rejected up to IMU_GLITCH_RUN times in a row.
+ * On rejection *t_c is replaced by the last accepted reading (or 25 C before the first one). */
+typedef struct { float t; uint8_t run; bool have; } imu_tguard_t;
+bool imu_temp_reject(imu_tguard_t *g, float *t_c, float max_step_c);
+
 #endif

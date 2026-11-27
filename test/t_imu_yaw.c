@@ -61,4 +61,20 @@ void t_imu_yaw(void)
         const int16_t neg[3] = { 307, (int16_t)(-275 - 6000), 20000 };
         CHECK(imu_glitch_reject(&f, neg, 5700));              /* negative jumps on any axis count too */
     }
+
+    REQ("REQ-IMU-03 / D-80: corrupted temperature readings are replaced by the last good one");
+    {
+        imu_tguard_t g = { 0 };
+        float tc = 1279.3f;
+        CHECK(imu_temp_reject(&g, &tc, 1.0f) && tc == 25.0f);       /* out of range before any good reading */
+        tc = 17.5f;  CHECK(!imu_temp_reject(&g, &tc, 1.0f) && tc == 17.5f);
+        tc = 17.6f;  CHECK(!imu_temp_reject(&g, &tc, 1.0f));
+        tc = -32.9f; CHECK(imu_temp_reject(&g, &tc, 1.0f) && tc == 17.6f);
+        tc = 1279.3f; CHECK(imu_temp_reject(&g, &tc, 1.0f) && tc == 17.6f);
+        for (int k = 0; k < 5; k++) { tc = 99.0f; CHECK(imu_temp_reject(&g, &tc, 1.0f)); }   /* never accepted */
+        tc = 20.0f;  CHECK(imu_temp_reject(&g, &tc, 1.0f));
+        tc = 20.0f;  CHECK(imu_temp_reject(&g, &tc, 1.0f));
+        tc = 20.0f;  CHECK(imu_temp_reject(&g, &tc, 1.0f));
+        tc = 20.0f;  CHECK(!imu_temp_reject(&g, &tc, 1.0f) && tc == 20.0f);   /* a real step after 3 */
+    }
 }
