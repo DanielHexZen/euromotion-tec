@@ -69,12 +69,12 @@
     X(500, ekf_kd,           1.0e-4f,   "m",       1.0e-6f, 1.0e-2f,PAR_L) \
     X(501, ekf_slip_infl,    100.0f,    "-",       1.0f,    1.0e4f, PAR_L) \
     X(502, ekf_slip_thr,     0.15f,     "rad/s",   0.02f,   1.0f,   PAR_L) \
-    X(503, ekf_gyro_nd,      1.0e-4f,   "rad/s/rtHz", 1.0e-6f, 1.0e-2f, PAR_L) \
+    X(503, ekf_gyro_nd,      2.6e-4f,   "rad/s/rtHz", 1.0e-6f, 1.0e-2f, PAR_L) \
     X(504, ekf_gyro_sf,      0.003f,    "-",       0.0f,    0.05f,  PAR_L) \
     X(505, ekf_q_bg,         1.0e-10f,  "(rad/s)2/s", 1.0e-14f, 1.0e-6f, PAR_L) \
     X(506, ekf_q_s,          1.0e-9f,   "1/s",     0.0f,    1.0e-5f,PAR_L) \
     X(507, ekf_q_th_enc,     1.0e-4f,   "rad2/m",  1.0e-6f, 1.0e-2f,PAR_L) \
-    X(508, ekf_zupt_floor,   2.0e-4f,   "rad/s",   0.0f,    1.0e-3f,PAR_L) \
+    X(508, ekf_zupt_floor,   4.6e-5f,   "rad/s",   0.0f,    1.0e-3f,PAR_L) \
     X(509, ekf_zupt_T,       1.0f,      "s",       0.2f,    5.0f,   PAR_L) \
     X(510, ekf_still_s,      0.2f,      "s",       0.05f,   2.0f,   PAR_L) \
     X(511, ekf_gate1,        9.0f,      "-",       1.0f,    100.0f, PAR_L) \

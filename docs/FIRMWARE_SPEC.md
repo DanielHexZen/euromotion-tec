@@ -1779,12 +1779,12 @@ All values are SI. Flag **L** = may change at any time (live), **S** = only whil
 | 500 | `ekf_kd` | 1.0e-4 | m | 1e-6–1e-2 | L | E | distance noise `[MEASURE]` repeated D5000 |
 | 501 | `ekf_slip_infl` | 100 | – | 1–1e4 | L | D | |
 | 502 | `ekf_slip_thr` | 0.15 | rad/s | 0.02–1 | L | D | |
-| 503 | `ekf_gyro_nd` | 1.0e-4 | rad/s/√Hz | 1e-6–1e-2 | L | E | `[MEASURE]` Allan variance |
+| 503 | `ekf_gyro_nd` | 2.6e-4 | rad/s/√Hz | 1e-6–1e-2 | L | M | Allan, H7 standstill log 2026-11-26 (40 min, z: N 14.8 mdps/√Hz; the 2026-11-25 log gave 8.5, the larger value is taken) |
 | 504 | `ekf_gyro_sf` | 0.003 | – | 0–0.05 | L | E | gyro scale-factor uncertainty |
-| 505 | `ekf_q_bg` | 1.0e-10 | (rad/s)²/s | 1e-14–1e-6 | L | E | `[MEASURE]` Allan variance |
+| 505 | `ekf_q_bg` | 1.0e-10 | (rad/s)²/s | 1e-14–1e-6 | L | M | confirmed by Allan 2026-11-26: K 9.9e-6 rad/s/√s, K² = 9.8e-11 |
 | 506 | `ekf_q_s` | 1.0e-9 | 1/s | 0–1e-5 | L | E | |
 | 507 | `ekf_q_th_enc` | 1.0e-4 | rad²/m | 1e-6–1e-2 | L | E | encoder-heading mode |
-| 508 | `ekf_zupt_floor` | 2.0e-4 | rad/s | 0–1e-3 | L | D | 0.011 °/s, vehicle test 2026-11-20 (D-69); was 3.5e-5. `[MEASURE]` Allan variance (H7) |
+| 508 | `ekf_zupt_floor` | 4.6e-5 | rad/s | 0–1e-3 | L | M | Allan 2026-11-26: √(σ_z(1 s)² − N²) = 2.6 mdps; with `ekf_gyro_nd` 2.6e-4 the ZUPT σ is 2.6e-4 rad/s (was 2.2e-4 with the live value 2e-4 of D-69) |
 | 509 | `ekf_zupt_T` | 1.0 | s | 0.2–5 | L | D | |
 | 510 | `ekf_still_s` | 0.2 | s | 0.05–2 | L | D | |
 | 511 | `ekf_gate1` | 9.0 | – | 1–100 | L | D | χ²₁ 99.7 % |
