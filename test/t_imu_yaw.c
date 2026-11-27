@@ -62,7 +62,7 @@ void t_imu_yaw(void)
         CHECK(imu_glitch_reject(&f, neg, 5700));              /* negative jumps on any axis count too */
     }
 
-    REQ("REQ-IMU-03 / D-80: corrupted temperature readings are replaced by the last good one");
+    REQ("REQ-IMU-03 / D-81: corrupted temperature readings are replaced by the last good one");
     {
         imu_tguard_t g = { 0 };
         float tc = 1279.3f;
